@@ -722,6 +722,7 @@
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
     catch(err){ console.warn('Não foi possível salvar no localStorage:', err); }
     window.CloudSync?.save(STORAGE_KEY, state);
+    window.dispatchEvent(new Event('planoEquipeAtualizado'));
   }
 
   function showToast(message){
@@ -1213,6 +1214,7 @@
     if(Array.isArray(remote)){ history=remote; selectedDate=history.slice().sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||''; render(); }
     window.CloudSync?.subscribe(KEY, remote=>{ if(Array.isArray(remote)){ history=remote; render(); } });
   });
+  window.addEventListener('planoEquipeAtualizado', ()=>render());
 
   function liveExtras(date){
     const loads=readJSON(LOAD_KEY,[]);const loadRows=Array.isArray(loads)?loads.filter(x=>x.data===date):[];
@@ -1287,6 +1289,7 @@
     if(remote && Array.isArray(remote.records)){ data=remote; data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)}; render(); }
     window.CloudSync?.subscribe(KEY, remote=>{ if(remote && Array.isArray(remote.records)){ data=remote; render(); } });
   });
+  window.addEventListener('planoEquipeAtualizado', ()=>render());
   function sectors(){return [...BIP_SECTORS];}
   function syncGoals(){
     data.goals={Leve:Math.max(0,+data.goals.Leve||300),Volumoso:Math.max(0,+data.goals.Volumoso||75)};
@@ -1462,6 +1465,7 @@
   document.querySelectorAll('[data-qr-mode]').forEach(btn=>btn.addEventListener('click',()=>{mode=btn.dataset.qrMode;render();}));
   $('qr-grid')?.addEventListener('click',e=>{const b=e.target.closest('[data-copy-qr]');if(b?.dataset.copyQr)copyText(b.dataset.copyQr);});
   window.addEventListener('storage',e=>{if(e.key===PLAN_KEY)render();});
+  window.addEventListener('planoEquipeAtualizado', ()=>render());
   render();
 })();
 </script>
