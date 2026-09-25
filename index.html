@@ -1287,7 +1287,7 @@
     const can=canManagePhotos();
     note.innerHTML=can
       ? '<div class="lc-photo-note">Você pode adicionar, substituir ou excluir as fotos desta finalização. Clique na miniatura para ampliar.</div>'
-      : '<div class="lc-photo-lock">🔒 Somente LÍDER pode adicionar ou excluir fotos. As fotos já salvas ficam disponíveis para consulta.</div>';
+      : '<div class="lc-photo-lock">🔒 Somente ADMIN/LÍDER podem adicionar ou excluir fotos. DM e VISUALIZAÇÃO podem consultar as fotos já salvas.</div>';
     grid.innerHTML=PHOTO_TYPES.map(t=>{
       const ph=photos[t.key];
       const preview=ph?.data
@@ -1408,7 +1408,7 @@
     }
     const arr=base.filter(x=>(!q||[x.lt,x.placa,x.motorista,x.destino].join(' ').toLowerCase().includes(q))&&(!fd||x.data===fd)&&(!fs||x.status===fs)&&(!dest||(x.destino||'').toLowerCase().includes(dest))).sort((a,b)=>((b.data||'')+(b.chegada||'')).localeCompare((a.data||'')+(a.chegada||'')));
     const tb=$('lc-tbody');tb.innerHTML='';$('lc-empty').style.display=arr.length?'none':'block';$('lc-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;
-    arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');tr.innerHTML=`<td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(minutes(x.inicio,x.fim))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td><button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> <button class="lc-smallbtn edit" data-lc-photos="${x.id}">📸 Fotos</button> <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button></td>`;tb.appendChild(tr);});
+    arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();const somenteLeitura=['DM','VISUALIZACAO'].includes(perfil);const fotoBtn=`<button class="lc-smallbtn edit" data-readonly-allowed="1" data-lc-photos="${x.id}">📸 ${somenteLeitura?'Ver fotos':'Fotos'}</button>`;tr.innerHTML=`<td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(minutes(x.inicio,x.fim))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td>${somenteLeitura?'':`<button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> `}${fotoBtn}${somenteLeitura?'':` <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button>`}</td>`;tb.appendChild(tr);});
     updateMetrics();
   }
 
@@ -1431,7 +1431,8 @@
 
   window.addEventListener('planoEquipeAtualizado',updateOpsDatalist);window.addEventListener('storage',e=>{if(e.key==='shippingAzulPlanner_v1')updateOpsDatalist();});$('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-equipe').addEventListener('blur',()=>{ $('lc-equipe').value=normalizeLoadersToOPS($('lc-equipe').value); });$('lc-photo-modal-close').addEventListener('click',closePhotoModal);$('lc-photo-modal').addEventListener('click',e=>{if(e.target.id==='lc-photo-modal')closePhotoModal();});$('lc-export').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
   ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));renderPhotos();
-  $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(ph)editar(ph.dataset.lcPhotos);if(del)excluir(del.dataset.lcDel);});
+  function visualizarFotos(id){const x=dados.find(r=>r.id===id);if(!x)return;setCurrentPhotoDraft(x.fotos||{});renderPhotos();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>document.getElementById('lc-photo-grid')?.scrollIntoView({behavior:'smooth',block:'center'}),120);}
+  $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(ph){const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();if(['DM','VISUALIZACAO'].includes(perfil))visualizarFotos(ph.dataset.lcPhotos);else editar(ph.dataset.lcPhotos);}if(del)excluir(del.dataset.lcDel);});
   novo();render();
 })();
 </script>
