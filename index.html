@@ -494,8 +494,9 @@
           <div><label>Responsável pelo aceite</label><input id="lc-aceitePor" placeholder="Nome"></div>
           <div><label>Responsável pela liberação</label><input id="lc-liberadoPor" placeholder="Nome"></div>
           <div class="lc-full">
-            <div class="lc-team-row"><div><label>Equipe / pessoas que carregaram</label><input id="lc-equipe" placeholder="Ex.: Hugo, Carlos, Pedro"></div><button type="button" class="lc-btn soft" id="lc-fill-team">Usar Plano do Dia</button></div>
-            <p class="lc-help">O botão acima puxa automaticamente funcionários presentes com função e pessoas da sinergia alocadas no Plano do Dia.</p>
+            <div class="lc-team-row"><div><label>OPS de quem carregou o caminhão</label><input id="lc-equipe" list="lc-ops-list" placeholder="Ex.: Ops391402, Ops392726" autocomplete="off"></div><button type="button" class="lc-btn soft" id="lc-fill-team">Usar OPS do Plano do Dia</button></div>
+            <datalist id="lc-ops-list"></datalist>
+            <p class="lc-help">Informe o OPS dos operadores que carregaram o caminhão. O botão preenche automaticamente os OPS das pessoas presentes/alocadas no Plano do Dia.</p>
           </div>
         </div>
       </div>
@@ -1151,8 +1152,18 @@
   let dados=[];
   try{const raw=JSON.parse(localStorage.getItem(KEY)||'[]');dados=Array.isArray(raw)?raw:[];}catch{dados=[];}
   window.CloudSync?.load(KEY).then(remote=>{
-    if(Array.isArray(remote)){ dados=remote; render(); }
-    window.CloudSync?.subscribe(KEY, remote=>{ if(Array.isArray(remote)){ dados=remote; render(); } });
+    if(Array.isArray(remote)){
+      dados=remote.map(x=>({...x,equipe:normalizeLoadersToOPS(x.equipe)}));
+      try{localStorage.setItem(KEY,JSON.stringify(dados));}catch{}
+      render();
+    }
+    window.CloudSync?.subscribe(KEY, remote=>{
+      if(Array.isArray(remote)){
+        dados=remote.map(x=>({...x,equipe:normalizeLoadersToOPS(x.equipe)}));
+        try{localStorage.setItem(KEY,JSON.stringify(dados));}catch{}
+        render();
+      }
+    });
   });
   const $=id=>document.getElementById(id);
   const v=id=>$(id).value;
@@ -1160,7 +1171,14 @@
   const localISODate=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-  function persist(){try{localStorage.setItem(KEY,JSON.stringify(dados));}catch(err){console.warn(err)}window.CloudSync?.save(KEY,dados);updateMetrics();}
+  function persist(){
+    try{
+      dados=dados.map(x=>({...x,equipe:normalizeLoadersToOPS(x.equipe)}));
+      localStorage.setItem(KEY,JSON.stringify(dados));
+    }catch(err){console.warn(err)}
+    window.CloudSync?.save(KEY,dados);
+    updateMetrics();
+  }
   function minutes(a,b){if(!a||!b)return null;const n=(new Date(b)-new Date(a))/60000;return n>=0?n:null;}
   function fmtMin(n){if(n==null)return '—';n=Math.round(n);return n>=60?Math.floor(n/60)+'h '+(n%60)+'min':n+' min';}
   function totalVol(x){return (x.comp||[]).reduce((s,c)=>s+(+c.qtd||0),0);}
@@ -1190,23 +1208,58 @@
     $('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }
 
-  function fillTeamFromPlan(){
+  function getPlanLoaderOPS(){
     try{
       const p=JSON.parse(localStorage.getItem('shippingAzulPlanner_v1')||'{}');
-      const people=[];
-      (p.employees||[]).forEach(e=>{if(e.status==='presente'&&e.function&&e.name)people.push(e.name);});
-      (p.synergy||[]).forEach(e=>{if(e.function&&e.name)people.push(e.name);});
-      const unique=[...new Set(people)];
-      if(!unique.length){alert('Não há pessoas alocadas no Plano do Dia. Marque funcionários como presentes e escolha as funções primeiro.');return;}
-      $('lc-equipe').value=unique.join(', ');
-    }catch{alert('Não foi possível ler o Plano do Dia.');}
+      const ops=[];
+      (p.employees||[]).forEach(e=>{if(e.status==='presente'&&e.function&&e.ops)ops.push(String(e.ops).trim());});
+      (p.synergy||[]).forEach(e=>{if(e.function&&e.ops)ops.push(String(e.ops).trim());});
+      return [...new Set(ops.filter(Boolean))];
+    }catch{return [];}
+  }
+
+  function updateOpsDatalist(){
+    const list=$('lc-ops-list');if(!list)return;
+    list.innerHTML='';
+    try{
+      const p=JSON.parse(localStorage.getItem('shippingAzulPlanner_v1')||'{}');
+      const ops=[];
+      (p.employees||[]).forEach(e=>{if(e.ops)ops.push(String(e.ops).trim());});
+      (p.synergy||[]).forEach(e=>{if(e.ops)ops.push(String(e.ops).trim());});
+      [...new Set(ops.filter(Boolean))].forEach(op=>{
+        const o=document.createElement('option');o.value=op;list.appendChild(o);
+      });
+    }catch{}
+  }
+
+  function normalizeLoadersToOPS(value){
+    const raw=String(value||'').split(',').map(x=>x.trim()).filter(Boolean);
+    if(!raw.length)return '';
+    try{
+      const p=JSON.parse(localStorage.getItem('shippingAzulPlanner_v1')||'{}');
+      const people=[...(p.employees||[]),...(p.synergy||[])];
+      return [...new Set(raw.map(token=>{
+        const found=people.find(e=>String(e.name||'').trim().toLowerCase()===token.toLowerCase());
+        return found?.ops ? String(found.ops).trim() : token;
+      }).filter(Boolean))].join(', ');
+    }catch{return raw.join(', ');}
+  }
+
+  function fillTeamFromPlan(){
+    const ops=getPlanLoaderOPS();
+    if(!ops.length){
+      alert('Não há OPS alocados no Plano do Dia. Marque funcionários como presentes, escolha as funções e confira se o OPS está cadastrado.');
+      return;
+    }
+    $('lc-equipe').value=ops.join(', ');
+    updateOpsDatalist();
   }
 
   function salvar(){
     const req=[['lc-lt','LT / Pedido'],['lc-destino','Destino'],['lc-motorista','Motorista']];
     for(const [id,n] of req){if(!$(id).value.trim()){alert('Preencha: '+n);$(id).focus();return;}}
     const id=$('lc-editId').value||uid();const old=dados.find(x=>x.id===id);
-    const obj={id,data:v('lc-data'),lt:v('lc-lt').trim(),destino:v('lc-destino').trim(),motorista:v('lc-motorista').trim(),placa:v('lc-placa').trim(),veiculo:v('lc-veiculo'),doca:v('lc-doca').trim(),chegada:v('lc-chegada'),aceite:v('lc-aceite'),docaHora:v('lc-docaHora'),cargaPronta:v('lc-cargaPronta'),inicio:v('lc-inicio'),fim:v('lc-fim'),liberacao:v('lc-liberacao'),meta:+v('lc-meta')||60,aceitePor:v('lc-aceitePor').trim(),liberadoPor:v('lc-liberadoPor').trim(),equipe:v('lc-equipe').trim(),comp:getComp(),pacotes:+v('lc-pacotes')||0,peso:+v('lc-peso')||0,status:v('lc-status'),motivo:v('lc-motivo'),obs:v('lc-obs').trim(),criado:old?.criado||new Date().toISOString()};
+    const obj={id,data:v('lc-data'),lt:v('lc-lt').trim(),destino:v('lc-destino').trim(),motorista:v('lc-motorista').trim(),placa:v('lc-placa').trim(),veiculo:v('lc-veiculo'),doca:v('lc-doca').trim(),chegada:v('lc-chegada'),aceite:v('lc-aceite'),docaHora:v('lc-docaHora'),cargaPronta:v('lc-cargaPronta'),inicio:v('lc-inicio'),fim:v('lc-fim'),liberacao:v('lc-liberacao'),meta:+v('lc-meta')||60,aceitePor:v('lc-aceitePor').trim(),liberadoPor:v('lc-liberadoPor').trim(),equipe:normalizeLoadersToOPS(v('lc-equipe').trim()),comp:getComp(),pacotes:+v('lc-pacotes')||0,peso:+v('lc-peso')||0,status:v('lc-status'),motivo:v('lc-motivo'),obs:v('lc-obs').trim(),criado:old?.criado||new Date().toISOString()};
     const i=dados.findIndex(x=>x.id===id);if(i>=0)dados[i]=obj;else dados.push(obj);persist();render();novo();alert('Carregamento salvo com sucesso.');
   }
 
@@ -1244,14 +1297,14 @@
 
   function download(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
   function exportCSV(){
-    const rows=[['Data','LT','Destino','Motorista','Placa','Veículo','Doca','Status','Chegada','Aceite','Entrada Doca','Carga Pronta','Início','Fim','Liberação','Tempo Carga (min)','Tempo Total (min)','Equipe','Aceite Por','Liberado Por','Volumes','Pacotes','Peso kg','Motivo','Observações','Composição']];
+    const rows=[['Data','LT','Destino','Motorista','Placa','Veículo','Doca','Status','Chegada','Aceite','Entrada Doca','Carga Pronta','Início','Fim','Liberação','Tempo Carga (min)','Tempo Total (min)','OPS Carregadores','Aceite Por','Liberado Por','Volumes','Pacotes','Peso kg','Motivo','Observações','Composição']];
     dados.forEach(x=>rows.push([x.data,x.lt,x.destino,x.motorista,x.placa,x.veiculo,x.doca,x.status,x.chegada,x.aceite,x.docaHora,x.cargaPronta,x.inicio,x.fim,x.liberacao,minutes(x.inicio,x.fim),minutes(x.chegada,x.liberacao),x.equipe,x.aceitePor,x.liberadoPor,totalVol(x),x.pacotes,x.peso,x.motivo,x.obs,(x.comp||[]).map(c=>`${c.tipo}: ${c.qtd}`).join(' | ')]));
     const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');download(csv,'controle_carregamento.csv','text/csv;charset=utf-8;');
   }
   function backup(){download(JSON.stringify(dados,null,2),'backup_carregamentos.json','application/json');}
   function restoreFile(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw new Error();if(!confirm(`Restaurar backup com ${d.length} carregamento(s)? Os dados atuais serão substituídos.`))return;dados=d;persist();render();alert('Backup restaurado.');}catch{alert('Arquivo de backup inválido.');}};r.readAsText(file);}
 
-  $('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-export').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
+  window.addEventListener('planoEquipeAtualizado',updateOpsDatalist);window.addEventListener('storage',e=>{if(e.key==='shippingAzulPlanner_v1')updateOpsDatalist();});$('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-equipe').addEventListener('blur',()=>{ $('lc-equipe').value=normalizeLoadersToOPS($('lc-equipe').value); });$('lc-export').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
   ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));
   $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(del)excluir(del.dataset.lcDel);});
   novo();render();
@@ -1564,7 +1617,13 @@ function aplicarPermissoes(){
 }
 function readLocalJson(key){try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
 function operatorHasLoadAssociation(){
-  const ops=String(SupabaseApp.profile?.ops||'').trim().toLowerCase();if(!ops)return false;const loads=readLocalJson('controle_carregamento_v1');return Array.isArray(loads)&&loads.some(x=>String(x.equipe||'').toLowerCase().includes(ops));
+  const ops=String(SupabaseApp.profile?.ops||'').trim().toLowerCase();if(!ops)return false;
+  const nome=String(SupabaseApp.profile?.nome||'').trim().toLowerCase();
+  const loads=readLocalJson('controle_carregamento_v1');
+  return Array.isArray(loads)&&loads.some(x=>{
+    const eq=String(x.equipe||'').toLowerCase();
+    return (ops&&eq.includes(ops))||(nome&&eq.includes(nome));
+  });
 }
 function applyOperatorDataFilter(){
   if(SupabaseApp.profile?.perfil!=='OPERADOR')return;
