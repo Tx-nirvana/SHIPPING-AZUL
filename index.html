@@ -267,6 +267,21 @@
   .prod-legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:-1px}
   .prod-legend-blue{background:#2563eb}.prod-legend-gray{background:#94a3b8}
   .prod-chart-note{font-size:9px;color:#748096;margin-top:8px;line-height:1.45}
+  .prod-tabs{display:flex;gap:7px;margin:0 0 14px;padding:5px;background:#eef2f7;border:1px solid var(--line);border-radius:12px}
+  .prod-tab{border:0;background:transparent;border-radius:9px;padding:9px 14px;font:inherit;font-size:12px;font-weight:900;color:#5b6678;cursor:pointer}
+  .prod-tab.active{background:#fff;color:#1f2937;box-shadow:0 1px 4px rgba(15,23,42,.08)}
+  .prod-main-content.prod-tab-hidden{display:none!important}
+  .prod-ranking-tools{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin-bottom:12px}
+  .prod-ranking-tools>div{min-width:150px}
+  .prod-ranking-tools label{font-size:10px;font-weight:900;color:#566176;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .prod-ranking-tools input,.prod-ranking-tools select{width:100%;border:1px solid #d8dee9;border-radius:9px;padding:9px;background:#fff;font:inherit;font-size:12px}
+  .prod-goal-day{display:flex;align-items:center;gap:9px;padding:11px 12px;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;margin-bottom:12px;flex-wrap:wrap}
+  .prod-goal-day strong{font-size:12px}.prod-goal-day input{width:120px;border:1px solid #d8dee9;border-radius:8px;padding:8px;text-align:center;font-weight:900}
+  .prod-rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .prod-rank-table{width:100%;border-collapse:collapse}.prod-rank-table th,.prod-rank-table td{padding:9px 8px;border-bottom:1px solid #edf0f4;text-align:left;font-size:11px}.prod-rank-table th{font-size:9px;text-transform:uppercase;color:#69758a}.prod-rank-table td:last-child,.prod-rank-table th:last-child{text-align:right}
+  .prod-rank-me{background:#eef6ff;font-weight:800}.prod-rank-pos{font-weight:900;width:42px}.prod-rank-empty{text-align:center!important;color:#7b8799;padding:20px!important}
+  .prod-week-note{font-size:10px;color:#687589;margin:0 0 12px}
+  @media(max-width:800px){.prod-rank-grid{grid-template-columns:1fr}.prod-tabs{overflow:auto}.prod-tab{white-space:nowrap}}
   .goal-list{display:flex;flex-direction:column;gap:7px;max-height:480px;overflow:auto}
   .goal-row{display:grid;grid-template-columns:minmax(100px,1fr) 90px 42px;gap:7px;align-items:center}
   .goal-row strong{font-size:11px}.goal-row input{width:100%;border:1px solid #d8dee9;border-radius:9px;padding:8px;text-align:center;font:inherit;font-size:12px}
@@ -646,7 +661,11 @@
       <button class="btn" type="button" id="prod-export">⇩ Exportar CSV</button>
     </div>
   </header>
-  <section class="prod-kpis">
+  <nav class="prod-tabs" aria-label="Abas de produtividade">
+    <button class="prod-tab active" type="button" data-prod-tab="main">📈 Minha produtividade</button>
+    <button class="prod-tab" type="button" data-prod-tab="ranking">🏆 Melhores do dia / semana</button>
+  </nav>
+  <section class="prod-kpis prod-main-content" data-prod-main="main">
     <div class="mini-kpi"><div class="mk-label">Bipes na data</div><div class="mk-value" id="prod-kpi-bipes">0</div><div class="mk-sub">total lançado</div></div>
     <div class="mini-kpi"><div class="mk-label">Pessoas lançadas</div><div class="mk-value" id="prod-kpi-people">0</div><div class="mk-sub">nomes únicos</div></div>
     <div class="mini-kpi"><div class="mk-label">Melhor índice</div><div class="mk-value" id="prod-kpi-best">—</div><div class="mk-sub" id="prod-kpi-best-sub">sem referência</div></div>
@@ -655,7 +674,7 @@
     <div class="mini-kpi"><div class="mk-label">Lançamentos</div><div class="mk-value" id="prod-kpi-records">0</div><div class="mk-sub">na data filtrada</div></div>
   </section>
 
-  <section class="prod-layout">
+  <section class="prod-layout prod-main-content" data-prod-main="main">
     <div class="prod-panel">
       <div class="prod-panel-head"><h2 id="prod-form-title">Adicionar produtividade</h2><button class="btn small" type="button" id="prod-clear-form">Limpar</button></div>
       <div class="prod-panel-body">
@@ -686,7 +705,7 @@
     </div>
   </section>
 
-  <section class="prod-panel prod-chart-panel">
+  <section class="prod-panel prod-chart-panel prod-main-content" data-prod-main="main">
     <div class="prod-panel-head"><h2>👤 Produtividade do colaborador</h2><span class="count">08h → 20h</span></div>
     <div class="prod-panel-body">
       <div class="prod-chart-toolbar">
@@ -699,7 +718,7 @@
     </div>
   </section>
 
-  <section class="prod-panel prod-chart-panel">
+  <section class="prod-panel prod-chart-panel prod-main-content" data-prod-main="main">
     <div class="prod-panel-head"><h2>🏭 Meta geral do setor</h2><span class="count" id="prod-general-status">—</span></div>
     <div class="prod-panel-body">
       <div class="prod-chart-box" id="prod-general-chart"></div>
@@ -707,13 +726,35 @@
         <span><i class="prod-legend-dot prod-legend-gray"></i>Esperado</span>
         <span><i class="prod-legend-dot prod-legend-blue"></i>Batido</span>
       </div>
-      <div class="prod-chart-note">O esperado de cada hora é calculado somando a meta do setor de cada colaborador lançado naquele horário. O batido é a soma dos bipes de todos os colaboradores. O filtro de setor, quando usado, também é aplicado a este gráfico.</div>
+      <div class="prod-chart-note">O esperado de cada hora é a meta geral do dia dividida pelas horas de acompanhamento (08h–20h). O batido é a soma das bipagens de todos os colaboradores.</div>
     </div>
   </section>
 
-  <section class="prod-panel">
+  <section class="prod-panel prod-main-content" data-prod-main="main">
     <div class="prod-panel-head"><h2>Lançamentos de produtividade</h2><span class="count" id="prod-history-count">0 registros</span></div>
     <div class="prod-history-wrap"><table class="prod-history-table"><thead><tr><th>Data</th><th>Hora</th><th>Funcionário</th><th>Setor</th><th>Bipes</th><th>Referência/h</th><th>Índice</th><th>Horas</th><th>Bipes/h</th><th>% Meta/h</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="prod-history-body"></tbody></table><div class="empty-inline" id="prod-history-empty">Nenhum lançamento para os filtros atuais.</div></div>
+  </section>
+  <section class="prod-panel prod-ranking-tab" data-prod-ranking="ranking" style="display:none">
+    <div class="prod-panel-head"><h2>🏆 Ranking de produtividade</h2><span class="count" id="prod-ranking-period-label">Dia</span></div>
+    <div class="prod-panel-body">
+      <div class="prod-ranking-tools">
+        <div><label>Período</label><select id="prod-ranking-period"><option value="day">Hoje / dia selecionado</option><option value="week">Semana do dia selecionado</option></select></div>
+        <div><label>Data de referência</label><input type="date" id="prod-ranking-date"></div>
+      </div>
+      <div class="prod-goal-day" id="prod-daily-goal-box"><strong>Meta geral do dia</strong><input type="number" id="prod-daily-goal" min="0" step="1" value="8000"><span>bipes</span><span id="prod-daily-goal-note" class="prod-week-note">Defina a meta diária que o setor precisa processar.</span></div>
+      <p class="prod-week-note" id="prod-ranking-week-note"></p>
+      <div class="prod-rank-grid">
+        <div class="prod-panel" style="box-shadow:none">
+          <div class="prod-panel-head"><h2>Leve</h2><span class="count" id="prod-rank-leve-count">0</span></div>
+          <div class="prod-panel-body" style="padding:6px 10px"><table class="prod-rank-table"><thead><tr><th>#</th><th>Colaborador</th><th>Bipes</th></tr></thead><tbody id="prod-rank-leve-body"></tbody></table></div>
+        </div>
+        <div class="prod-panel" style="box-shadow:none">
+          <div class="prod-panel-head"><h2>Volumoso</h2><span class="count" id="prod-rank-volumoso-count">0</span></div>
+          <div class="prod-panel-body" style="padding:6px 10px"><table class="prod-rank-table"><thead><tr><th>#</th><th>Colaborador</th><th>Bipes</th></tr></thead><tbody id="prod-rank-volumoso-body"></tbody></table></div>
+        </div>
+      </div>
+      <div class="prod-note" id="prod-ranking-summary"></div>
+    </div>
   </section>
 </div>
 
@@ -1617,17 +1658,21 @@
   const readPlan=()=>{try{return JSON.parse(localStorage.getItem(PLAN_KEY)||'{}')||{};}catch{return {};}};
   let data;try{data=JSON.parse(localStorage.getItem(KEY)||'');}catch{};if(!data||!Array.isArray(data.records)||typeof data.goals!=='object')data={records:[],goals:{Leve:300,Volumoso:75}};
   data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)};
+  data.dailyGoal=Math.max(0,+data.dailyGoal||8000);
+  data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{};
   const BIP_SECTORS=['Leve','Volumoso'];
   const persist=()=>{localStorage.setItem(KEY,JSON.stringify(data));window.CloudSync?.save(KEY,data);window.ShippingHistory?.render?.();};
   window.CloudSync?.load(KEY).then(remote=>{
-    if(remote && Array.isArray(remote.records)){ data=remote; data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)}; render(); }
+    if(remote && Array.isArray(remote.records)){ data=remote; data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)}; data.dailyGoal=Math.max(0,+data.dailyGoal||8000); data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{}; render(); }
     window.CloudSync?.subscribe(KEY, remote=>{ if(remote && Array.isArray(remote.records)){ data=remote; render(); } });
   });
   window.addEventListener('planoEquipeAtualizado', ()=>render());
   function sectors(){return [...BIP_SECTORS];}
   function syncGoals(){
     data.goals={Leve:Math.max(0,+data.goals.Leve||300),Volumoso:Math.max(0,+data.goals.Volumoso||75)};
+    data.dailyGoal=Math.max(0,+data.dailyGoal||8000);data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{};
   }
+  function dailyGoalFor(date){return Math.max(0,+data.dailyGoals?.[date]||data.dailyGoal||8000);}
   function people(){const p=readPlan(),arr=[];(p.employees||[]).forEach(e=>arr.push({value:'emp:'+e.id,name:e.name,meta:[e.so,e.ops].filter(Boolean).join(' · ')}));(p.synergy||[]).forEach(e=>arr.push({value:'syn:'+e.id,name:e.name,meta:'Sinergia • '+(e.origin||'') }));return arr;}
   function fmtN(n,dec=0){return Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
   function reference(sector){return Math.max(0,+data.goals[sector]||0);}
@@ -1637,8 +1682,10 @@
 
   function renderSelectors(){
     const ppl=people(),current=$('prod-person').value;
-    $('prod-person').innerHTML='<option value="">Selecione...</option>'+ppl.map(p=>`<option value="${esc(p.value)}">${esc(p.name)}${p.meta?' — '+esc(p.meta):''}</option>`).join('');
-    if(ppl.some(p=>p.value===current))$('prod-person').value=current;
+    const opKey=operatorPersonKey();const formPpl=opKey?ppl.filter(p=>p.value===opKey):ppl;
+    $('prod-person').innerHTML='<option value="">Selecione...</option>'+formPpl.map(p=>`<option value="${esc(p.value)}">${esc(p.name)}${p.meta?' — '+esc(p.meta):''}</option>`).join('');
+    if(formPpl.some(p=>p.value===current))$('prod-person').value=current;else if(opKey)$('prod-person').value=opKey;
+    $('prod-person').disabled=!!opKey;
     const secs=sectors(),curSec=$('prod-sector').value,curFilter=$('prod-sector-filter').value;
     $('prod-sector').innerHTML='<option value="">Selecione...</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');
     $('prod-sector-filter').innerHTML='<option value="all">Todos os setores</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');
@@ -1655,8 +1702,8 @@
   function operatorPersonKey(){
     const p=window.SupabaseApp?.profile;
     if(p?.perfil!=='OPERADOR')return '';
-    const ops=String(p.ops||'').trim().toLowerCase(),plan=readPlan();
-    const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);
+    const ops=String(p.ops||p.afs||'').trim().toLowerCase(),plan=readPlan();
+    const emp=(plan?.employees||[]).find(e=>String(e.ops||e.afs||'').trim().toLowerCase()===ops);
     if(emp)return 'emp:'+emp.id;
     return '';
   }
@@ -1676,7 +1723,7 @@
     sel.disabled=!!opKey;
   }
 function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class="goal-row"><strong title="${esc(s)}">${esc(s)}</strong><input type="number" min="0" step="1" value="${reference(s)}" data-goal-sector="${esc(s)}"><span>bipes/h</span></div>`).join('');}
-  function filtered(){const d=$('prod-date-filter').value,sec=$('prod-sector-filter').value;let rows=data.records.filter(r=>BIP_SECTORS.includes(r.sector)&&(!d||r.date===d)&&(sec==='all'||r.sector===sec));const p=window.SupabaseApp?.profile;if(p?.perfil==='OPERADOR'){const ops=String(p.ops||'').trim().toLowerCase();const plan=readPlan();const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);const key=emp?`emp:${emp.id}`:'';rows=rows.filter(r=>key&&r.personKey===key);}return rows;}
+  function filtered(){const d=$('prod-date-filter').value,sec=$('prod-sector-filter').value;let rows=data.records.filter(r=>BIP_SECTORS.includes(r.sector)&&(!d||r.date===d)&&(sec==='all'||r.sector===sec));const p=window.SupabaseApp?.profile;if(p?.perfil==='OPERADOR'){const ops=String(p.ops||p.afs||'').trim().toLowerCase();const plan=readPlan();const emp=(plan?.employees||[]).find(e=>String(e.ops||e.afs||'').trim().toLowerCase()===ops);const key=emp?`emp:${emp.id}`:'';rows=rows.filter(r=>key&&r.personKey===key);}return rows;}
   function aggregate(rows){
     const map=new Map();for(const r of rows){const key=r.personKey||r.personName;let x=map.get(key);if(!x){x={name:r.personName,bipes:0,index:0,indexParts:0,sectors:new Set(),hours:0,hasHours:false};map.set(key,x);}x.bipes+=+r.bipes||0;x.sectors.add(r.sector);const idx=indexOf(r);if(idx!=null){x.index+=idx;x.indexParts++;}if(+r.hours>0){x.hours+=+r.hours;x.hasHours=true;}}
     return [...map.values()].sort((a,b)=>(b.indexParts?b.index:-1)-(a.indexParts?a.index:-1)||b.bipes-a.bipes);
@@ -1750,14 +1797,9 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const rows=chartRows();
     if(!rows.length){box.innerHTML='<div class="prod-chart-empty">Nenhuma bipagem com horário registrada para montar a meta geral.</div>';if($('prod-general-status'))$('prod-general-status').textContent='—';return;}
     const actual=CHART_HOURS.map(h=>rows.filter(r=>recordHour(r)===h).reduce((sum,r)=>sum+(+r.bipes||0),0));
-    const expected=CHART_HOURS.map(h=>{
-      const seen=new Set(),total=rows.filter(r=>recordHour(r)===h).reduce((sum,r)=>{
-        const key=`${r.personKey||r.personName}|${r.sector}`;
-        if(seen.has(key))return sum;
-        seen.add(key);return sum+reference(r.sector);
-      },0);
-      return total;
-    });
+    const target=dailyGoalFor($('prod-date-filter').value||localDate());
+    const expectedPerHour=CHART_HOURS.length?target/CHART_HOURS.length:0;
+    const expected=CHART_HOURS.map(()=>expectedPerHour);
     box.innerHTML=lineChartSvg([
       {values:expected,color:'#94a3b8'},
       {values:actual,color:'#2563eb'}
@@ -1771,14 +1813,70 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     renderGeneralChart();
   }
 
-function render(){syncGoals();renderSelectors();renderGoals();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);}
+  function currentProfile(){return window.SupabaseApp?.profile||{};}
+  function currentOperatorKey(){
+    const p=currentProfile();
+    if(String(p.perfil||'').toUpperCase()!=='OPERADOR')return '';
+    const ident=String(p.ops||p.afs||'').trim().toLowerCase();
+    if(!ident)return '';
+    const plan=readPlan();
+    const emp=(plan.employees||[]).find(e=>String(e.ops||e.afs||'').trim().toLowerCase()===ident);
+    return emp?'emp:'+emp.id:'';
+  }
+  function dateRangeForPeriod(date,period){
+    if(period==='day')return {start:date,end:date};
+    const d=new Date(date+'T12:00:00');
+    const day=d.getDay();
+    const diff=(day+6)%7;
+    const start=new Date(d);start.setDate(d.getDate()-diff);
+    const end=new Date(start);end.setDate(start.getDate()+6);
+    const f=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+    return {start:f(start),end:f(end)};
+  }
+  function rankingRows(sector,period,date){
+    const range=dateRangeForPeriod(date,period);
+    const map=new Map();
+    data.records.filter(r=>r.sector===sector&&r.date>=range.start&&r.date<=range.end).forEach(r=>{
+      const key=r.personKey||r.personName;let x=map.get(key);if(!x)x={key,name:r.personName,bipes:0};x.bipes+=+r.bipes||0;map.set(key,x);
+    });
+    return [...map.values()].sort((a,b)=>b.bipes-a.bipes||a.name.localeCompare(b.name,'pt-BR'));
+  }
+  function renderRankingTab(){
+    const date=$('prod-ranking-date')?.value||$('prod-date-filter')?.value||localDate(),period=$('prod-ranking-period')?.value||'day';
+    const selectedGoal=dailyGoalFor(date);if($('prod-daily-goal'))$('prod-daily-goal').value=selectedGoal;
+    const profile=currentProfile(),canGoal=['ADMIN','LIDER'].includes(String(profile.perfil||'').toUpperCase());
+    const goalBox=$('prod-daily-goal-box');if(goalBox)goalBox.style.display=canGoal?'flex':'none';
+    const range=dateRangeForPeriod(date,period);
+    const label=period==='day'?'Dia':'Semana';
+    if($('prod-ranking-period-label'))$('prod-ranking-period-label').textContent=label;
+    if($('prod-ranking-week-note'))$('prod-ranking-week-note').textContent=period==='week'?`Semana: ${range.start.split('-').reverse().join('/')} até ${range.end.split('-').reverse().join('/')}`:'';
+    const me=currentOperatorKey();
+    for(const sec of BIP_SECTORS){
+      const rows=rankingRows(sec,period,date),body=$('prod-rank-'+sec.toLowerCase()+'-body'),count=$('prod-rank-'+sec.toLowerCase()+'-count');
+      if(count)count.textContent=`${rows.length} pessoa${rows.length===1?'':'s'}`;
+      if(body)body.innerHTML=rows.length?rows.map((x,i)=>`<tr class="${me&&x.key===me?'prod-rank-me':''}"><td class="prod-rank-pos">${i+1}º</td><td>${esc(x.name)}${me&&x.key===me?' <small>(você)</small>':''}</td><td><b>${fmtN(x.bipes)}</b></td></tr>`).join(''):'<tr><td colspan="3" class="prod-rank-empty">Nenhum lançamento.</td></tr>';
+    }
+    const all=data.records.filter(r=>BIP_SECTORS.includes(r.sector)&&r.date>=range.start&&r.date<=range.end);
+    const total=all.reduce((s,r)=>s+(+r.bipes||0),0);
+    const dates=[];for(let d=new Date(range.start+'T12:00:00');d<=new Date(range.end+'T12:00:00');d.setDate(d.getDate()+1)){dates.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);}
+    const goal=dates.reduce((sum,d)=>sum+dailyGoalFor(d),0);
+    if($('prod-ranking-summary'))$('prod-ranking-summary').innerHTML=period==='day'?`Meta geral do dia: <b>${fmtN(dailyGoalFor(date))} bipes</b> • Bipado: <b>${fmtN(total)}</b> • ${dailyGoalFor(date)?fmtN(total/dailyGoalFor(date)*100,0):0}% da meta.`:`Meta acumulada da semana: <b>${fmtN(goal)} bipes</b> • Bipado no período: <b>${fmtN(total)}</b> • ${goal?fmtN(total/goal*100,0):0}% da meta.`;
+  }
+  function setProductivityTab(tab){
+    document.querySelectorAll('[data-prod-tab]').forEach(b=>b.classList.toggle('active',b.dataset.prodTab===tab));
+    document.querySelectorAll('[data-prod-main]').forEach(el=>el.classList.toggle('prod-tab-hidden',tab!=='main'));
+    const rank=$('[data-prod-ranking="ranking"]');if(rank)rank.style.display=tab==='ranking'?'block':'none';
+    if(tab==='ranking')renderRankingTab();
+  }
+  function render(){syncGoals();renderSelectors();renderGoals();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();}
   function clearForm(){
     $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';
     $('prod-date').value=$('prod-date-filter').value||localDate();$('prod-hour').value='';
     $('prod-person').value='';$('prod-sector').value='';$('prod-bipes').value='';$('prod-hours').value='';$('prod-note').value='';
   }
   function saveRecord(){
-    const personVal=$('prod-person').value,sector=$('prod-sector').value,date=$('prod-date').value,hour=$('prod-hour').value;
+    let personVal=$('prod-person').value;const operatorKey=currentOperatorKey();if(operatorKey)personVal=operatorKey;
+    const sector=$('prod-sector').value,date=$('prod-date').value,hour=$('prod-hour').value;
     const bipes=Math.max(0,Math.floor(+$('prod-bipes').value||0)),hours=Math.max(0,+$('prod-hours').value||0);
     if(!date||!hour||!personVal||!sector)return alert('Preencha data, hora, funcionário e setor.');
     if(!bipes)return alert('Informe a quantidade de bipes.');
@@ -1806,12 +1904,16 @@ function editRecord(id){
 renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value=localDate();
   document.querySelector('[data-module-target="productivityModule"]')?.addEventListener('click',()=>setTimeout(render,0));
   $('prod-save').addEventListener('click',saveRecord);$('prod-clear-form').addEventListener('click',clearForm);
-  $('prod-date-filter').addEventListener('change',()=>{if(!$('prod-edit-id').value)$('prod-date').value=$('prod-date-filter').value;render();});
+  $('prod-date-filter').addEventListener('change',()=>{if(!$('prod-edit-id').value)$('prod-date').value=$('prod-date-filter').value;if($('prod-ranking-date'))$('prod-ranking-date').value=$('prod-date-filter').value;render();});
   $('prod-sector-filter').addEventListener('change',render);$('prod-chart-person').addEventListener('change',renderPersonChart);
   $('prod-export').addEventListener('click',exportCSV);
   $('prod-goals').addEventListener('change',e=>{const sec=e.target.dataset.goalSector;if(!sec)return;data.goals[sec]=Math.max(0,+e.target.value||0);persist();render();});
   $('prod-history-body').addEventListener('click',e=>{const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');if(ed)editRecord(ed.dataset.prodEdit);if(del&&confirm('Excluir este lançamento de produtividade?')){data.records=data.records.filter(r=>r.id!==del.dataset.prodDel);persist();render();}});
-  render();clearForm();
+  document.querySelectorAll('[data-prod-tab]').forEach(b=>b.addEventListener('click',()=>setProductivityTab(b.dataset.prodTab)));
+  $('prod-ranking-date').value=localDate();
+  $('prod-ranking-period').addEventListener('change',renderRankingTab);$('prod-ranking-date').addEventListener('change',()=>{if($('prod-date-filter'))$('prod-date-filter').value=$('prod-ranking-date').value;renderRankingTab();render();});
+  $('prod-daily-goal').addEventListener('change',()=>{const perfil=String(currentProfile().perfil||'').toUpperCase();if(!['ADMIN','LIDER'].includes(perfil))return;const d=$('prod-ranking-date').value||localDate();data.dailyGoals[d]=Math.max(0,Math.floor(+$('prod-daily-goal').value||0));persist();renderRankingTab();renderGeneralChart();});
+  render();clearForm();setProductivityTab('main');
 })();
 </script>
 
