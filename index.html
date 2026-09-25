@@ -245,10 +245,202 @@
 <body>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ===== Sincronização entre computadores (Supabase) =====
-   Preencha SUPABASE_URL e SUPABASE_ANON_KEY com os valores do seu projeto
-   (Project Settings → API, no painel do Supabase). */
-(function(){
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* =========================================================
+   SUPABASE - CONEXÃO + AUTENTICAÇÃO
+   ========================================================= */
+
+const SUPABASE_URL =
+  'https://jvbnpwqpznekplwerkaw.supabase.co';
+
+const SUPABASE_PUBLISHABLE_KEY =
+  'sb_publishable_HwaYX8WebSN9c_wVIsbepA_4_XXjY_V';
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+window.SupabaseApp = {
+  client: supabaseClient,
+  user: null,
+  profile: null
+};
+
+
+/* =========================================================
+   PERFIS
+   ========================================================= */
+
+async function carregarPerfilUsuario(userId) {
+
+  const { data, error } = await supabaseClient
+    .from('perfis')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Erro ao carregar perfil:', error);
+    return null;
+  }
+
+  return data;
+}
+
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+async function fazerLogin(email, senha) {
+
+  const { data, error } =
+    await supabaseClient.auth.signInWithPassword({
+      email: email.trim(),
+      password: senha
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  const profile =
+    await carregarPerfilUsuario(data.user.id);
+
+  SupabaseApp.user = data.user;
+  SupabaseApp.profile = profile;
+
+  return {
+    user: data.user,
+    profile
+  };
+}
+
+
+/* =========================================================
+   CADASTRO
+   ========================================================= */
+
+async function fazerCadastro(nome, email, senha) {
+
+  const { data, error } =
+    await supabaseClient.auth.signUp({
+      email: email.trim(),
+      password: senha,
+      options: {
+        data: {
+          nome: nome.trim()
+        }
+      }
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+async function fazerLogout() {
+
+  const { error } =
+    await supabaseClient.auth.signOut();
+
+  if (error) {
+    console.error('Erro ao sair:', error);
+  }
+
+  SupabaseApp.user = null;
+  SupabaseApp.profile = null;
+
+  mostrarLogin();
+}
+
+
+/* =========================================================
+   SESSÃO
+   ========================================================= */
+
+async function verificarSessao() {
+
+  const {
+    data: { session }
+  } = await supabaseClient.auth.getSession();
+
+  if (!session) {
+    mostrarLogin();
+    return false;
+  }
+
+  SupabaseApp.user = session.user;
+
+  const profile =
+    await carregarPerfilUsuario(session.user.id);
+
+  if (!profile) {
+    await fazerLogout();
+    return false;
+  }
+
+  if (!profile.ativo) {
+    alert('Seu usuário está desativado.');
+    await fazerLogout();
+    return false;
+  }
+
+  SupabaseApp.profile = profile;
+
+  mostrarSistema();
+
+  aplicarPermissoes();
+
+  return true;
+}
+
+
+/* =========================================================
+   ALTERAÇÃO DE SESSÃO
+   ========================================================= */
+
+supabaseClient.auth.onAuthStateChange(
+  async (event, session) => {
+
+    if (event === 'SIGNED_OUT') {
+
+      SupabaseApp.user = null;
+      SupabaseApp.profile = null;
+
+      mostrarLogin();
+      return;
+    }
+
+    if (session && event === 'SIGNED_IN') {
+
+      SupabaseApp.user = session.user;
+
+      const profile =
+        await carregarPerfilUsuario(
+          session.user.id
+        );
+
+      SupabaseApp.profile = profile;
+
+      mostrarSistema();
+
+      aplicarPermissoes();
+    }
+  }
+);
+</script>
   const SUPABASE_URL = 'https://qcfgbcszqadggwvlxqqg.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi';
   let client = null;
