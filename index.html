@@ -276,12 +276,13 @@
   .prod-ranking-tools label{font-size:10px;font-weight:900;color:#566176;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
   .prod-ranking-tools input,.prod-ranking-tools select{width:100%;border:1px solid #d8dee9;border-radius:9px;padding:9px;background:#fff;font:inherit;font-size:12px}
   .prod-goal-day{display:flex;align-items:center;gap:9px;padding:11px 12px;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;margin-bottom:12px;flex-wrap:wrap}
+  .prod-goal-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;background:linear-gradient(180deg,#f8fbff,#f3f6fb);border:1px solid var(--line);border-radius:12px;margin:0 0 14px}.prod-goal-main .goal-title{font-size:12px;font-weight:900}.prod-goal-main input{width:130px;border:1px solid #d8dee9;border-radius:9px;padding:9px 10px;text-align:center;font-weight:900;font-size:14px}.prod-goal-main button{white-space:nowrap}.prod-goal-stat{font-size:10px;color:var(--muted);padding-left:4px}.prod-goal-stat b{color:var(--text);font-size:12px}.prod-quick-rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.prod-quick-rank{border:1px solid var(--line);border-radius:10px;overflow:hidden}.prod-quick-rank h3{margin:0;padding:9px 10px;font-size:11px;background:#f7f9fc}.prod-quick-rank table{width:100%;border-collapse:collapse}.prod-quick-rank th,.prod-quick-rank td{padding:7px 9px;border-bottom:1px solid #edf0f4;font-size:10px}.prod-quick-rank th{font-size:8px;text-transform:uppercase;color:#69758a;text-align:left}.prod-quick-rank td:last-child,.prod-quick-rank th:last-child{text-align:right}.prod-rank-me{background:#eef6ff;font-weight:900}.prod-rank-me small{font-size:8px;color:#2563eb}.prod-rank-empty{text-align:center!important;color:var(--muted);padding:14px!important}
   .prod-goal-day strong{font-size:12px}.prod-goal-day input{width:120px;border:1px solid #d8dee9;border-radius:8px;padding:8px;text-align:center;font-weight:900}
   .prod-rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .prod-rank-table{width:100%;border-collapse:collapse}.prod-rank-table th,.prod-rank-table td{padding:9px 8px;border-bottom:1px solid #edf0f4;text-align:left;font-size:11px}.prod-rank-table th{font-size:9px;text-transform:uppercase;color:#69758a}.prod-rank-table td:last-child,.prod-rank-table th:last-child{text-align:right}
   .prod-rank-me{background:#eef6ff;font-weight:800}.prod-rank-pos{font-weight:900;width:42px}.prod-rank-empty{text-align:center!important;color:#7b8799;padding:20px!important}
   .prod-week-note{font-size:10px;color:#687589;margin:0 0 12px}
-  @media(max-width:800px){.prod-rank-grid{grid-template-columns:1fr}.prod-tabs{overflow:auto}.prod-tab{white-space:nowrap}}
+  @media(max-width:800px){.prod-rank-grid,.prod-quick-rank-grid{grid-template-columns:1fr}.prod-tabs{overflow:auto}.prod-tab{white-space:nowrap}}
   .goal-list{display:flex;flex-direction:column;gap:7px;max-height:480px;overflow:auto}
   .goal-row{display:grid;grid-template-columns:minmax(100px,1fr) 90px 42px;gap:7px;align-items:center}
   .goal-row strong{font-size:11px}.goal-row input{width:100%;border:1px solid #d8dee9;border-radius:9px;padding:8px;text-align:center;font:inherit;font-size:12px}
@@ -665,6 +666,19 @@
     <button class="prod-tab active" type="button" data-prod-tab="main">📈 Minha produtividade</button>
     <button class="prod-tab" type="button" data-prod-tab="ranking">🏆 Melhores do dia / semana</button>
   </nav>
+  <section class="prod-main-content" data-prod-main="main">
+    <div class="prod-goal-main">
+      <span class="goal-title">🎯 Meta esperada do dia</span>
+      <input type="number" id="prod-main-daily-goal" min="0" step="1" value="8000" aria-label="Meta esperada do dia em bipes">
+      <span>bipes</span>
+      <button class="btn small primary" type="button" id="prod-main-goal-save">Salvar meta</button>
+      <span class="prod-goal-stat">Data: <b id="prod-main-goal-date">—</b></span>
+      <span class="prod-goal-stat">Esperado: <b id="prod-main-goal-expected">0</b></span>
+      <span class="prod-goal-stat">Batido: <b id="prod-main-goal-actual">0</b></span>
+      <span class="prod-goal-stat">Atingimento: <b id="prod-main-goal-pct">0%</b></span>
+    </div>
+  </section>
+
   <section class="prod-kpis prod-main-content" data-prod-main="main">
     <div class="mini-kpi"><div class="mk-label">Bipes na data</div><div class="mk-value" id="prod-kpi-bipes">0</div><div class="mk-sub">total lançado</div></div>
     <div class="mini-kpi"><div class="mk-label">Pessoas lançadas</div><div class="mk-value" id="prod-kpi-people">0</div><div class="mk-sub">nomes únicos</div></div>
@@ -700,8 +714,14 @@
       </div>
     </div>
     <div class="prod-panel">
-      <div class="prod-panel-head"><h2>Melhores métricas do dia</h2><span class="count" id="prod-rank-count">0 pessoas</span></div>
-      <div class="prod-panel-body"><div class="rank-list" id="prod-ranking"></div></div>
+      <div class="prod-panel-head"><h2>🏆 Melhores do dia</h2><span class="count">Leve × Volumoso</span></div>
+      <div class="prod-panel-body">
+        <div class="prod-quick-rank-grid">
+          <div class="prod-quick-rank"><h3>Leve</h3><table><thead><tr><th>#</th><th>Colaborador</th><th>Bipes</th></tr></thead><tbody id="prod-quick-leve-body"></tbody></table></div>
+          <div class="prod-quick-rank"><h3>Volumoso</h3><table><thead><tr><th>#</th><th>Colaborador</th><th>Bipes</th></tr></thead><tbody id="prod-quick-volumoso-body"></tbody></table></div>
+        </div>
+        <div class="prod-note" id="prod-quick-rank-note">O ranking é atualizado automaticamente quando uma produtividade é salva.</div>
+      </div>
     </div>
   </section>
 
@@ -1833,14 +1853,48 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const f=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
     return {start:f(start),end:f(end)};
   }
+  function resolvePersonName(r){
+    if(String(r.personName||'').trim())return String(r.personName).trim();
+    const key=String(r.personKey||'');
+    const ppl=people();
+    const hit=ppl.find(p=>p.value===key);
+    return hit?.name||'Colaborador não identificado';
+  }
   function rankingRows(sector,period,date){
     const range=dateRangeForPeriod(date,period);
+    const wanted=String(sector||'').trim().toLowerCase();
     const map=new Map();
-    data.records.filter(r=>r.sector===sector&&r.date>=range.start&&r.date<=range.end).forEach(r=>{
-      const key=r.personKey||r.personName;let x=map.get(key);if(!x)x={key,name:r.personName,bipes:0};x.bipes+=+r.bipes||0;map.set(key,x);
+    data.records.filter(r=>String(r.sector||'').trim().toLowerCase()===wanted&&r.date>=range.start&&r.date<=range.end).forEach(r=>{
+      const key=r.personKey||resolvePersonName(r);
+      let x=map.get(key);
+      if(!x)x={key,name:resolvePersonName(r),bipes:0};
+      x.bipes+=Math.max(0,+r.bipes||0);
+      map.set(key,x);
     });
     return [...map.values()].sort((a,b)=>b.bipes-a.bipes||a.name.localeCompare(b.name,'pt-BR'));
   }
+  function renderQuickRanking(){
+    const date=$('prod-date-filter')?.value||localDate(), me=currentOperatorKey();
+    for(const sec of BIP_SECTORS){
+      const rows=rankingRows(sec,'day',date).slice(0,10);
+      const body=$('prod-quick-'+sec.toLowerCase()+'-body');
+      if(body)body.innerHTML=rows.length?rows.map((x,i)=>`<tr class="${me&&x.key===me?'prod-rank-me':''}"><td>${i+1}º</td><td>${esc(x.name)}${me&&x.key===me?' <small>(você)</small>':''}</td><td><b>${fmtN(x.bipes)}</b></td></tr>`).join(''):'<tr><td colspan="3" class="prod-rank-empty">Nenhum lançamento.</td></tr>';
+    }
+  }
+  function renderMainDailyGoal(){
+    const date=$('prod-date-filter')?.value||localDate();
+    const goal=dailyGoalFor(date);
+    const actual=data.records.filter(r=>r.date===date&&BIP_SECTORS.includes(r.sector)).reduce((s,r)=>s+Math.max(0,+r.bipes||0),0);
+    const pct=goal>0?actual/goal*100:0;
+    const p=currentProfile(),canEdit=['ADMIN','LIDER'].includes(String(p.perfil||'').toUpperCase());
+    const input=$('prod-main-daily-goal');if(input){input.value=goal;input.disabled=!canEdit;}
+    const btn=$('prod-main-goal-save');if(btn)btn.style.display=canEdit?'inline-flex':'none';
+    if($('prod-main-goal-date'))$('prod-main-goal-date').textContent=date.split('-').reverse().join('/');
+    if($('prod-main-goal-expected'))$('prod-main-goal-expected').textContent=fmtN(goal);
+    if($('prod-main-goal-actual'))$('prod-main-goal-actual').textContent=fmtN(actual);
+    if($('prod-main-goal-pct'))$('prod-main-goal-pct').textContent=fmtN(pct,0)+'%';
+  }
+
   function renderRankingTab(){
     const date=$('prod-ranking-date')?.value||$('prod-date-filter')?.value||localDate(),period=$('prod-ranking-period')?.value||'day';
     const selectedGoal=dailyGoalFor(date);if($('prod-daily-goal'))$('prod-daily-goal').value=selectedGoal;
@@ -1868,7 +1922,7 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const rank=$('[data-prod-ranking="ranking"]');if(rank)rank.style.display=tab==='ranking'?'block':'none';
     if(tab==='ranking')renderRankingTab();
   }
-  function render(){syncGoals();renderSelectors();renderGoals();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();}
+  function render(){syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();}
   function clearForm(){
     $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';
     $('prod-date').value=$('prod-date-filter').value||localDate();$('prod-hour').value='';
@@ -1910,6 +1964,14 @@ renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value
   $('prod-goals').addEventListener('change',e=>{const sec=e.target.dataset.goalSector;if(!sec)return;data.goals[sec]=Math.max(0,+e.target.value||0);persist();render();});
   $('prod-history-body').addEventListener('click',e=>{const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');if(ed)editRecord(ed.dataset.prodEdit);if(del&&confirm('Excluir este lançamento de produtividade?')){data.records=data.records.filter(r=>r.id!==del.dataset.prodDel);persist();render();}});
   document.querySelectorAll('[data-prod-tab]').forEach(b=>b.addEventListener('click',()=>setProductivityTab(b.dataset.prodTab)));
+  $('prod-main-goal-save').addEventListener('click',()=>{
+    const perfil=String(currentProfile().perfil||'').toUpperCase();
+    if(!['ADMIN','LIDER'].includes(perfil))return;
+    const d=$('prod-date-filter').value||localDate();
+    data.dailyGoals[d]=Math.max(0,Math.floor(+$('prod-main-daily-goal').value||0));
+    persist();renderMainDailyGoal();renderRankingTab();renderGeneralChart();
+  });
+  $('prod-main-daily-goal').addEventListener('keydown',e=>{if(e.key==='Enter')$('prod-main-goal-save').click();});
   $('prod-ranking-date').value=localDate();
   $('prod-ranking-period').addEventListener('change',renderRankingTab);$('prod-ranking-date').addEventListener('change',()=>{if($('prod-date-filter'))$('prod-date-filter').value=$('prod-ranking-date').value;renderRankingTab();render();});
   $('prod-daily-goal').addEventListener('change',()=>{const perfil=String(currentProfile().perfil||'').toUpperCase();if(!['ADMIN','LIDER'].includes(perfil))return;const d=$('prod-ranking-date').value||localDate();data.dailyGoals[d]=Math.max(0,Math.floor(+$('prod-daily-goal').value||0));persist();renderRankingTab();renderGeneralChart();});
