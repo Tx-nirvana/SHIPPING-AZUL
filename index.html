@@ -245,22 +245,34 @@
   .history-details{padding:14px}.history-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.history-box{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}.history-box h3{margin:0;padding:10px 12px;background:#f7f9fc;border-bottom:1px solid var(--line);font-size:12px}.history-box-body{padding:10px;max-height:310px;overflow:auto}.history-table{width:100%;border-collapse:collapse}.history-table th,.history-table td{padding:7px 8px;font-size:10px;border-bottom:1px solid #edf0f5;white-space:nowrap}.history-table th{position:sticky;top:0;background:#f8fafc;z-index:1}.history-status{display:inline-flex;border-radius:99px;padding:3px 6px;font-size:9px;font-weight:900}.history-status.presente{background:var(--green-soft);color:var(--green)}.history-status.ausente{background:var(--red-soft);color:var(--red)}.history-status.sem-status{background:#eef2f7;color:#657085}
 
   /* ===== Produtividade ===== */
-  .prod-layout{display:grid;grid-template-columns:360px 330px minmax(0,1fr);gap:14px;align-items:start;margin-bottom:14px}.prod-panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}.prod-panel-head{padding:13px 14px;border-bottom:1px solid var(--line);background:#fbfcfe;display:flex;align-items:center;justify-content:space-between;gap:8px}.prod-panel-head h2{margin:0;font-size:14px}.prod-panel-body{padding:14px}.prod-form{display:grid;grid-template-columns:1fr 1fr;gap:9px}.prod-form .full{grid-column:1/-1}.prod-form label{font-size:10px;font-weight:900;color:#566176;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}.prod-form input,.prod-form select,.prod-form textarea{width:100%;border:1px solid #d8dee9;border-radius:9px;padding:9px;background:#fff;font:inherit;font-size:12px;outline:none}.prod-form textarea{resize:vertical;min-height:64px}.prod-form input:focus,.prod-form select:focus,.prod-form textarea:focus{border-color:#79a9ff;box-shadow:0 0 0 3px rgba(18,102,241,.10)}
-  .prod-goal-chart{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:18px;align-items:center}
-  .prod-goal-summary{display:grid;gap:8px}
-  .prod-goal-metric{border:1px solid #e1e6ee;border-radius:10px;background:#f8fafc;padding:9px 11px}
-  .prod-goal-metric span{display:block;font-size:9px;text-transform:uppercase;font-weight:900;color:#687589;letter-spacing:.04em}
-  .prod-goal-metric strong{display:block;font-size:18px;margin-top:3px}
-  .prod-goal-metric small{display:block;font-size:9px;color:#748096;margin-top:2px}
-  .prod-bars{display:flex;align-items:flex-end;justify-content:center;gap:34px;height:190px;padding:10px 20px 0;border-bottom:1px solid #dfe5ed;background:linear-gradient(to bottom,transparent 24%,#eef2f7 25%,transparent 25.5%,transparent 49%,#eef2f7 50%,transparent 50.5%,transparent 74%,#eef2f7 75%,transparent 75.5%);border-radius:10px 10px 0 0}
-  .prod-bar-col{width:min(150px,34%);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:7px}
-  .prod-bar-value{font-size:11px;font-weight:900;color:#243044;white-space:nowrap}
-  .prod-bar{width:70px;max-width:100%;min-height:4px;border-radius:8px 8px 0 0;transition:height .25s ease}
-  .prod-bar.expected{background:#94a3b8}.prod-bar.actual{background:#2563eb}
-  .prod-bar-label{font-size:10px;font-weight:900;color:#566176;margin-bottom:7px}
-  .prod-chart-note{font-size:9px;color:#748096;margin-top:9px;line-height:1.45}
-  @media(max-width:900px){.prod-goal-chart{grid-template-columns:1fr}.prod-bars{height:160px}}
-
+  .prod-layout{display:grid;grid-template-columns:360px 330px minmax(0,1fr);gap:14px;align-items:start;margin-bottom:14px}
+  .prod-panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .prod-panel-head{padding:13px 14px;border-bottom:1px solid var(--line);background:#fbfcfe;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .prod-panel-head h2{margin:0;font-size:14px}
+  .prod-panel-body{padding:14px}
+  .prod-form{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .prod-form .full{grid-column:1/-1}
+  .prod-form label{font-size:10px;font-weight:900;color:#566176;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .prod-form input,.prod-form select,.prod-form textarea{width:100%;border:1px solid #d8dee9;border-radius:9px;padding:9px;background:#fff;font:inherit;font-size:12px;outline:none}
+  .prod-form textarea{resize:vertical;min-height:64px}
+  .prod-form input:focus,.prod-form select:focus,.prod-form textarea:focus{border-color:#79a9ff;box-shadow:0 0 0 3px rgba(18,102,241,.10)}
+  .prod-chart-panel{margin-bottom:14px}
+  .prod-chart-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}
+  .prod-chart-toolbar label{font-size:10px;font-weight:900;color:#566176;text-transform:uppercase;letter-spacing:.04em}
+  .prod-chart-toolbar select{min-width:220px;border:1px solid #d8dee9;border-radius:9px;padding:8px 10px;background:#fff;font:inherit;font-size:12px}
+  .prod-chart-box{border:1px solid #e2e7ef;border-radius:12px;background:#fbfcfe;padding:10px 10px 5px;overflow:hidden}
+  .prod-chart-svg{display:block;width:100%;height:300px}
+  .prod-chart-empty{height:300px;display:grid;place-items:center;text-align:center;color:#7b8799;font-size:12px;padding:20px}
+  .prod-chart-legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:10px;font-weight:800;color:#5d687b}
+  .prod-legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:-1px}
+  .prod-legend-blue{background:#2563eb}.prod-legend-gray{background:#94a3b8}
+  .prod-chart-note{font-size:9px;color:#748096;margin-top:8px;line-height:1.45}
+  .goal-list{display:flex;flex-direction:column;gap:7px;max-height:480px;overflow:auto}
+  .goal-row{display:grid;grid-template-columns:minmax(100px,1fr) 90px 42px;gap:7px;align-items:center}
+  .goal-row strong{font-size:11px}.goal-row input{width:100%;border:1px solid #d8dee9;border-radius:9px;padding:8px;text-align:center;font:inherit;font-size:12px}
+  .goal-row span{font-size:9px;color:#687589}
+  @media(max-width:1100px){.prod-layout{grid-template-columns:1fr 1fr}.prod-layout>.prod-panel:last-child{grid-column:1/-1}}
+  @media(max-width:900px){.prod-layout{grid-template-columns:1fr}.prod-layout>.prod-panel:last-child{grid-column:auto}.prod-chart-svg{height:250px}}
   .goal-list{display:flex;flex-direction:column;gap:7px;max-height:480px;overflow:auto}.goal-row{display:grid;grid-template-columns:minmax(100px,1fr) 90px 42px;gap:7px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff}.goal-row strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.goal-row input{height:31px;border:1px solid #d8dee9;border-radius:8px;text-align:center;font-weight:900;width:100%}.goal-row span{font-size:9px;color:var(--muted);font-weight:800}.prod-note{background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:#657085;font-size:10px;line-height:1.45;margin-top:10px}
   .rank-list{display:flex;flex-direction:column;gap:7px;max-height:520px;overflow:auto}.rank-card{display:grid;grid-template-columns:36px minmax(120px,1fr) 90px 80px 78px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:8px 10px}.rank-card.top1{border-color:#f0d58f;background:#fffdf5}.rank-pos{width:30px;height:30px;border-radius:9px;background:#f0f3f8;display:grid;place-items:center;font-weight:900;font-size:11px}.rank-card.top1 .rank-pos{background:#fff0b8;color:#8a5a00}.rank-name{font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rank-meta{font-size:9px;color:var(--muted);margin-top:2px}.rank-num{text-align:right}.rank-num b{display:block;font-size:12px}.rank-num span{font-size:9px;color:var(--muted)}
   .prod-history-wrap{overflow:auto;max-height:430px}.prod-history-table{min-width:980px}.prod-history-table th,.prod-history-table td{font-size:10px;padding:8px}.score-pill{display:inline-flex;padding:4px 7px;border-radius:99px;background:var(--primary-soft);color:var(--primary-2);font-weight:900;font-size:10px}.score-pill.good{background:var(--green-soft);color:var(--green)}.score-pill.warn{background:var(--amber-soft);color:var(--amber)}
@@ -627,7 +639,7 @@
 
 <div id="productivityModule" class="app module-view">
   <header class="submodule-header">
-    <div><h1>📈 Produtividade</h1><p>Lançamento manual de bipes • comparação justa por referência de setor • sem integração externa</p></div>
+    <div><h1>📈 Produtividade</h1><p>Bipagem por hora • acompanhamento individual e meta geral do setor</p></div>
     <div class="submodule-actions">
       <label style="font-size:11px;font-weight:800;color:#d5deea">Data</label><input type="date" id="prod-date-filter">
       <select id="prod-sector-filter"><option value="all">Todos os setores</option></select>
@@ -642,6 +654,7 @@
     <div class="mini-kpi"><div class="mk-label">Com horas informadas</div><div class="mk-value" id="prod-kpi-hours">0</div><div class="mk-sub">permite % da meta/h</div></div>
     <div class="mini-kpi"><div class="mk-label">Lançamentos</div><div class="mk-value" id="prod-kpi-records">0</div><div class="mk-sub">na data filtrada</div></div>
   </section>
+
   <section class="prod-layout">
     <div class="prod-panel">
       <div class="prod-panel-head"><h2 id="prod-form-title">Adicionar produtividade</h2><button class="btn small" type="button" id="prod-clear-form">Limpar</button></div>
@@ -649,21 +662,22 @@
         <input type="hidden" id="prod-edit-id">
         <div class="prod-form">
           <div><label>Data</label><input type="date" id="prod-date"></div>
+          <div><label>Hora da bipagem</label><select id="prod-hour"></select></div>
           <div><label>Funcionário</label><select id="prod-person"></select></div>
           <div><label>Setor</label><select id="prod-sector"></select></div>
-          <div><label>Quantidade de bipes</label><input type="number" id="prod-bipes" min="0" step="1" placeholder="Ex.: 1800"></div>
-          <div class="full"><label>Horas no setor — opcional</label><input type="number" id="prod-hours" min="0" step="0.25" placeholder="Ex.: 6,5"></div>
-          <div class="full"><label>Observação — opcional</label><textarea id="prod-note" placeholder="Ex.: ficou 2h apoiando outro setor..."></textarea></div>
+          <div><label>Quantidade de bipes</label><input type="number" id="prod-bipes" min="0" step="1" placeholder="Ex.: 300"></div>
+          <div><label>Horas no setor — opcional</label><input type="number" id="prod-hours" min="0" step="0.25" placeholder="Ex.: 1"></div>
+          <div class="full"><label>Observação — opcional</label><textarea id="prod-note" placeholder="Ex.: ficou apoiando outro setor..."></textarea></div>
           <div class="full"><button class="btn primary" style="width:100%" type="button" id="prod-save">Salvar produtividade</button></div>
         </div>
-        <div class="prod-note"><b>Sem integração:</b> as horas são opcionais. O ranking principal usa o total de bipes dividido pela referência do setor. Isso normaliza Leve x Volumoso sem afirmar que sabemos a produtividade horária real.</div>
+        <div class="prod-note"><b>Importante:</b> informe a hora em que aquela bipagem aconteceu. É ela que alimenta os dois gráficos do dia.</div>
       </div>
     </div>
     <div class="prod-panel">
       <div class="prod-panel-head"><h2>Referência por setor</h2><span class="count">bipes/h</span></div>
       <div class="prod-panel-body">
         <div class="goal-list" id="prod-goals"></div>
-        <div class="prod-note">Somente os setores que realizam bip aparecem aqui: <b>Leve = 300/h</b> e <b>Volumoso = 75/h</b>. Você pode ajustar essas duas referências quando quiser.</div>
+        <div class="prod-note">Referências usadas na meta: <b>Leve = 300/h</b> e <b>Volumoso = 75/h</b>. Você pode ajustar os valores.</div>
       </div>
     </div>
     <div class="prod-panel">
@@ -671,28 +685,35 @@
       <div class="prod-panel-body"><div class="rank-list" id="prod-ranking"></div></div>
     </div>
   </section>
-  <section class="prod-panel" style="margin-bottom:14px">
-    <div class="prod-panel-head"><h2>Meta geral — Esperado × Batido</h2><span class="count" id="prod-goal-chart-period">data filtrada</span></div>
+
+  <section class="prod-panel prod-chart-panel">
+    <div class="prod-panel-head"><h2>👤 Produtividade do colaborador</h2><span class="count">08h → 20h</span></div>
     <div class="prod-panel-body">
-      <div class="prod-goal-chart">
-        <div class="prod-goal-summary">
-          <div class="prod-goal-metric"><span>Esperado</span><strong id="prod-goal-expected">0</strong><small>bipes para as horas informadas</small></div>
-          <div class="prod-goal-metric"><span>Batido</span><strong id="prod-goal-actual">0</strong><small>bipes lançados</small></div>
-          <div class="prod-goal-metric"><span>Atingimento</span><strong id="prod-goal-percent">—</strong><small id="prod-goal-hours">sem horas informadas</small></div>
-        </div>
-        <div>
-          <div class="prod-bars" id="prod-goal-bars">
-            <div class="prod-bar-col"><div class="prod-bar-value">0</div><div class="prod-bar expected" style="height:4px"></div><div class="prod-bar-label">Esperado</div></div>
-            <div class="prod-bar-col"><div class="prod-bar-value">0</div><div class="prod-bar actual" style="height:4px"></div><div class="prod-bar-label">Batido</div></div>
-          </div>
-          <div class="prod-chart-note">O esperado é calculado pela referência do setor × horas informadas em cada lançamento. Se as horas não forem preenchidas, aquele lançamento não entra no cálculo do esperado.</div>
-        </div>
+      <div class="prod-chart-toolbar">
+        <label for="prod-chart-person">Colaborador</label>
+        <select id="prod-chart-person"></select>
       </div>
+      <div class="prod-chart-box" id="prod-person-chart"></div>
+      <div class="prod-chart-legend"><span><i class="prod-legend-dot prod-legend-blue"></i>Bipes realizados por hora</span></div>
+      <div class="prod-chart-note">Cada ponto representa os bipes lançados naquele horário. Horários sem lançamento aparecem como zero.</div>
     </div>
   </section>
+
+  <section class="prod-panel prod-chart-panel">
+    <div class="prod-panel-head"><h2>🏭 Meta geral do setor</h2><span class="count" id="prod-general-status">—</span></div>
+    <div class="prod-panel-body">
+      <div class="prod-chart-box" id="prod-general-chart"></div>
+      <div class="prod-chart-legend">
+        <span><i class="prod-legend-dot prod-legend-gray"></i>Esperado</span>
+        <span><i class="prod-legend-dot prod-legend-blue"></i>Batido</span>
+      </div>
+      <div class="prod-chart-note">O esperado de cada hora é calculado somando a meta do setor de cada colaborador lançado naquele horário. O batido é a soma dos bipes de todos os colaboradores. O filtro de setor, quando usado, também é aplicado a este gráfico.</div>
+    </div>
+  </section>
+
   <section class="prod-panel">
     <div class="prod-panel-head"><h2>Lançamentos de produtividade</h2><span class="count" id="prod-history-count">0 registros</span></div>
-    <div class="prod-history-wrap"><table class="prod-history-table"><thead><tr><th>Data</th><th>Funcionário</th><th>Setor</th><th>Bipes</th><th>Referência/h</th><th>Índice</th><th>Horas</th><th>Bipes/h</th><th>% Meta/h</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="prod-history-body"></tbody></table><div class="empty-inline" id="prod-history-empty">Nenhum lançamento para os filtros atuais.</div></div>
+    <div class="prod-history-wrap"><table class="prod-history-table"><thead><tr><th>Data</th><th>Hora</th><th>Funcionário</th><th>Setor</th><th>Bipes</th><th>Referência/h</th><th>Índice</th><th>Horas</th><th>Bipes/h</th><th>% Meta/h</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="prod-history-body"></tbody></table><div class="empty-inline" id="prod-history-empty">Nenhum lançamento para os filtros atuais.</div></div>
   </section>
 </div>
 
@@ -1615,10 +1636,46 @@
   function achievement(r){const rate=rateOf(r),g=reference(r.sector);return rate!=null&&g>0?rate/g*100:null;}
 
   function renderSelectors(){
-    const ppl=people(),current=$('prod-person').value;$('prod-person').innerHTML='<option value="">Selecione...</option>'+ppl.map(p=>`<option value="${esc(p.value)}">${esc(p.name)}${p.meta?' — '+esc(p.meta):''}</option>`).join('');if(ppl.some(p=>p.value===current))$('prod-person').value=current;
-    const secs=sectors(),curSec=$('prod-sector').value,curFilter=$('prod-sector-filter').value;$('prod-sector').innerHTML='<option value="">Selecione...</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');$('prod-sector-filter').innerHTML='<option value="all">Todos os setores</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');if(secs.includes(curSec))$('prod-sector').value=curSec;if(secs.includes(curFilter))$('prod-sector-filter').value=curFilter;
+    const ppl=people(),current=$('prod-person').value;
+    $('prod-person').innerHTML='<option value="">Selecione...</option>'+ppl.map(p=>`<option value="${esc(p.value)}">${esc(p.name)}${p.meta?' — '+esc(p.meta):''}</option>`).join('');
+    if(ppl.some(p=>p.value===current))$('prod-person').value=current;
+    const secs=sectors(),curSec=$('prod-sector').value,curFilter=$('prod-sector-filter').value;
+    $('prod-sector').innerHTML='<option value="">Selecione...</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');
+    $('prod-sector-filter').innerHTML='<option value="all">Todos os setores</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');
+    if(secs.includes(curSec))$('prod-sector').value=curSec;
+    if(secs.includes(curFilter))$('prod-sector-filter').value=curFilter;
+    renderChartPersonSelector();
   }
-  function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class="goal-row"><strong title="${esc(s)}">${esc(s)}</strong><input type="number" min="0" step="1" value="${reference(s)}" data-goal-sector="${esc(s)}"><span>bipes/h</span></div>`).join('');}
+  function renderHourOptions(){
+    const sel=$('prod-hour');if(!sel)return;
+    const current=sel.value;
+    sel.innerHTML='<option value="">Selecione...</option>'+Array.from({length:13},(_,i)=>i+8).map(h=>`<option value="${String(h).padStart(2,'0')}:00">${String(h).padStart(2,'0')}:00</option>`).join('');
+    if(current)sel.value=current;
+  }
+  function operatorPersonKey(){
+    const p=window.SupabaseApp?.profile;
+    if(p?.perfil!=='OPERADOR')return '';
+    const ops=String(p.ops||'').trim().toLowerCase(),plan=readPlan();
+    const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);
+    if(emp)return 'emp:'+emp.id;
+    return '';
+  }
+  function renderChartPersonSelector(){
+    const sel=$('prod-chart-person');if(!sel)return;
+    const ppl=people(),opKey=operatorPersonKey(),date=$('prod-date-filter').value;
+    const current=sel.value;
+    let options=ppl;
+    if(opKey)options=ppl.filter(p=>p.value===opKey);
+    const rows=data.records.filter(r=>r.date===date&&BIP_SECTORS.includes(r.sector));
+    const used=new Set(rows.map(r=>r.personKey));
+    const ordered=[...options].sort((a,b)=>((used.has(b.value)?1:0)-(used.has(a.value)?1:0))||a.name.localeCompare(b.name,'pt-BR'));
+    sel.innerHTML=ordered.length?ordered.map(p=>`<option value="${esc(p.value)}">${esc(p.name)}</option>`).join(''):'<option value="">Nenhum colaborador</option>';
+    if(ordered.some(p=>p.value===current))sel.value=current;
+    else if(opKey&&ordered.some(p=>p.value===opKey))sel.value=opKey;
+    else if(ordered.length)sel.value=ordered[0].value;
+    sel.disabled=!!opKey;
+  }
+function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class="goal-row"><strong title="${esc(s)}">${esc(s)}</strong><input type="number" min="0" step="1" value="${reference(s)}" data-goal-sector="${esc(s)}"><span>bipes/h</span></div>`).join('');}
   function filtered(){const d=$('prod-date-filter').value,sec=$('prod-sector-filter').value;let rows=data.records.filter(r=>BIP_SECTORS.includes(r.sector)&&(!d||r.date===d)&&(sec==='all'||r.sector===sec));const p=window.SupabaseApp?.profile;if(p?.perfil==='OPERADOR'){const ops=String(p.ops||'').trim().toLowerCase();const plan=readPlan();const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);const key=emp?`emp:${emp.id}`:'';rows=rows.filter(r=>key&&r.personKey===key);}return rows;}
   function aggregate(rows){
     const map=new Map();for(const r of rows){const key=r.personKey||r.personName;let x=map.get(key);if(!x){x={name:r.personName,bipes:0,index:0,indexParts:0,sectors:new Set(),hours:0,hasHours:false};map.set(key,x);}x.bipes+=+r.bipes||0;x.sectors.add(r.sector);const idx=indexOf(r);if(idx!=null){x.index+=idx;x.indexParts++;}if(+r.hours>0){x.hours+=+r.hours;x.hasHours=true;}}
@@ -1631,39 +1688,127 @@
   }
   function renderRanking(rank){$('prod-rank-count').textContent=`${rank.length} pessoa${rank.length===1?'':'s'}`;$('prod-ranking').innerHTML=rank.length?rank.map((x,i)=>`<div class="rank-card ${i===0?'top1':''}"><div class="rank-pos">${i+1}º</div><div><div class="rank-name">${esc(x.name)}</div><div class="rank-meta">${esc([...x.sectors].join(' • '))}</div></div><div class="rank-num"><b>${fmtN(x.bipes)}</b><span>bipes</span></div><div class="rank-num"><b>${x.indexParts?fmtN(x.index,2)+'×':'—'}</b><span>índice</span></div><div class="rank-num"><b>${x.hasHours?fmtN(x.hours,2):'—'}</b><span>horas inf.</span></div></div>`).join(''):'<div class="empty-inline">Nenhum lançamento nessa data/setor.</div>';}
   function renderHistory(rows){
-    const arr=rows.slice().sort((a,b)=>(b.date+b.createdAt).localeCompare(a.date+a.createdAt));$('prod-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;$('prod-history-empty').style.display=arr.length?'none':'block';$('prod-history-body').innerHTML=arr.map(r=>{const idx=indexOf(r),rate=rateOf(r),ach=achievement(r);return `<tr><td>${esc(r.date.split('-').reverse().join('/'))}</td><td><b>${esc(r.personName)}</b></td><td>${esc(r.sector)}</td><td><b>${fmtN(r.bipes)}</b></td><td>${reference(r.sector)?fmtN(reference(r.sector)):'—'}</td><td>${idx!=null?`<span class="score-pill">${fmtN(idx,2)}×</span>`:'—'}</td><td>${+r.hours>0?fmtN(r.hours,2):'—'}</td><td>${rate!=null?fmtN(rate,1):'—'}</td><td>${ach!=null?`<span class="score-pill ${ach>=100?'good':ach>=85?'warn':''}">${fmtN(ach,0)}%</span>`:'—'}</td><td title="${esc(r.note||'')}">${esc((r.note||'').slice(0,42)||'—')}</td><td><button class="btn small" data-prod-edit="${r.id}">Editar</button> <button class="btn small danger" data-prod-del="${r.id}">Excluir</button></td></tr>`;}).join('');
+    const arr=rows.slice().sort((a,b)=>(b.date+(b.hour||'')+b.createdAt).localeCompare(a.date+(a.hour||'')+a.createdAt));
+    $('prod-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;
+    $('prod-history-empty').style.display=arr.length?'none':'block';
+    $('prod-history-body').innerHTML=arr.map(r=>{
+      const idx=indexOf(r),rate=rateOf(r),ach=achievement(r);
+      return `<tr><td>${esc(r.date.split('-').reverse().join('/'))}</td><td><b>${esc(r.hour||'—')}</b></td><td>${esc(r.personName)}</td><td>${esc(r.sector)}</td><td><b>${fmtN(r.bipes)}</b></td><td>${reference(r.sector)?fmtN(reference(r.sector)):'—'}</td><td>${idx!=null?`<span class="score-pill">${fmtN(idx,2)}×</span>`:'—'}</td><td>${+r.hours>0?fmtN(r.hours,2):'—'}</td><td>${rate!=null?fmtN(rate,1):'—'}</td><td>${ach!=null?`<span class="score-pill ${ach>=100?'good':ach>=85?'warn':''}">${fmtN(ach,0)}%</span>`:'—'}</td><td title="${esc(r.note||'')}">${esc((r.note||'').slice(0,42)||'—')}</td><td><button class="btn small" data-prod-edit="${r.id}">Editar</button> <button class="btn small danger" data-prod-del="${r.id}">Excluir</button></td></tr>`;
+    }).join('');
   }
-  function renderGoalChart(rows){
-    const withHours=rows.filter(r=>+r.hours>0);
-    const expected=withHours.reduce((sum,r)=>sum+(+r.hours||0)*reference(r.sector),0);
-    const actual=rows.reduce((sum,r)=>sum+(+r.bipes||0),0);
-    const pct=expected>0?(actual/expected*100):null;
-    const hours=withHours.reduce((sum,r)=>sum+(+r.hours||0),0);
-    $('prod-goal-expected').textContent=fmtN(expected);
-    $('prod-goal-actual').textContent=fmtN(actual);
-    $('prod-goal-percent').textContent=pct==null?'—':fmtN(pct,0)+'%';
-    $('prod-goal-hours').textContent=withHours.length?`${fmtN(hours,2)} h consideradas`: 'sem horas informadas';
-    const max=Math.max(expected,actual,1);
-    const bars=$('prod-goal-bars');
-    const cols=bars?.querySelectorAll('.prod-bar-col')||[];
-    if(cols.length>=2){
-      const vals=[expected,actual];
-      vals.forEach((val,i)=>{const bar=cols[i].querySelector('.prod-bar');const label=cols[i].querySelector('.prod-bar-value');if(label)label.textContent=fmtN(val);if(bar)bar.style.height=Math.max(4,(val/max)*145)+'px';});
-    }
-    const d=$('prod-date-filter').value;
-    $('prod-goal-chart-period').textContent=d?('Data '+d.split('-').reverse().join('/')):'Todos os dias';
-  }
-  function render(){syncGoals();renderSelectors();renderGoals();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderGoalChart(rows);renderHistory(rows);}
-  function clearForm(){ $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';$('prod-date').value=$('prod-date-filter').value||localDate();$('prod-person').value='';$('prod-sector').value='';$('prod-bipes').value='';$('prod-hours').value='';$('prod-note').value='';}
-  function saveRecord(){
-    const personVal=$('prod-person').value,sector=$('prod-sector').value,date=$('prod-date').value,bipes=Math.max(0,Math.floor(+$('prod-bipes').value||0)),hours=Math.max(0,+$('prod-hours').value||0);if(!date||!personVal||!sector)return alert('Preencha data, funcionário e setor.');if(!bipes)return alert('Informe a quantidade de bipes.');const p=people().find(x=>x.value===personVal);if(!p)return alert('Funcionário não encontrado no cadastro atual.');const id=$('prod-edit-id').value||uid(),old=data.records.find(x=>x.id===id);const obj={id,date,personKey:personVal,personName:p.name,sector,bipes,hours:hours||'',note:$('prod-note').value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};const i=data.records.findIndex(x=>x.id===id);if(i>=0)data.records[i]=obj;else data.records.push(obj);persist();$('prod-date-filter').value=date;clearForm();render();
-  }
-  function editRecord(id){const r=data.records.find(x=>x.id===id);if(!r)return;$('prod-edit-id').value=id;$('prod-form-title').textContent='Editar produtividade';$('prod-date').value=r.date;renderSelectors();$('prod-person').value=r.personKey;$('prod-sector').value=r.sector;$('prod-bipes').value=r.bipes;$('prod-hours').value=r.hours||'';$('prod-note').value=r.note||'';document.getElementById('productivityModule').scrollIntoView({behavior:'smooth',block:'start'});}
-  function exportCSV(){const rows=[['Data','Funcionário','Setor','Bipes','Referência por hora','Índice relativo','Horas informadas','Bipes por hora','% da meta por hora','Observação']];data.records.forEach(r=>rows.push([r.date,r.personName,r.sector,r.bipes,reference(r.sector),indexOf(r)??'',r.hours||'',rateOf(r)??'',achievement(r)??'',r.note||'']));const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='produtividade_shipping.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 
-  $('prod-date-filter').value=localDate();$('prod-date').value=localDate();
+  const CHART_HOURS=Array.from({length:13},(_,i)=>i+8);
+  function recordHour(r){
+    const raw=String(r.hour||'').trim();
+    const m=raw.match(/^(\d{1,2})(?::\d{2})?$/);
+    if(!m)return null;
+    const h=+m[1];return h>=8&&h<=20?h:null;
+  }
+  function chartRows(){
+    const date=$('prod-date-filter').value,sec=$('prod-sector-filter').value;
+    return data.records.filter(r=>r.date===date&&BIP_SECTORS.includes(r.sector)&&(sec==='all'||r.sector===sec)&&recordHour(r)!=null);
+  }
+  function lineChartSvg(series,title){
+    const W=900,H=300,L=58,R=18,T=20,B=46,plotW=W-L-R,plotH=H-T-B;
+    const all=series.flatMap(x=>x.values),maxVal=Math.max(...all,0);
+    if(!all.length)return `<div class="prod-chart-empty">Nenhum dado com horário informado para este dia.</div>`;
+    const maxY=Math.max(1,Math.ceil((maxVal*1.15)/50)*50);
+    const x=i=>L+(plotW*(i/(CHART_HOURS.length-1)));
+    const y=v=>T+plotH-(Math.max(0,v)/maxY)*plotH;
+    let svg=`<svg class="prod-chart-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">`;
+    for(let i=0;i<=4;i++){
+      const val=maxY*i/4,yy=y(val);
+      svg+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#e5e9ef" stroke-width="1"/>`;
+      svg+=`<text x="${L-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#7b8799">${esc(fmtN(val))}</text>`;
+    }
+    CHART_HOURS.forEach((h,i)=>{
+      const xx=x(i);
+      svg+=`<line x1="${xx}" y1="${T+plotH}" x2="${xx}" y2="${T+plotH+5}" stroke="#cfd6e1" stroke-width="1"/>`;
+      svg+=`<text x="${xx}" y="${H-17}" text-anchor="middle" font-size="10" fill="#687589">${String(h).padStart(2,'0')}h</text>`;
+    });
+    series.forEach(ser=>{
+      const pts=ser.values.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+      svg+=`<polyline points="${pts}" fill="none" stroke="${ser.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+      ser.values.forEach((v,i)=>{
+        svg+=`<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#fff" stroke="${ser.color}" stroke-width="2"><title>${String(CHART_HOURS[i]).padStart(2,'0')}h: ${fmtN(v)} bipes</title></circle>`;
+      });
+    });
+    svg+='</svg>';return svg;
+  }
+  function renderPersonChart(){
+    const box=$('prod-person-chart');if(!box)return;
+    const key=$('prod-chart-person').value;
+    const rows=chartRows().filter(r=>r.personKey===key);
+    const values=CHART_HOURS.map(h=>rows.filter(r=>recordHour(r)===h).reduce((sum,r)=>sum+(+r.bipes||0),0));
+    const person=people().find(p=>p.value===key);
+    if(!person){box.innerHTML='<div class="prod-chart-empty">Selecione um colaborador para visualizar a produtividade.</div>';return;}
+    if(!rows.length){box.innerHTML=`<div class="prod-chart-empty">Nenhuma bipagem com horário registrada para <b>${esc(person.name)}</b> nesta data.</div>`;return;}
+    box.innerHTML=lineChartSvg([{values,color:'#2563eb'}],'Produtividade de '+person.name);
+  }
+  function renderGeneralChart(){
+    const box=$('prod-general-chart');if(!box)return;
+    const rows=chartRows();
+    if(!rows.length){box.innerHTML='<div class="prod-chart-empty">Nenhuma bipagem com horário registrada para montar a meta geral.</div>';if($('prod-general-status'))$('prod-general-status').textContent='—';return;}
+    const actual=CHART_HOURS.map(h=>rows.filter(r=>recordHour(r)===h).reduce((sum,r)=>sum+(+r.bipes||0),0));
+    const expected=CHART_HOURS.map(h=>{
+      const seen=new Set(),total=rows.filter(r=>recordHour(r)===h).reduce((sum,r)=>{
+        const key=`${r.personKey||r.personName}|${r.sector}`;
+        if(seen.has(key))return sum;
+        seen.add(key);return sum+reference(r.sector);
+      },0);
+      return total;
+    });
+    box.innerHTML=lineChartSvg([
+      {values:expected,color:'#94a3b8'},
+      {values:actual,color:'#2563eb'}
+    ],'Meta geral do setor');
+    const expectedTotal=expected.reduce((a,b)=>a+b,0),actualTotal=actual.reduce((a,b)=>a+b,0),pct=expectedTotal>0?(actualTotal/expectedTotal*100):null;
+    const status=$('prod-general-status');if(status)status.textContent=pct==null?'—':`${fmtN(pct,0)}% da meta no dia`;
+  }
+  function renderCharts(){
+    renderChartPersonSelector();
+    renderPersonChart();
+    renderGeneralChart();
+  }
+
+function render(){syncGoals();renderSelectors();renderGoals();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);}
+  function clearForm(){
+    $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';
+    $('prod-date').value=$('prod-date-filter').value||localDate();$('prod-hour').value='';
+    $('prod-person').value='';$('prod-sector').value='';$('prod-bipes').value='';$('prod-hours').value='';$('prod-note').value='';
+  }
+  function saveRecord(){
+    const personVal=$('prod-person').value,sector=$('prod-sector').value,date=$('prod-date').value,hour=$('prod-hour').value;
+    const bipes=Math.max(0,Math.floor(+$('prod-bipes').value||0)),hours=Math.max(0,+$('prod-hours').value||0);
+    if(!date||!hour||!personVal||!sector)return alert('Preencha data, hora, funcionário e setor.');
+    if(!bipes)return alert('Informe a quantidade de bipes.');
+    const p=people().find(x=>x.value===personVal);if(!p)return alert('Funcionário não encontrado no cadastro atual.');
+    const id=$('prod-edit-id').value||uid(),old=data.records.find(x=>x.id===id);
+    const obj={id,date,hour,personKey:personVal,personName:p.name,sector,bipes,hours:hours||'',note:$('prod-note').value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+    const i=data.records.findIndex(x=>x.id===id);if(i>=0)data.records[i]=obj;else data.records.push(obj);
+    persist();$('prod-date-filter').value=date;clearForm();render();
+  }
+
+function editRecord(id){
+    const r=data.records.find(x=>x.id===id);if(!r)return;
+    $('prod-edit-id').value=id;$('prod-form-title').textContent='Editar produtividade';$('prod-date').value=r.date;
+    renderSelectors();$('prod-person').value=r.personKey;$('prod-sector').value=r.sector;$('prod-hour').value=r.hour||'';
+    $('prod-bipes').value=r.bipes;$('prod-hours').value=r.hours||'';$('prod-note').value=r.note||'';
+    document.getElementById('productivityModule').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function exportCSV(){
+    const rows=[['Data','Hora','Funcionário','Setor','Bipes','Referência por hora','Índice relativo','Horas informadas','Bipes por hora','% da meta por hora','Observação']];
+    data.records.forEach(r=>rows.push([r.date,r.hour||'',r.personName,r.sector,r.bipes,reference(r.sector),indexOf(r)??'',r.hours||'',rateOf(r)??'',achievement(r)??'',r.note||'']));
+    const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='produtividade_shipping.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+
+renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value=localDate();
   document.querySelector('[data-module-target="productivityModule"]')?.addEventListener('click',()=>setTimeout(render,0));
-  $('prod-save').addEventListener('click',saveRecord);$('prod-clear-form').addEventListener('click',clearForm);$('prod-date-filter').addEventListener('change',()=>{if(!$('prod-edit-id').value)$('prod-date').value=$('prod-date-filter').value;render();});$('prod-sector-filter').addEventListener('change',render);$('prod-export').addEventListener('click',exportCSV);
+  $('prod-save').addEventListener('click',saveRecord);$('prod-clear-form').addEventListener('click',clearForm);
+  $('prod-date-filter').addEventListener('change',()=>{if(!$('prod-edit-id').value)$('prod-date').value=$('prod-date-filter').value;render();});
+  $('prod-sector-filter').addEventListener('change',render);$('prod-chart-person').addEventListener('change',renderPersonChart);
+  $('prod-export').addEventListener('click',exportCSV);
   $('prod-goals').addEventListener('change',e=>{const sec=e.target.dataset.goalSector;if(!sec)return;data.goals[sec]=Math.max(0,+e.target.value||0);persist();render();});
   $('prod-history-body').addEventListener('click',e=>{const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');if(ed)editRecord(ed.dataset.prodEdit);if(del&&confirm('Excluir este lançamento de produtividade?')){data.records=data.records.filter(r=>r.id!==del.dataset.prodDel);persist();render();}});
   render();clearForm();
