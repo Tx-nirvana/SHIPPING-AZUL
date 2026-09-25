@@ -299,7 +299,7 @@
   <div class="admin-users-card">
     <div class="admin-users-head"><h2>👑 Gerenciamento de usuários</h2><button class="btn" type="button" onclick="fecharAdminUsuarios()">Fechar</button></div>
     <div class="admin-users-body">
-      <div class="admin-users-note">ADMIN usa e-mail. OPERADOR usa OPS + senha. O cadastro do operador cria a conta e vincula o OPS ao funcionário.</div><div class="admin-operator-create"><h3>Cadastrar operador</h3><div class="admin-create-grid"><input id="newOperatorOps" placeholder="OPS (ex.: Ops392726)"><input id="newOperatorName" placeholder="Nome completo"><input id="newOperatorPassword" type="password" placeholder="Senha (mín. 6 caracteres)"><select id="newOperatorRole"><option value="OPERADOR">OPERADOR</option><option value="VISUALIZACAO">VISUALIZACAO</option></select><button class="btn primary" type="button" onclick="criarOperadorAdmin()">Criar usuário</button></div><div id="newOperatorMsg" class="auth-error"></div></div>
+      <div class="admin-users-note">ADMIN usa e-mail. OPERADOR usa OPS + senha. O cadastro do operador cria a conta e vincula o OPS ao funcionário.</div><div class="admin-operator-create"><h3>Cadastrar operador</h3><div class="admin-create-grid"><input id="newOperatorOps" placeholder="OPS (ex.: Ops392726)"><input id="newOperatorName" placeholder="Nome completo"><input id="newOperatorPassword" type="password" placeholder="Senha (mín. 6 caracteres)"><select id="newOperatorRole"><option value="OPERADOR">OPERADOR</option><option value="DM">ACESSO GERAL (somente leitura)</option><option value="VISUALIZACAO">VISUALIZACAO</option></select><button class="btn primary" type="button" onclick="criarOperadorAdmin()">Criar usuário</button></div><div id="newOperatorMsg" class="auth-error"></div><div class="admin-users-note">ACESSO GERAL (perfil interno DM): pode visualizar todos os módulos e carregamentos, mas não pode editar, excluir ou adicionar dados/fotos.</div></div>
       <div id="adminUsersContent">Carregando...</div>
     </div>
   </div>
@@ -544,7 +544,7 @@
       </div>
       <div class="lc-photos-section">
         <div class="lc-photos-head">
-          <div><h3>📸 Evidências da finalização</h3><div class="lc-photos-note">Fotos do lacre, caminhão/baú fechado e outras evidências. O upload é liberado para LÍDER/DM.</div></div>
+          <div><h3>📸 Evidências da finalização</h3><div class="lc-photos-note">Fotos do lacre, caminhão/baú fechado e outras evidências. O upload é liberado para LÍDER.</div></div>
           <span class="count" id="lc-photo-count">0 fotos</span>
         </div>
         <div id="lc-photo-permission"></div>
@@ -1246,7 +1246,7 @@
   ];
   function canManagePhotos(){
     const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();
-    return ['ADMIN','LIDER','DM'].includes(perfil);
+    return ['ADMIN','LIDER'].includes(perfil);
   }
   function getCurrentPhotoDraft(){
     return window.__lcPhotoDraft || {};
@@ -1287,7 +1287,7 @@
     const can=canManagePhotos();
     note.innerHTML=can
       ? '<div class="lc-photo-note">Você pode adicionar, substituir ou excluir as fotos desta finalização. Clique na miniatura para ampliar.</div>'
-      : '<div class="lc-photo-lock">🔒 Somente LÍDER/DM pode adicionar ou excluir fotos. As fotos já salvas ficam disponíveis para consulta.</div>';
+      : '<div class="lc-photo-lock">🔒 Somente LÍDER pode adicionar ou excluir fotos. As fotos já salvas ficam disponíveis para consulta.</div>';
     grid.innerHTML=PHOTO_TYPES.map(t=>{
       const ph=photos[t.key];
       const preview=ph?.data
@@ -1733,7 +1733,7 @@ async function loginUsuario(){
 }
 async function cadastrarUsuario(){mostrarLogin();}
 function aplicarPermissoes(){
-  const perfil=SupabaseApp.profile?.perfil;document.body.dataset.perfil=perfil||'';document.body.classList.toggle('readonly-mode',perfil==='VISUALIZACAO'||perfil==='OPERADOR');
+  const perfil=SupabaseApp.profile?.perfil;document.body.dataset.perfil=perfil||'';document.body.classList.toggle('readonly-mode',perfil==='VISUALIZACAO'||perfil==='OPERADOR'||perfil==='DM');
   const allow={ADMIN:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],LIDER:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],DM:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],OPERADOR:['productivityModule'],VISUALIZACAO:['plannerModule','loadingModule','historyModule','productivityModule','qrModule']}[perfil]||[];
   const hasOperatorLoad=perfil==='OPERADOR' && operatorHasLoadAssociation();if(hasOperatorLoad)allow.push('loadingModule');
   document.querySelectorAll('[data-module-target]').forEach(t=>t.style.display=allow.includes(t.dataset.moduleTarget)?'':'none');
@@ -1761,7 +1761,7 @@ async function abrirAdminUsuarios(){
   const panel=document.getElementById('adminUsersPanel'),content=document.getElementById('adminUsersContent');panel.style.display='flex';content.textContent='Carregando...';
   const {data,error}=await SupabaseApp.client.from('perfis').select('id,nome,email,ops,perfil,ativo,created_at').order('created_at',{ascending:true});
   if(error){content.innerHTML='<div class="auth-error">'+escAuth(error.message)+'</div>';return;}
-  content.innerHTML=`<table class="admin-users-table"><thead><tr><th>Nome</th><th>OPS</th><th>Login</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>${(data||[]).map(u=>`<tr><td>${escAuth(u.nome||'—')}</td><td>${escAuth(u.ops||'—')}</td><td>${u.ops?'OPS':'E-mail'}</td><td><select data-admin-profile="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option ${u.perfil==='ADMIN'?'selected':''}>ADMIN</option><option ${u.perfil==='LIDER'?'selected':''}>LIDER</option><option ${u.perfil==='DM'?'selected':''}>DM</option><option ${u.perfil==='OPERADOR'?'selected':''}>OPERADOR</option><option ${u.perfil==='VISUALIZACAO'?'selected':''}>VISUALIZACAO</option></select></td><td><select data-admin-active="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option value="true" ${u.ativo?'selected':''}>Ativo</option><option value="false" ${!u.ativo?'selected':''}>Desativado</option></select></td><td><button class="btn small" onclick="salvarPerfilAdmin('${u.id}')" ${u.id===SupabaseApp.user.id?'disabled':''}>Salvar</button></td></tr>`).join('')}</tbody></table>`;
+  content.innerHTML=`<table class="admin-users-table"><thead><tr><th>Nome</th><th>OPS</th><th>Login</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>${(data||[]).map(u=>`<tr><td>${escAuth(u.nome||'—')}</td><td>${escAuth(u.ops||'—')}</td><td>${u.ops?'OPS':'E-mail'}</td><td><select data-admin-profile="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option ${u.perfil==='ADMIN'?'selected':''}>ADMIN</option><option ${u.perfil==='LIDER'?'selected':''}>LIDER</option><option value="DM" ${u.perfil==='DM'?'selected':''}>ACESSO GERAL (DM)</option><option ${u.perfil==='OPERADOR'?'selected':''}>OPERADOR</option><option ${u.perfil==='VISUALIZACAO'?'selected':''}>VISUALIZACAO</option></select></td><td><select data-admin-active="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option value="true" ${u.ativo?'selected':''}>Ativo</option><option value="false" ${!u.ativo?'selected':''}>Desativado</option></select></td><td><button class="btn small" onclick="salvarPerfilAdmin('${u.id}')" ${u.id===SupabaseApp.user.id?'disabled':''}>Salvar</button></td></tr>`).join('')}</tbody></table>`;
 }
 async function criarOperadorAdmin(){
   const ops=document.getElementById('newOperatorOps').value.trim(),nome=document.getElementById('newOperatorName').value.trim(),senha=document.getElementById('newOperatorPassword').value,perfil=document.getElementById('newOperatorRole').value,msg=document.getElementById('newOperatorMsg');msg.textContent='';
