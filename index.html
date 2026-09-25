@@ -240,245 +240,108 @@
   .qr-empty{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:15px;padding:45px;text-align:center;color:var(--muted);font-size:12px}
   @media(max-width:700px){.qr-toolbar{align-items:stretch;flex-direction:column}.qr-search-wrap{max-width:none}.qr-mode{justify-content:center}.qr-summary{grid-template-columns:1fr}.qr-grid{grid-template-columns:1fr}}
 
+
+/* ===== AUTENTICAÇÃO / PERFIS ===== */
+#authScreen{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at top,#163c72 0,#0b1625 48%,#070d15 100%);}
+.auth-box{width:390px;max-width:calc(100vw - 32px);background:#fff;border-radius:20px;padding:34px;box-shadow:0 30px 80px rgba(0,0,0,.38);text-align:center}
+.auth-logo{width:64px;height:64px;margin:0 auto 14px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(145deg,#1273ff,#0647ac);color:#fff;font-size:21px;font-weight:900;box-shadow:0 10px 25px rgba(18,102,241,.3)}
+.auth-box h1{margin:0;font-size:24px}.auth-subtitle{margin:5px 0 24px;color:#657085;font-size:13px}.auth-box input{box-sizing:border-box;width:100%;height:44px;margin-bottom:10px;padding:0 13px;border:1px solid #d8dee9;border-radius:10px;outline:none;font-size:13px}.auth-box input:focus{border-color:#1266f1;box-shadow:0 0 0 3px rgba(18,102,241,.10)}
+.auth-main-btn{width:100%;height:44px;margin-top:6px;border:0;border-radius:10px;background:#1266f1;color:#fff;font-weight:900;cursor:pointer}.auth-main-btn:hover{background:#0c4fc4}.auth-link{border:0;background:transparent;color:#1266f1;margin-top:15px;cursor:pointer;font-size:12px;font-weight:800}.auth-error{min-height:18px;margin-top:12px;color:#d64545;font-size:11px;font-weight:700}
+.user-area{display:flex;align-items:center;gap:10px;margin-left:auto}.user-info{color:#cbd7e5;font-size:10px;font-weight:800;text-align:right;line-height:1.25}.user-info small{color:#8fa4bd;font-size:9px}.logout-btn{border:1px solid #34475f!important;background:#172334!important;color:#dce7f5!important}.readonly-mode button:not(.module-tab):not(.logout-btn):not([data-readonly-allowed]),.readonly-mode input:not([data-readonly-allowed]),.readonly-mode select:not([data-readonly-allowed]),.readonly-mode textarea{pointer-events:none!important;opacity:.55!important}.readonly-mode .module-tab,.readonly-mode .logout-btn{pointer-events:auto!important;opacity:1!important}
+#adminUsersPanel{display:none;position:fixed;inset:0;z-index:9990;background:rgba(3,10,20,.65);align-items:center;justify-content:center;padding:20px}.admin-users-card{width:min(900px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.35)}.admin-users-head{padding:18px 20px;border-bottom:1px solid #e6ebf2;display:flex;justify-content:space-between;align-items:center}.admin-users-head h2{margin:0;font-size:17px}.admin-users-body{padding:18px 20px}.admin-users-table{width:100%;border-collapse:collapse;font-size:11px}.admin-users-table th,.admin-users-table td{padding:9px;border-bottom:1px solid #edf0f4;text-align:left}.admin-users-table select{padding:6px;border:1px solid #d8dee9;border-radius:7px}.admin-user-actions{display:flex;gap:7px;align-items:center}.admin-users-note{font-size:11px;color:#657085;margin-bottom:14px}
+
 </style>
 </head>
 <body>
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">SA</div>
+    <h1>Shipping Azul</h1>
+    <p class="auth-subtitle">Sistema Operacional</p>
+    <div id="loginForm">
+      <input type="email" id="loginEmail" placeholder="E-mail" autocomplete="email">
+      <input type="password" id="loginPassword" placeholder="Senha" autocomplete="current-password">
+      <button type="button" class="auth-main-btn" id="loginButton" onclick="loginUsuario()">Entrar</button>
+      <button type="button" class="auth-link" onclick="mostrarCadastro()">Criar uma conta</button>
+      <div id="loginError" class="auth-error"></div>
+    </div>
+    <div id="cadastroForm" style="display:none">
+      <input type="text" id="cadastroNome" placeholder="Nome completo">
+      <input type="email" id="cadastroEmail" placeholder="E-mail" autocomplete="email">
+      <input type="password" id="cadastroPassword" placeholder="Senha" autocomplete="new-password">
+      <input type="password" id="cadastroPassword2" placeholder="Confirmar senha" autocomplete="new-password">
+      <button type="button" class="auth-main-btn" onclick="cadastrarUsuario()">Criar conta</button>
+      <button type="button" class="auth-link" onclick="mostrarLogin()">Voltar para login</button>
+      <div id="cadastroError" class="auth-error"></div>
+    </div>
+  </div>
+</div>
+<div id="adminUsersPanel">
+  <div class="admin-users-card">
+    <div class="admin-users-head"><h2>👑 Gerenciamento de usuários</h2><button class="btn" type="button" onclick="fecharAdminUsuarios()">Fechar</button></div>
+    <div class="admin-users-body">
+      <div class="admin-users-note">Novos usuários entram como OPERACAO. O ADMIN pode alterar perfil e ativar/desativar contas já cadastradas.</div>
+      <div id="adminUsersContent">Carregando...</div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+/* ===== SUPABASE + AUTENTICAÇÃO ===== */
+(function(){
+  const SUPABASE_URL='https://jvbnpwqpznekplwerkaw.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_HwaYX8WebSN9c_wVIsbepA_4_XXjY_V';
+  let client=null;
+  try{client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);}catch(e){console.error('Supabase indisponível',e);}
 
-<script>
-/* =========================================================
-   SUPABASE - CONEXÃO + AUTENTICAÇÃO
-   ========================================================= */
-
-const SUPABASE_URL =
-  'https://jvbnpwqpznekplwerkaw.supabase.co';
-
-const SUPABASE_PUBLISHABLE_KEY =
-  'sb_publishable_HwaYX8WebSN9c_wVIsbepA_4_XXjY_V';
-
-const supabaseClient =
-  window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
-
-window.SupabaseApp = {
-  client: supabaseClient,
-  user: null,
-  profile: null
-};
-
-
-/* =========================================================
-   PERFIS
-   ========================================================= */
-
-async function carregarPerfilUsuario(userId) {
-
-  const { data, error } = await supabaseClient
-    .from('perfis')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (error) {
-    console.error('Erro ao carregar perfil:', error);
-    return null;
-  }
-
-  return data;
-}
-
-
-/* =========================================================
-   LOGIN
-   ========================================================= */
-
-async function fazerLogin(email, senha) {
-
-  const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-      email: email.trim(),
-      password: senha
-    });
-
-  if (error) {
-    throw error;
-  }
-
-  const profile =
-    await carregarPerfilUsuario(data.user.id);
-
-  SupabaseApp.user = data.user;
-  SupabaseApp.profile = profile;
-
-  return {
-    user: data.user,
-    profile
-  };
-}
-
-
-/* =========================================================
-   CADASTRO
-   ========================================================= */
-
-async function fazerCadastro(nome, email, senha) {
-
-  const { data, error } =
-    await supabaseClient.auth.signUp({
-      email: email.trim(),
-      password: senha,
-      options: {
-        data: {
-          nome: nome.trim()
-        }
-      }
-    });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}
-
-
-/* =========================================================
-   LOGOUT
-   ========================================================= */
-
-async function fazerLogout() {
-
-  const { error } =
-    await supabaseClient.auth.signOut();
-
-  if (error) {
-    console.error('Erro ao sair:', error);
-  }
-
-  SupabaseApp.user = null;
-  SupabaseApp.profile = null;
-
-  mostrarLogin();
-}
-
-
-/* =========================================================
-   SESSÃO
-   ========================================================= */
-
-async function verificarSessao() {
-
-  const {
-    data: { session }
-  } = await supabaseClient.auth.getSession();
-
-  if (!session) {
-    mostrarLogin();
-    return false;
-  }
-
-  SupabaseApp.user = session.user;
-
-  const profile =
-    await carregarPerfilUsuario(session.user.id);
-
-  if (!profile) {
-    await fazerLogout();
-    return false;
-  }
-
-  if (!profile.ativo) {
-    alert('Seu usuário está desativado.');
-    await fazerLogout();
-    return false;
-  }
-
-  SupabaseApp.profile = profile;
-
-  mostrarSistema();
-
-  aplicarPermissoes();
-
-  return true;
-}
-
-
-/* =========================================================
-   ALTERAÇÃO DE SESSÃO
-   ========================================================= */
-
-supabaseClient.auth.onAuthStateChange(
-  async (event, session) => {
-
-    if (event === 'SIGNED_OUT') {
-
-      SupabaseApp.user = null;
-      SupabaseApp.profile = null;
-
-      mostrarLogin();
-      return;
-    }
-
-    if (session && event === 'SIGNED_IN') {
-
-      SupabaseApp.user = session.user;
-
-      const profile =
-        await carregarPerfilUsuario(
-          session.user.id
-        );
-
-      SupabaseApp.profile = profile;
-
-      mostrarSistema();
-
-      aplicarPermissoes();
-    }
-  }
-);
-</script>
-  const SUPABASE_URL = 'https://qcfgbcszqadggwvlxqqg.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi';
-  let client = null;
-  try{
-    if(SUPABASE_URL.includes('SEUPROJETO')){
-      console.warn('Supabase não configurado: edite SUPABASE_URL e SUPABASE_ANON_KEY no topo do <body>.');
-    }else{
-      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-  }catch(e){ console.warn('Supabase indisponível', e); }
-
-  async function cloudSave(key, data){
-    if(!client) return;
-    try{ await client.from('app_state').upsert({ key, data, updated_at: new Date().toISOString() }); }
-    catch(e){ console.warn('Falha ao salvar na nuvem ('+key+')', e); }
+  async function cloudSave(key,data){
+    if(!client)return;
+    try{await client.from('app_state').upsert({key,data,updated_at:new Date().toISOString()});}
+    catch(e){console.warn('Falha ao salvar na nuvem ('+key+')',e);}
   }
   async function cloudLoad(key){
-    if(!client) return null;
-    try{
-      const { data, error } = await client.from('app_state').select('data').eq('key', key).maybeSingle();
-      if(error){ console.warn('Falha ao carregar da nuvem ('+key+')', error); return null; }
-      return data ? data.data : null;
-    }catch(e){ console.warn('Falha ao carregar da nuvem ('+key+')', e); return null; }
+    if(!client)return null;
+    try{const {data,error}=await client.from('app_state').select('data').eq('key',key).maybeSingle();if(error){console.warn('Falha ao carregar da nuvem ('+key+')',error);return null;}return data?data.data:null;}catch(e){return null;}
   }
-  function cloudSubscribe(key, onChange){
-    if(!client) return;
-    client.channel('sync_'+key)
-      .on('postgres_changes', { event:'*', schema:'public', table:'app_state', filter:`key=eq.${key}` }, payload => {
-        if(payload.new && payload.new.data !== undefined) onChange(payload.new.data);
-      })
-      .subscribe();
+  function cloudSubscribe(key,onChange){
+    if(!client)return;
+    client.channel('sync_'+key).on('postgres_changes',{event:'*',schema:'public',table:'app_state',filter:`key=eq.${key}`},payload=>{if(payload.new&&payload.new.data!==undefined)onChange(payload.new.data);}).subscribe();
   }
-  window.CloudSync = { save: cloudSave, load: cloudLoad, subscribe: cloudSubscribe, ready: !!client };
+  window.CloudSync={save:cloudSave,load:cloudLoad,subscribe:cloudSubscribe,ready:!!client};
+  window.SupabaseApp={client,user:null,profile:null};
+
+  window.carregarPerfilUsuario=async function(userId){
+    const {data,error}=await client.from('perfis').select('*').eq('id',userId).maybeSingle();
+    if(error){console.error('Erro ao carregar perfil:',error);return null;} return data;
+  };
+  window.fazerLogin=async function(email,senha){
+    const {data,error}=await client.auth.signInWithPassword({email:email.trim(),password:senha});
+    if(error)throw error;
+    const profile=await carregarPerfilUsuario(data.user.id); SupabaseApp.user=data.user;SupabaseApp.profile=profile;return {user:data.user,profile};
+  };
+  window.fazerCadastro=async function(nome,email,senha){
+    const {data,error}=await client.auth.signUp({email:email.trim(),password:senha,options:{data:{nome:nome.trim()}}});if(error)throw error;return data;
+  };
+  window.fazerLogout=async function(){await client.auth.signOut();SupabaseApp.user=null;SupabaseApp.profile=null;mostrarLogin();};
+  window.verificarSessao=async function(){
+    const {data:{session}}=await client.auth.getSession();
+    if(!session){mostrarLogin();return false;}
+    SupabaseApp.user=session.user;const profile=await carregarPerfilUsuario(session.user.id);
+    if(!profile||!profile.ativo){alert('Seu usuário está desativado ou sem perfil.');await fazerLogout();return false;}
+    SupabaseApp.profile=profile;mostrarSistema();aplicarPermissoes();return true;
+  };
+  client.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_OUT'){SupabaseApp.user=null;SupabaseApp.profile=null;mostrarLogin();}else if(session&&event==='SIGNED_IN'){SupabaseApp.user=session.user;const p=await carregarPerfilUsuario(session.user.id);SupabaseApp.profile=p;mostrarSistema();aplicarPermissoes();}});
 })();
 </script>
 <div class="module-switcher-shell">
   <div class="module-switcher">
     <div class="module-switcher-brand">Shipping Azul • Operação</div>
+    <div class="user-area">
+      <div id="currentUserInfo" class="user-info"></div>
+      <button id="adminUsersBtn" class="module-tab" type="button" style="display:none" onclick="abrirAdminUsuarios()">👑 Usuários</button>
+      <button class="module-tab logout-btn" type="button" onclick="fazerLogout()">🚪 Sair</button>
+    </div>
     <div class="module-tabs">
       <button class="module-tab active" type="button" data-module-target="plannerModule">👥 Plano de Equipe</button>
       <button class="module-tab" type="button" data-module-target="loadingModule">🚛 Controle de Carregamento</button>
@@ -1662,5 +1525,49 @@ supabaseClient.auth.onAuthStateChange(
 })();
 </script>
 
+<script>
+/* ===== CONTROLE DE AUTENTICAÇÃO / PERMISSÕES ===== */
+function mostrarLogin(){
+  const a=document.getElementById('authScreen'); if(a)a.style.display='flex';
+  document.getElementById('loginForm').style.display='block';document.getElementById('cadastroForm').style.display='none';
+  document.getElementById('loginError').textContent='';
+}
+function mostrarCadastro(){document.getElementById('loginForm').style.display='none';document.getElementById('cadastroForm').style.display='block';document.getElementById('cadastroError').textContent='';}
+function mostrarSistema(){
+  const a=document.getElementById('authScreen');if(a)a.style.display='none';
+  const p=SupabaseApp.profile||{};const i=document.getElementById('currentUserInfo');if(i)i.innerHTML=`${escAuth(p.nome||SupabaseApp.user?.email||'Usuário')}<br><small>${escAuth(p.perfil||'')}</small>`;
+  const admin=document.getElementById('adminUsersBtn');if(admin)admin.style.display=p.perfil==='ADMIN'?'inline-flex':'none';
+}
+function escAuth(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function traduzirErroAuth(e){const m=String(e?.message||'').toLowerCase();if(m.includes('invalid login credentials'))return'E-mail ou senha incorretos.';if(m.includes('email not confirmed'))return'Confirme seu e-mail antes de entrar.';if(m.includes('user already registered'))return'Este e-mail já está cadastrado.';return e?.message||'Não foi possível realizar a operação.';}
+async function loginUsuario(){
+  const email=document.getElementById('loginEmail').value,senha=document.getElementById('loginPassword').value,err=document.getElementById('loginError'),b=document.getElementById('loginButton');err.textContent='';if(!email||!senha){err.textContent='Informe e-mail e senha.';return;}b.disabled=true;b.textContent='Entrando...';
+  try{await fazerLogin(email,senha);mostrarSistema();aplicarPermissoes();}catch(e){console.error(e);err.textContent=traduzirErroAuth(e);}finally{b.disabled=false;b.textContent='Entrar';}
+}
+async function cadastrarUsuario(){
+  const nome=document.getElementById('cadastroNome').value.trim(),email=document.getElementById('cadastroEmail').value.trim(),senha=document.getElementById('cadastroPassword').value,senha2=document.getElementById('cadastroPassword2').value,err=document.getElementById('cadastroError');err.textContent='';
+  if(!nome||!email||!senha){err.textContent='Preencha todos os campos.';return;}if(senha.length<6){err.textContent='A senha precisa ter pelo menos 6 caracteres.';return;}if(senha!==senha2){err.textContent='As senhas não são iguais.';return;}
+  try{const d=await fazerCadastro(nome,email,senha);if(d.session){await verificarSessao();}else{alert('Cadastro realizado. Se a confirmação por e-mail estiver ativada, confirme seu e-mail antes de entrar.');mostrarLogin();}}catch(e){console.error(e);err.textContent=traduzirErroAuth(e);}
+}
+function aplicarPermissoes(){
+  const perfil=SupabaseApp.profile?.perfil;document.body.dataset.perfil=perfil||'';document.body.classList.toggle('readonly-mode',perfil==='VISUALIZACAO');
+  const allow={ADMIN:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],LIDER:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],OPERACAO:['plannerModule','loadingModule','qrModule'],VISUALIZACAO:['plannerModule','loadingModule','historyModule','productivityModule','qrModule']}[perfil]||[];
+  document.querySelectorAll('[data-module-target]').forEach(t=>t.style.display=allow.includes(t.dataset.moduleTarget)?'':'none');
+  const active=document.querySelector('.module-view.active');if(!active||!allow.includes(active.id)){const first=allow[0];document.querySelectorAll('.module-view').forEach(v=>v.classList.toggle('active',v.id===first));document.querySelectorAll('[data-module-target]').forEach(t=>t.classList.toggle('active',t.dataset.moduleTarget===first));}
+}
+async function abrirAdminUsuarios(){
+  if(SupabaseApp.profile?.perfil!=='ADMIN')return;
+  const panel=document.getElementById('adminUsersPanel'),content=document.getElementById('adminUsersContent');panel.style.display='flex';content.textContent='Carregando...';
+  const {data,error}=await SupabaseApp.client.from('perfis').select('id,nome,email,perfil,ativo,created_at').order('created_at',{ascending:true});
+  if(error){content.innerHTML='<div class="auth-error">'+escAuth(error.message)+'</div>';return;}
+  content.innerHTML=`<table class="admin-users-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>${(data||[]).map(u=>`<tr><td>${escAuth(u.nome||'—')}</td><td>${escAuth(u.email||'—')}</td><td><select data-admin-profile="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option ${u.perfil==='ADMIN'?'selected':''}>ADMIN</option><option ${u.perfil==='LIDER'?'selected':''}>LIDER</option><option ${u.perfil==='OPERACAO'?'selected':''}>OPERACAO</option><option ${u.perfil==='VISUALIZACAO'?'selected':''}>VISUALIZACAO</option></select></td><td><select data-admin-active="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option value="true" ${u.ativo?'selected':''}>Ativo</option><option value="false" ${!u.ativo?'selected':''}>Desativado</option></select></td><td><button class="btn small" onclick="salvarPerfilAdmin('${u.id}')" ${u.id===SupabaseApp.user.id?'disabled':''}>Salvar</button></td></tr>`).join('')}</tbody></table>`;
+}
+async function salvarPerfilAdmin(id){
+  if(SupabaseApp.profile?.perfil!=='ADMIN')return;const sel=document.querySelector(`[data-admin-profile="${id}"]`),active=document.querySelector(`[data-admin-active="${id}"]`);if(!sel||!active)return;
+  const {error}=await SupabaseApp.client.from('perfis').update({perfil:sel.value,ativo:active.value==='true'}).eq('id',id);if(error){alert('Erro: '+error.message);return;}alert('Perfil atualizado.');abrirAdminUsuarios();
+}
+function fecharAdminUsuarios(){document.getElementById('adminUsersPanel').style.display='none';}
+document.addEventListener('DOMContentLoaded',async()=>{await verificarSessao();});
+</script>
 </body>
 </html>
