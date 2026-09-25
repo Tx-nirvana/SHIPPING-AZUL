@@ -180,9 +180,12 @@
   #loadingModule .lc-photo-title{font-size:8px;font-weight:900;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #loadingModule .lc-photo-preview{height:52px;border-radius:6px;background:#f1f5f9;display:grid;place-items:center;overflow:hidden;color:#94a3b8;font-size:18px;width:100%;box-sizing:border-box}
   #loadingModule .lc-photo-preview img{width:100%;height:100%;object-fit:cover;cursor:pointer}
-  #loadingModule .lc-photo-actions{display:flex;gap:3px;align-items:center;min-width:0}
-  #loadingModule .lc-photo-actions button,#loadingModule .lc-photo-actions label{font-size:7px!important;padding:4px 4px!important;line-height:1!important;white-space:nowrap;min-width:0}
+  #loadingModule .lc-photo-actions{display:flex;gap:6px;align-items:stretch;min-width:0;flex-wrap:wrap;margin-top:1px}
+  #loadingModule .lc-photo-actions button,#loadingModule .lc-photo-actions label{font-size:8px!important;padding:5px 7px!important;line-height:1.1!important;white-space:nowrap;min-width:0;flex:1 1 0;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:3px;box-sizing:border-box}
   #loadingModule .lc-photo-actions input{display:none}
+  #loadingModule .lc-photo-actions .lc-btn.soft:first-child{background:#eaf2ff;border-color:#bcd3fb;color:#1555b5}
+  #loadingModule .lc-photo-actions label.lc-btn.soft{background:#f3f6fa;border-color:#cfd8e3;color:#334155}
+  #loadingModule .lc-photo-actions .lc-btn.danger{flex-basis:100%}
   #loadingModule .lc-photo-status{font-size:7px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
   #loadingModule .lc-photo-lock{padding:6px;border-radius:6px;background:#f8fafc;color:#64748b;font-size:8px}
   #loadingModule .lc-photo-modal{position:fixed;inset:0;z-index:10050;background:rgba(2,8,18,.86);display:none;align-items:center;justify-content:center;padding:25px}
@@ -243,6 +246,21 @@
 
   /* ===== Produtividade ===== */
   .prod-layout{display:grid;grid-template-columns:360px 330px minmax(0,1fr);gap:14px;align-items:start;margin-bottom:14px}.prod-panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}.prod-panel-head{padding:13px 14px;border-bottom:1px solid var(--line);background:#fbfcfe;display:flex;align-items:center;justify-content:space-between;gap:8px}.prod-panel-head h2{margin:0;font-size:14px}.prod-panel-body{padding:14px}.prod-form{display:grid;grid-template-columns:1fr 1fr;gap:9px}.prod-form .full{grid-column:1/-1}.prod-form label{font-size:10px;font-weight:900;color:#566176;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}.prod-form input,.prod-form select,.prod-form textarea{width:100%;border:1px solid #d8dee9;border-radius:9px;padding:9px;background:#fff;font:inherit;font-size:12px;outline:none}.prod-form textarea{resize:vertical;min-height:64px}.prod-form input:focus,.prod-form select:focus,.prod-form textarea:focus{border-color:#79a9ff;box-shadow:0 0 0 3px rgba(18,102,241,.10)}
+  .prod-goal-chart{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:18px;align-items:center}
+  .prod-goal-summary{display:grid;gap:8px}
+  .prod-goal-metric{border:1px solid #e1e6ee;border-radius:10px;background:#f8fafc;padding:9px 11px}
+  .prod-goal-metric span{display:block;font-size:9px;text-transform:uppercase;font-weight:900;color:#687589;letter-spacing:.04em}
+  .prod-goal-metric strong{display:block;font-size:18px;margin-top:3px}
+  .prod-goal-metric small{display:block;font-size:9px;color:#748096;margin-top:2px}
+  .prod-bars{display:flex;align-items:flex-end;justify-content:center;gap:34px;height:190px;padding:10px 20px 0;border-bottom:1px solid #dfe5ed;background:linear-gradient(to bottom,transparent 24%,#eef2f7 25%,transparent 25.5%,transparent 49%,#eef2f7 50%,transparent 50.5%,transparent 74%,#eef2f7 75%,transparent 75.5%);border-radius:10px 10px 0 0}
+  .prod-bar-col{width:min(150px,34%);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:7px}
+  .prod-bar-value{font-size:11px;font-weight:900;color:#243044;white-space:nowrap}
+  .prod-bar{width:70px;max-width:100%;min-height:4px;border-radius:8px 8px 0 0;transition:height .25s ease}
+  .prod-bar.expected{background:#94a3b8}.prod-bar.actual{background:#2563eb}
+  .prod-bar-label{font-size:10px;font-weight:900;color:#566176;margin-bottom:7px}
+  .prod-chart-note{font-size:9px;color:#748096;margin-top:9px;line-height:1.45}
+  @media(max-width:900px){.prod-goal-chart{grid-template-columns:1fr}.prod-bars{height:160px}}
+
   .goal-list{display:flex;flex-direction:column;gap:7px;max-height:480px;overflow:auto}.goal-row{display:grid;grid-template-columns:minmax(100px,1fr) 90px 42px;gap:7px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff}.goal-row strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.goal-row input{height:31px;border:1px solid #d8dee9;border-radius:8px;text-align:center;font-weight:900;width:100%}.goal-row span{font-size:9px;color:var(--muted);font-weight:800}.prod-note{background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:#657085;font-size:10px;line-height:1.45;margin-top:10px}
   .rank-list{display:flex;flex-direction:column;gap:7px;max-height:520px;overflow:auto}.rank-card{display:grid;grid-template-columns:36px minmax(120px,1fr) 90px 80px 78px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:8px 10px}.rank-card.top1{border-color:#f0d58f;background:#fffdf5}.rank-pos{width:30px;height:30px;border-radius:9px;background:#f0f3f8;display:grid;place-items:center;font-weight:900;font-size:11px}.rank-card.top1 .rank-pos{background:#fff0b8;color:#8a5a00}.rank-name{font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rank-meta{font-size:9px;color:var(--muted);margin-top:2px}.rank-num{text-align:right}.rank-num b{display:block;font-size:12px}.rank-num span{font-size:9px;color:var(--muted)}
   .prod-history-wrap{overflow:auto;max-height:430px}.prod-history-table{min-width:980px}.prod-history-table th,.prod-history-table td{font-size:10px;padding:8px}.score-pill{display:inline-flex;padding:4px 7px;border-radius:99px;background:var(--primary-soft);color:var(--primary-2);font-weight:900;font-size:10px}.score-pill.good{background:var(--green-soft);color:var(--green)}.score-pill.warn{background:var(--amber-soft);color:var(--amber)}
@@ -651,6 +669,25 @@
     <div class="prod-panel">
       <div class="prod-panel-head"><h2>Melhores métricas do dia</h2><span class="count" id="prod-rank-count">0 pessoas</span></div>
       <div class="prod-panel-body"><div class="rank-list" id="prod-ranking"></div></div>
+    </div>
+  </section>
+  <section class="prod-panel" style="margin-bottom:14px">
+    <div class="prod-panel-head"><h2>Meta geral — Esperado × Batido</h2><span class="count" id="prod-goal-chart-period">data filtrada</span></div>
+    <div class="prod-panel-body">
+      <div class="prod-goal-chart">
+        <div class="prod-goal-summary">
+          <div class="prod-goal-metric"><span>Esperado</span><strong id="prod-goal-expected">0</strong><small>bipes para as horas informadas</small></div>
+          <div class="prod-goal-metric"><span>Batido</span><strong id="prod-goal-actual">0</strong><small>bipes lançados</small></div>
+          <div class="prod-goal-metric"><span>Atingimento</span><strong id="prod-goal-percent">—</strong><small id="prod-goal-hours">sem horas informadas</small></div>
+        </div>
+        <div>
+          <div class="prod-bars" id="prod-goal-bars">
+            <div class="prod-bar-col"><div class="prod-bar-value">0</div><div class="prod-bar expected" style="height:4px"></div><div class="prod-bar-label">Esperado</div></div>
+            <div class="prod-bar-col"><div class="prod-bar-value">0</div><div class="prod-bar actual" style="height:4px"></div><div class="prod-bar-label">Batido</div></div>
+          </div>
+          <div class="prod-chart-note">O esperado é calculado pela referência do setor × horas informadas em cada lançamento. Se as horas não forem preenchidas, aquele lançamento não entra no cálculo do esperado.</div>
+        </div>
+      </div>
     </div>
   </section>
   <section class="prod-panel">
@@ -1317,16 +1354,15 @@
        const key=b.dataset.photoRemove,draft=getCurrentPhotoDraft();
        if(confirm('Excluir esta foto antes de salvar o carregamento?')){delete draft[key];setCurrentPhotoDraft(draft);renderPhotos();}
      }));
-     grid.querySelectorAll('[data-photo-slot]').forEach(card=>card.addEventListener('click',e=>{
-       if(e.target.closest('label,button,img'))return;
-       window.__lcActivePhotoSlot=card.dataset.photoSlot;
-       grid.querySelectorAll('[data-photo-slot]').forEach(c=>c.classList.toggle('active',c===card));
-     }));
+     grid.querySelectorAll('[data-photo-slot]').forEach(card=>{
+       const activate=()=>{window.__lcActivePhotoSlot=card.dataset.photoSlot;grid.querySelectorAll('[data-photo-slot]').forEach(c=>c.classList.toggle('active',c===card));};
+       card.addEventListener('click',e=>{if(e.target.closest('label,button,img'))return;activate();});
+       card.addEventListener('focus',activate);
+     });
      grid.querySelectorAll('[data-photo-paste]').forEach(b=>b.addEventListener('click',e=>{
        e.preventDefault();e.stopPropagation();window.__lcActivePhotoSlot=b.dataset.photoPaste;
        grid.querySelectorAll('[data-photo-slot]').forEach(c=>c.classList.toggle('active',c.dataset.photoSlot===window.__lcActivePhotoSlot));
        b.closest('[data-photo-slot]')?.focus();
-       alert('Campo selecionado. Agora pressione Ctrl+V para colar a imagem.');
      }));
     grid.querySelectorAll('[data-photo-view]').forEach(img=>img.addEventListener('click',()=>{
       const ph=getCurrentPhotoDraft()[img.dataset.photoView];if(!ph?.data)return;
@@ -1597,7 +1633,27 @@
   function renderHistory(rows){
     const arr=rows.slice().sort((a,b)=>(b.date+b.createdAt).localeCompare(a.date+a.createdAt));$('prod-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;$('prod-history-empty').style.display=arr.length?'none':'block';$('prod-history-body').innerHTML=arr.map(r=>{const idx=indexOf(r),rate=rateOf(r),ach=achievement(r);return `<tr><td>${esc(r.date.split('-').reverse().join('/'))}</td><td><b>${esc(r.personName)}</b></td><td>${esc(r.sector)}</td><td><b>${fmtN(r.bipes)}</b></td><td>${reference(r.sector)?fmtN(reference(r.sector)):'—'}</td><td>${idx!=null?`<span class="score-pill">${fmtN(idx,2)}×</span>`:'—'}</td><td>${+r.hours>0?fmtN(r.hours,2):'—'}</td><td>${rate!=null?fmtN(rate,1):'—'}</td><td>${ach!=null?`<span class="score-pill ${ach>=100?'good':ach>=85?'warn':''}">${fmtN(ach,0)}%</span>`:'—'}</td><td title="${esc(r.note||'')}">${esc((r.note||'').slice(0,42)||'—')}</td><td><button class="btn small" data-prod-edit="${r.id}">Editar</button> <button class="btn small danger" data-prod-del="${r.id}">Excluir</button></td></tr>`;}).join('');
   }
-  function render(){syncGoals();renderSelectors();renderGoals();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderHistory(rows);}
+  function renderGoalChart(rows){
+    const withHours=rows.filter(r=>+r.hours>0);
+    const expected=withHours.reduce((sum,r)=>sum+(+r.hours||0)*reference(r.sector),0);
+    const actual=rows.reduce((sum,r)=>sum+(+r.bipes||0),0);
+    const pct=expected>0?(actual/expected*100):null;
+    const hours=withHours.reduce((sum,r)=>sum+(+r.hours||0),0);
+    $('prod-goal-expected').textContent=fmtN(expected);
+    $('prod-goal-actual').textContent=fmtN(actual);
+    $('prod-goal-percent').textContent=pct==null?'—':fmtN(pct,0)+'%';
+    $('prod-goal-hours').textContent=withHours.length?`${fmtN(hours,2)} h consideradas`: 'sem horas informadas';
+    const max=Math.max(expected,actual,1);
+    const bars=$('prod-goal-bars');
+    const cols=bars?.querySelectorAll('.prod-bar-col')||[];
+    if(cols.length>=2){
+      const vals=[expected,actual];
+      vals.forEach((val,i)=>{const bar=cols[i].querySelector('.prod-bar');const label=cols[i].querySelector('.prod-bar-value');if(label)label.textContent=fmtN(val);if(bar)bar.style.height=Math.max(4,(val/max)*145)+'px';});
+    }
+    const d=$('prod-date-filter').value;
+    $('prod-goal-chart-period').textContent=d?('Data '+d.split('-').reverse().join('/')):'Todos os dias';
+  }
+  function render(){syncGoals();renderSelectors();renderGoals();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderGoalChart(rows);renderHistory(rows);}
   function clearForm(){ $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';$('prod-date').value=$('prod-date-filter').value||localDate();$('prod-person').value='';$('prod-sector').value='';$('prod-bipes').value='';$('prod-hours').value='';$('prod-note').value='';}
   function saveRecord(){
     const personVal=$('prod-person').value,sector=$('prod-sector').value,date=$('prod-date').value,bipes=Math.max(0,Math.floor(+$('prod-bipes').value||0)),hours=Math.max(0,+$('prod-hours').value||0);if(!date||!personVal||!sector)return alert('Preencha data, funcionário e setor.');if(!bipes)return alert('Informe a quantidade de bipes.');const p=people().find(x=>x.value===personVal);if(!p)return alert('Funcionário não encontrado no cadastro atual.');const id=$('prod-edit-id').value||uid(),old=data.records.find(x=>x.id===id);const obj={id,date,personKey:personVal,personName:p.name,sector,bipes,hours:hours||'',note:$('prod-note').value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};const i=data.records.findIndex(x=>x.id===id);if(i>=0)data.records[i]=obj;else data.records.push(obj);persist();$('prod-date-filter').value=date;clearForm();render();
