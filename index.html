@@ -246,7 +246,7 @@
 .auth-box{width:390px;max-width:calc(100vw - 32px);background:#fff;border-radius:20px;padding:34px;box-shadow:0 30px 80px rgba(0,0,0,.38);text-align:center}
 .auth-logo{width:64px;height:64px;margin:0 auto 14px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(145deg,#1273ff,#0647ac);color:#fff;font-size:21px;font-weight:900;box-shadow:0 10px 25px rgba(18,102,241,.3)}
 .auth-box h1{margin:0;font-size:24px}.auth-subtitle{margin:5px 0 24px;color:#657085;font-size:13px}.auth-box input{box-sizing:border-box;width:100%;height:44px;margin-bottom:10px;padding:0 13px;border:1px solid #d8dee9;border-radius:10px;outline:none;font-size:13px}.auth-box input:focus{border-color:#1266f1;box-shadow:0 0 0 3px rgba(18,102,241,.10)}
-.auth-main-btn{width:100%;height:44px;margin-top:6px;border:0;border-radius:10px;background:#1266f1;color:#fff;font-weight:900;cursor:pointer}.auth-main-btn:hover{background:#0c4fc4}.auth-link{border:0;background:transparent;color:#1266f1;margin-top:15px;cursor:pointer;font-size:12px;font-weight:800}.auth-error{min-height:18px;margin-top:12px;color:#d64545;font-size:11px;font-weight:700}
+.auth-main-btn{width:100%;height:44px;margin-top:6px;border:0;border-radius:10px;background:#1266f1;color:#fff;font-weight:900;cursor:pointer}.auth-main-btn:hover{background:#0c4fc4}.auth-link{border:0;background:transparent;color:#1266f1;margin-top:15px;cursor:pointer;font-size:12px;font-weight:800}.auth-hint{margin-top:12px;color:#657085;font-size:11px;line-height:1.45}.admin-operator-create{margin:0 0 18px;padding:14px;border:1px solid #e6ebf2;border-radius:12px;background:#f8fafc}.admin-operator-create h3{margin:0 0 10px;font-size:13px}.admin-create-grid{display:grid;grid-template-columns:1.1fr 1.6fr 1.1fr 1fr auto;gap:8px}.admin-create-grid input,.admin-create-grid select{height:36px;box-sizing:border-box;padding:0 9px;border:1px solid #d8dee9;border-radius:8px;background:#fff}.auth-error{min-height:18px;margin-top:12px;color:#d64545;font-size:11px;font-weight:700}
 .user-area{display:flex;align-items:center;gap:10px;margin-left:auto}.user-info{color:#cbd7e5;font-size:10px;font-weight:800;text-align:right;line-height:1.25}.user-info small{color:#8fa4bd;font-size:9px}.logout-btn{border:1px solid #34475f!important;background:#172334!important;color:#dce7f5!important}.readonly-mode button:not(.module-tab):not(.logout-btn):not([data-readonly-allowed]),.readonly-mode input:not([data-readonly-allowed]),.readonly-mode select:not([data-readonly-allowed]),.readonly-mode textarea{pointer-events:none!important;opacity:.55!important}.readonly-mode .module-tab,.readonly-mode .logout-btn{pointer-events:auto!important;opacity:1!important}
 #adminUsersPanel{display:none;position:fixed;inset:0;z-index:9990;background:rgba(3,10,20,.65);align-items:center;justify-content:center;padding:20px}.admin-users-card{width:min(900px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.35)}.admin-users-head{padding:18px 20px;border-bottom:1px solid #e6ebf2;display:flex;justify-content:space-between;align-items:center}.admin-users-head h2{margin:0;font-size:17px}.admin-users-body{padding:18px 20px}.admin-users-table{width:100%;border-collapse:collapse;font-size:11px}.admin-users-table th,.admin-users-table td{padding:9px;border-bottom:1px solid #edf0f4;text-align:left}.admin-users-table select{padding:6px;border:1px solid #d8dee9;border-radius:7px}.admin-user-actions{display:flex;gap:7px;align-items:center}.admin-users-note{font-size:11px;color:#657085;margin-bottom:14px}
 
@@ -259,18 +259,14 @@
     <h1>Shipping Azul</h1>
     <p class="auth-subtitle">Sistema Operacional</p>
     <div id="loginForm">
-      <input type="email" id="loginEmail" placeholder="E-mail" autocomplete="email">
+      <input type="text" id="loginIdentificador" placeholder="OPS (operador) ou e-mail (ADMIN)" autocomplete="username">
       <input type="password" id="loginPassword" placeholder="Senha" autocomplete="current-password">
       <button type="button" class="auth-main-btn" id="loginButton" onclick="loginUsuario()">Entrar</button>
-      <button type="button" class="auth-link" onclick="mostrarCadastro()">Criar uma conta</button>
+      <div class="auth-hint">ADMIN entra com e-mail. OPERADOR entra com OPS.</div>
       <div id="loginError" class="auth-error"></div>
     </div>
     <div id="cadastroForm" style="display:none">
-      <input type="text" id="cadastroNome" placeholder="Nome completo">
-      <input type="email" id="cadastroEmail" placeholder="E-mail" autocomplete="email">
-      <input type="password" id="cadastroPassword" placeholder="Senha" autocomplete="new-password">
-      <input type="password" id="cadastroPassword2" placeholder="Confirmar senha" autocomplete="new-password">
-      <button type="button" class="auth-main-btn" onclick="cadastrarUsuario()">Criar conta</button>
+      <div class="auth-hint">Cadastros de operadores são feitos pelo ADMIN no gerenciamento de usuários.</div>
       <button type="button" class="auth-link" onclick="mostrarLogin()">Voltar para login</button>
       <div id="cadastroError" class="auth-error"></div>
     </div>
@@ -280,7 +276,7 @@
   <div class="admin-users-card">
     <div class="admin-users-head"><h2>👑 Gerenciamento de usuários</h2><button class="btn" type="button" onclick="fecharAdminUsuarios()">Fechar</button></div>
     <div class="admin-users-body">
-      <div class="admin-users-note">Novos usuários entram como OPERACAO. O ADMIN pode alterar perfil e ativar/desativar contas já cadastradas.</div>
+      <div class="admin-users-note">ADMIN usa e-mail. OPERADOR usa OPS + senha. O cadastro do operador cria a conta e vincula o OPS ao funcionário.</div><div class="admin-operator-create"><h3>Cadastrar operador</h3><div class="admin-create-grid"><input id="newOperatorOps" placeholder="OPS (ex.: Ops392726)"><input id="newOperatorName" placeholder="Nome completo"><input id="newOperatorPassword" type="password" placeholder="Senha (mín. 6 caracteres)"><select id="newOperatorRole"><option value="OPERADOR">OPERADOR</option><option value="VISUALIZACAO">VISUALIZACAO</option></select><button class="btn primary" type="button" onclick="criarOperadorAdmin()">Criar usuário</button></div><div id="newOperatorMsg" class="auth-error"></div></div>
       <div id="adminUsersContent">Carregando...</div>
     </div>
   </div>
@@ -290,8 +286,8 @@
 <script>
 /* ===== SUPABASE + AUTENTICAÇÃO ===== */
 (function(){
-const SUPABASE_URL='https://qcfgbcszqadggwvlxqqg.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi';
+  const SUPABASE_URL='https://qcfgbcszqadggwvlxqqg.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi';
   let client=null;
   try{client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);}catch(e){console.error('Supabase indisponível',e);}
 
@@ -315,13 +311,17 @@ const SUPABASE_PUBLISHABLE_KEY='sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi';
     const {data,error}=await client.from('perfis').select('*').eq('id',userId).maybeSingle();
     if(error){console.error('Erro ao carregar perfil:',error);return null;} return data;
   };
-  window.fazerLogin=async function(email,senha){
-    const {data,error}=await client.auth.signInWithPassword({email:email.trim(),password:senha});
+  function loginEmailFromIdentificador(identificador){
+    const v=String(identificador||'').trim();
+    if(v.includes('@')) return v;
+    const ops=v.toLowerCase().replace(/[^a-z0-9]/g,'');
+    return ops ? `ops-${ops}@login.shippingazul.local` : '';
+  }
+  window.fazerLogin=async function(identificador,senha){
+    const email=loginEmailFromIdentificador(identificador);
+    const {data,error}=await client.auth.signInWithPassword({email,password:senha});
     if(error)throw error;
     const profile=await carregarPerfilUsuario(data.user.id); SupabaseApp.user=data.user;SupabaseApp.profile=profile;return {user:data.user,profile};
-  };
-  window.fazerCadastro=async function(nome,email,senha){
-    const {data,error}=await client.auth.signUp({email:email.trim(),password:senha,options:{data:{nome:nome.trim()}}});if(error)throw error;return data;
   };
   window.fazerLogout=async function(){await client.auth.signOut();SupabaseApp.user=null;SupabaseApp.profile=null;mostrarLogin();};
   window.verificarSessao=async function(){
@@ -1219,7 +1219,16 @@ const SUPABASE_PUBLISHABLE_KEY='sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi';
 
   function render(){
     const q=v('lc-busca').toLowerCase(),fd=v('lc-fData'),fs=v('lc-fStatus'),dest=v('lc-fDestino').toLowerCase();
-    const arr=dados.filter(x=>(!q||[x.lt,x.placa,x.motorista,x.destino].join(' ').toLowerCase().includes(q))&&(!fd||x.data===fd)&&(!fs||x.status===fs)&&(!dest||(x.destino||'').toLowerCase().includes(dest))).sort((a,b)=>((b.data||'')+(b.chegada||'')).localeCompare((a.data||'')+(a.chegada||'')));
+    const profile=window.SupabaseApp?.profile;
+    let base=dados;
+    if(profile?.perfil==='OPERADOR'){
+      const ops=String(profile.ops||'').trim().toLowerCase();
+      const plan=(()=>{try{return JSON.parse(localStorage.getItem('shippingAzulPlanner_v1')||'null')}catch{return null}})();
+      const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);
+      const nome=String(emp?.name||profile.nome||'').trim().toLowerCase();
+      base=dados.filter(x=>{const eq=String(x.equipe||'').toLowerCase();return (ops&&eq.includes(ops))||(nome&&eq.includes(nome));});
+    }
+    const arr=base.filter(x=>(!q||[x.lt,x.placa,x.motorista,x.destino].join(' ').toLowerCase().includes(q))&&(!fd||x.data===fd)&&(!fs||x.status===fs)&&(!dest||(x.destino||'').toLowerCase().includes(dest))).sort((a,b)=>((b.data||'')+(b.chegada||'')).localeCompare((a.data||'')+(a.chegada||'')));
     const tb=$('lc-tbody');tb.innerHTML='';$('lc-empty').style.display=arr.length?'none':'block';$('lc-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;
     arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');tr.innerHTML=`<td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(minutes(x.inicio,x.fim))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td><button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button></td>`;tb.appendChild(tr);});
     updateMetrics();
@@ -1361,7 +1370,7 @@ const SUPABASE_PUBLISHABLE_KEY='sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi';
     const secs=sectors(),curSec=$('prod-sector').value,curFilter=$('prod-sector-filter').value;$('prod-sector').innerHTML='<option value="">Selecione...</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');$('prod-sector-filter').innerHTML='<option value="all">Todos os setores</option>'+secs.map(s=>`<option>${esc(s)}</option>`).join('');if(secs.includes(curSec))$('prod-sector').value=curSec;if(secs.includes(curFilter))$('prod-sector-filter').value=curFilter;
   }
   function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class="goal-row"><strong title="${esc(s)}">${esc(s)}</strong><input type="number" min="0" step="1" value="${reference(s)}" data-goal-sector="${esc(s)}"><span>bipes/h</span></div>`).join('');}
-  function filtered(){const d=$('prod-date-filter').value,sec=$('prod-sector-filter').value;return data.records.filter(r=>BIP_SECTORS.includes(r.sector)&&(!d||r.date===d)&&(sec==='all'||r.sector===sec));}
+  function filtered(){const d=$('prod-date-filter').value,sec=$('prod-sector-filter').value;let rows=data.records.filter(r=>BIP_SECTORS.includes(r.sector)&&(!d||r.date===d)&&(sec==='all'||r.sector===sec));const p=window.SupabaseApp?.profile;if(p?.perfil==='OPERADOR'){const ops=String(p.ops||'').trim().toLowerCase();const plan=readPlan();const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);const key=emp?`emp:${emp.id}`:'';rows=rows.filter(r=>key&&r.personKey===key);}return rows;}
   function aggregate(rows){
     const map=new Map();for(const r of rows){const key=r.personKey||r.personName;let x=map.get(key);if(!x){x={name:r.personName,bipes:0,index:0,indexParts:0,sectors:new Set(),hours:0,hasHours:false};map.set(key,x);}x.bipes+=+r.bipes||0;x.sectors.add(r.sector);const idx=indexOf(r);if(idx!=null){x.index+=idx;x.indexParts++;}if(+r.hours>0){x.hours+=+r.hours;x.hasHours=true;}}
     return [...map.values()].sort((a,b)=>(b.indexParts?b.index:-1)-(a.indexParts?a.index:-1)||b.bipes-a.bipes);
@@ -1535,32 +1544,50 @@ function mostrarLogin(){
 function mostrarCadastro(){document.getElementById('loginForm').style.display='none';document.getElementById('cadastroForm').style.display='block';document.getElementById('cadastroError').textContent='';}
 function mostrarSistema(){
   const a=document.getElementById('authScreen');if(a)a.style.display='none';
-  const p=SupabaseApp.profile||{};const i=document.getElementById('currentUserInfo');if(i)i.innerHTML=`${escAuth(p.nome||SupabaseApp.user?.email||'Usuário')}<br><small>${escAuth(p.perfil||'')}</small>`;
+  const p=SupabaseApp.profile||{};const label=p.ops?`${p.nome||'Usuário'} • ${p.ops}`:(p.nome||SupabaseApp.user?.email||'Usuário');const i=document.getElementById('currentUserInfo');if(i)i.innerHTML=`${escAuth(label)}<br><small>${escAuth(p.perfil||'')}</small>`;
   const admin=document.getElementById('adminUsersBtn');if(admin)admin.style.display=p.perfil==='ADMIN'?'inline-flex':'none';
 }
 function escAuth(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-function traduzirErroAuth(e){const m=String(e?.message||'').toLowerCase();if(m.includes('invalid login credentials'))return'E-mail ou senha incorretos.';if(m.includes('email not confirmed'))return'Confirme seu e-mail antes de entrar.';if(m.includes('user already registered'))return'Este e-mail já está cadastrado.';return e?.message||'Não foi possível realizar a operação.';}
+function traduzirErroAuth(e){const m=String(e?.message||'').toLowerCase();if(m.includes('invalid login credentials'))return'OPS/e-mail ou senha incorretos.';if(m.includes('email not confirmed'))return'Confirme o e-mail do ADMIN antes de entrar.';return e?.message||'Não foi possível realizar a operação.';}
 async function loginUsuario(){
-  const email=document.getElementById('loginEmail').value,senha=document.getElementById('loginPassword').value,err=document.getElementById('loginError'),b=document.getElementById('loginButton');err.textContent='';if(!email||!senha){err.textContent='Informe e-mail e senha.';return;}b.disabled=true;b.textContent='Entrando...';
-  try{await fazerLogin(email,senha);mostrarSistema();aplicarPermissoes();}catch(e){console.error(e);err.textContent=traduzirErroAuth(e);}finally{b.disabled=false;b.textContent='Entrar';}
+  const identificador=document.getElementById('loginIdentificador').value,senha=document.getElementById('loginPassword').value,err=document.getElementById('loginError'),b=document.getElementById('loginButton');err.textContent='';if(!identificador||!senha){err.textContent='Informe OPS/e-mail e senha.';return;}b.disabled=true;b.textContent='Entrando...';
+  try{const r=await fazerLogin(identificador,senha);if(!r.profile||!r.profile.ativo)throw new Error('Usuário desativado.');mostrarSistema();aplicarPermissoes();}catch(e){console.error(e);err.textContent=traduzirErroAuth(e);}finally{b.disabled=false;b.textContent='Entrar';}
 }
-async function cadastrarUsuario(){
-  const nome=document.getElementById('cadastroNome').value.trim(),email=document.getElementById('cadastroEmail').value.trim(),senha=document.getElementById('cadastroPassword').value,senha2=document.getElementById('cadastroPassword2').value,err=document.getElementById('cadastroError');err.textContent='';
-  if(!nome||!email||!senha){err.textContent='Preencha todos os campos.';return;}if(senha.length<6){err.textContent='A senha precisa ter pelo menos 6 caracteres.';return;}if(senha!==senha2){err.textContent='As senhas não são iguais.';return;}
-  try{const d=await fazerCadastro(nome,email,senha);if(d.session){await verificarSessao();}else{alert('Cadastro realizado. Se a confirmação por e-mail estiver ativada, confirme seu e-mail antes de entrar.');mostrarLogin();}}catch(e){console.error(e);err.textContent=traduzirErroAuth(e);}
-}
+async function cadastrarUsuario(){mostrarLogin();}
 function aplicarPermissoes(){
-  const perfil=SupabaseApp.profile?.perfil;document.body.dataset.perfil=perfil||'';document.body.classList.toggle('readonly-mode',perfil==='VISUALIZACAO');
-  const allow={ADMIN:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],LIDER:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],OPERACAO:['plannerModule','loadingModule','qrModule'],VISUALIZACAO:['plannerModule','loadingModule','historyModule','productivityModule','qrModule']}[perfil]||[];
+  const perfil=SupabaseApp.profile?.perfil;document.body.dataset.perfil=perfil||'';document.body.classList.toggle('readonly-mode',perfil==='VISUALIZACAO'||perfil==='OPERADOR');
+  const allow={ADMIN:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],LIDER:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],OPERADOR:['productivityModule'],VISUALIZACAO:['plannerModule','loadingModule','historyModule','productivityModule','qrModule']}[perfil]||[];
+  const hasOperatorLoad=perfil==='OPERADOR' && operatorHasLoadAssociation();if(hasOperatorLoad)allow.push('loadingModule');
   document.querySelectorAll('[data-module-target]').forEach(t=>t.style.display=allow.includes(t.dataset.moduleTarget)?'':'none');
   const active=document.querySelector('.module-view.active');if(!active||!allow.includes(active.id)){const first=allow[0];document.querySelectorAll('.module-view').forEach(v=>v.classList.toggle('active',v.id===first));document.querySelectorAll('[data-module-target]').forEach(t=>t.classList.toggle('active',t.dataset.moduleTarget===first));}
+  applyOperatorDataFilter();
+}
+function readLocalJson(key){try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
+function operatorHasLoadAssociation(){
+  const ops=String(SupabaseApp.profile?.ops||'').trim().toLowerCase();if(!ops)return false;const loads=readLocalJson('controle_carregamento_v1');return Array.isArray(loads)&&loads.some(x=>String(x.equipe||'').toLowerCase().includes(ops));
+}
+function applyOperatorDataFilter(){
+  if(SupabaseApp.profile?.perfil!=='OPERADOR')return;
+  const ops=String(SupabaseApp.profile?.ops||'').trim().toLowerCase();
+  document.querySelectorAll('#productivityModule [data-prod-edit],#productivityModule [data-prod-del]').forEach(b=>b.style.display='none');
 }
 async function abrirAdminUsuarios(){
   if(SupabaseApp.profile?.perfil!=='ADMIN')return;
   const panel=document.getElementById('adminUsersPanel'),content=document.getElementById('adminUsersContent');panel.style.display='flex';content.textContent='Carregando...';
-  const {data,error}=await SupabaseApp.client.from('perfis').select('id,nome,email,perfil,ativo,created_at').order('created_at',{ascending:true});
+  const {data,error}=await SupabaseApp.client.from('perfis').select('id,nome,email,ops,perfil,ativo,created_at').order('created_at',{ascending:true});
   if(error){content.innerHTML='<div class="auth-error">'+escAuth(error.message)+'</div>';return;}
-  content.innerHTML=`<table class="admin-users-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>${(data||[]).map(u=>`<tr><td>${escAuth(u.nome||'—')}</td><td>${escAuth(u.email||'—')}</td><td><select data-admin-profile="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option ${u.perfil==='ADMIN'?'selected':''}>ADMIN</option><option ${u.perfil==='LIDER'?'selected':''}>LIDER</option><option ${u.perfil==='OPERACAO'?'selected':''}>OPERACAO</option><option ${u.perfil==='VISUALIZACAO'?'selected':''}>VISUALIZACAO</option></select></td><td><select data-admin-active="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option value="true" ${u.ativo?'selected':''}>Ativo</option><option value="false" ${!u.ativo?'selected':''}>Desativado</option></select></td><td><button class="btn small" onclick="salvarPerfilAdmin('${u.id}')" ${u.id===SupabaseApp.user.id?'disabled':''}>Salvar</button></td></tr>`).join('')}</tbody></table>`;
+  content.innerHTML=`<table class="admin-users-table"><thead><tr><th>Nome</th><th>OPS</th><th>Login</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>${(data||[]).map(u=>`<tr><td>${escAuth(u.nome||'—')}</td><td>${escAuth(u.ops||'—')}</td><td>${u.ops?'OPS':'E-mail'}</td><td><select data-admin-profile="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option ${u.perfil==='ADMIN'?'selected':''}>ADMIN</option><option ${u.perfil==='LIDER'?'selected':''}>LIDER</option><option ${u.perfil==='OPERADOR'?'selected':''}>OPERADOR</option><option ${u.perfil==='VISUALIZACAO'?'selected':''}>VISUALIZACAO</option></select></td><td><select data-admin-active="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option value="true" ${u.ativo?'selected':''}>Ativo</option><option value="false" ${!u.ativo?'selected':''}>Desativado</option></select></td><td><button class="btn small" onclick="salvarPerfilAdmin('${u.id}')" ${u.id===SupabaseApp.user.id?'disabled':''}>Salvar</button></td></tr>`).join('')}</tbody></table>`;
+}
+async function criarOperadorAdmin(){
+  const ops=document.getElementById('newOperatorOps').value.trim(),nome=document.getElementById('newOperatorName').value.trim(),senha=document.getElementById('newOperatorPassword').value,perfil=document.getElementById('newOperatorRole').value,msg=document.getElementById('newOperatorMsg');msg.textContent='';
+  if(!ops||!nome||!senha){msg.textContent='Informe OPS, nome e senha.';return;}if(senha.length<6){msg.textContent='A senha precisa ter pelo menos 6 caracteres.';return;}
+  try{
+    const fnUrl='https://qcfgbcszqadggwvlxqqg.supabase.co/functions/v1/admin-create-operator';
+    const {data:{session}}=await SupabaseApp.client.auth.getSession();
+    const res=await fetch(fnUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({ops,nome,senha,perfil})});
+    const out=await res.json();if(!res.ok)throw new Error(out.error||'Falha ao criar operador.');
+    msg.style.color='#138a4b';msg.textContent='Usuário criado com sucesso. Login: '+ops;document.getElementById('newOperatorPassword').value='';abrirAdminUsuarios();
+  }catch(e){msg.style.color='#d64545';msg.textContent=e.message||'Erro ao criar usuário.';}
 }
 async function salvarPerfilAdmin(id){
   if(SupabaseApp.profile?.perfil!=='ADMIN')return;const sel=document.querySelector(`[data-admin-profile="${id}"]`),active=document.querySelector(`[data-admin-active="${id}"]`);if(!sel||!active)return;
