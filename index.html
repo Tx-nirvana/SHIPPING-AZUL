@@ -168,6 +168,28 @@
   }
 
 
+
+  /* ===== Fotos de finalização do carregamento ===== */
+  #loadingModule .lc-photos-section{border:1px solid #dfe5ec;border-radius:12px;background:#fbfcfe;padding:12px;margin-top:12px}
+  #loadingModule .lc-photos-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+  #loadingModule .lc-photos-head h3{margin:0;font-size:13px}
+  #loadingModule .lc-photos-note{font-size:10px;color:#687589;line-height:1.5}
+  #loadingModule .lc-photo-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin-top:10px}
+  #loadingModule .lc-photo-card{border:1px dashed #cfd8e3;border-radius:10px;background:#fff;min-height:145px;padding:8px;display:flex;flex-direction:column;gap:6px}
+  #loadingModule .lc-photo-title{font-size:10px;font-weight:900;color:#334155}
+  #loadingModule .lc-photo-preview{height:90px;border-radius:8px;background:#f1f5f9;display:grid;place-items:center;overflow:hidden;color:#94a3b8;font-size:24px}
+  #loadingModule .lc-photo-preview img{width:100%;height:100%;object-fit:cover;cursor:pointer}
+  #loadingModule .lc-photo-actions{display:flex;gap:5px;align-items:center}
+  #loadingModule .lc-photo-actions button,#loadingModule .lc-photo-actions label{font-size:9px!important;padding:6px 7px!important}
+  #loadingModule .lc-photo-actions input{display:none}
+  #loadingModule .lc-photo-status{font-size:9px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #loadingModule .lc-photo-lock{padding:9px;border-radius:8px;background:#f8fafc;color:#64748b;font-size:10px}
+  #loadingModule .lc-photo-modal{position:fixed;inset:0;z-index:10050;background:rgba(2,8,18,.86);display:none;align-items:center;justify-content:center;padding:25px}
+  #loadingModule .lc-photo-modal.open{display:flex}
+  #loadingModule .lc-photo-modal img{max-width:min(1100px,94vw);max-height:88vh;border-radius:12px;box-shadow:0 20px 80px rgba(0,0,0,.45)}
+  #loadingModule .lc-photo-modal-close{position:absolute;right:22px;top:18px;border:0;border-radius:50%;width:38px;height:38px;font-size:24px;cursor:pointer}
+  @media(max-width:900px){#loadingModule .lc-photo-grid{grid-template-columns:repeat(2,minmax(120px,1fr))}}
+
   /* ===== Alternância entre módulos ===== */
   .module-switcher-shell{position:sticky;top:0;z-index:60;background:#101823;border-bottom:1px solid #243244;box-shadow:0 4px 18px rgba(5,15,30,.18)}
   .module-switcher{max-width:1860px;margin:auto;padding:8px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -519,6 +541,14 @@
           <div class="lc-full"><label>Observações</label><textarea id="lc-obs" placeholder="Registre ocorrências, divergências ou informações importantes..."></textarea></div>
         </div>
       </div>
+      <div class="lc-photos-section">
+        <div class="lc-photos-head">
+          <div><h3>📸 Evidências da finalização</h3><div class="lc-photos-note">Fotos do lacre, caminhão/baú fechado e outras evidências. O upload é liberado para LÍDER/DM.</div></div>
+          <span class="count" id="lc-photo-count">0 fotos</span>
+        </div>
+        <div id="lc-photo-permission"></div>
+        <div class="lc-photo-grid" id="lc-photo-grid"></div>
+      </div>
       <div class="lc-form-actions"><button class="lc-btn primary" id="lc-save" type="button">Salvar carregamento</button><button class="lc-btn" id="lc-clear" type="button">Limpar</button></div>
     </div>
 
@@ -537,6 +567,10 @@
       <div id="lc-empty" class="lc-empty" style="display:none">Nenhum carregamento encontrado.</div>
     </div>
   </section>
+  <div id="lc-photo-modal" class="lc-photo-modal" aria-hidden="true">
+    <button type="button" class="lc-photo-modal-close" id="lc-photo-modal-close">×</button>
+    <img id="lc-photo-modal-img" alt="Foto da finalização do carregamento">
+  </div>
 </div>
 
 
@@ -1199,12 +1233,98 @@
   }
   function getComp(){return [...document.querySelectorAll('#lc-comp .lc-composition-row')].map(r=>({tipo:r.querySelector('.lc-ctipo').value.trim(),qtd:+r.querySelector('.lc-cqt').value||0})).filter(x=>x.tipo||x.qtd);}
 
+  const PHOTO_TYPES=[
+    {key:'lacre',label:'Lacre do caminhão'},
+    {key:'caminhao',label:'Caminhão'},
+    {key:'bau',label:'Baú fechado'},
+    {key:'outros',label:'Outra evidência'}
+  ];
+  function canManagePhotos(){
+    const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();
+    return ['ADMIN','LIDER','DM'].includes(perfil);
+  }
+  function getCurrentPhotoDraft(){
+    return window.__lcPhotoDraft || {};
+  }
+  function setCurrentPhotoDraft(v){
+    window.__lcPhotoDraft=v||{};
+  }
+  function compressPhoto(file){
+    return new Promise((resolve,reject)=>{
+      if(!file)return resolve('');
+      if(!file.type.startsWith('image/'))return reject(new Error('Selecione uma imagem.'));
+      const reader=new FileReader();
+      reader.onload=()=>{
+        const img=new Image();
+        img.onload=()=>{
+          const max=1280;
+          const scale=Math.min(1,max/Math.max(img.width,img.height));
+          const canvas=document.createElement('canvas');
+          canvas.width=Math.max(1,Math.round(img.width*scale));
+          canvas.height=Math.max(1,Math.round(img.height*scale));
+          const ctx=canvas.getContext('2d');
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          resolve(canvas.toDataURL('image/jpeg',0.72));
+        };
+        img.onerror=()=>reject(new Error('Não foi possível ler a imagem.'));
+        img.src=reader.result;
+      };
+      reader.onerror=()=>reject(new Error('Falha ao ler a foto.'));
+      reader.readAsDataURL(file);
+    });
+  }
+  function renderPhotos(){
+    const grid=$('lc-photo-grid'),note=$('lc-photo-permission'),count=$('lc-photo-count');
+    if(!grid)return;
+    const photos=getCurrentPhotoDraft();
+    const total=PHOTO_TYPES.filter(t=>photos[t.key]?.data).length;
+    if(count)count.textContent=`${total} foto${total===1?'':'s'}`;
+    const can=canManagePhotos();
+    note.innerHTML=can
+      ? '<div class="lc-photo-note">Você pode adicionar, substituir ou excluir as fotos desta finalização. Clique na miniatura para ampliar.</div>'
+      : '<div class="lc-photo-lock">🔒 Somente LÍDER/DM pode adicionar ou excluir fotos. As fotos já salvas ficam disponíveis para consulta.</div>';
+    grid.innerHTML=PHOTO_TYPES.map(t=>{
+      const ph=photos[t.key];
+      const preview=ph?.data
+        ? `<img src="${ph.data}" alt="${esc(t.label)}" data-photo-view="${t.key}">`
+        : '<span>📷</span>';
+      const buttons=can
+        ? `<div class="lc-photo-actions"><label class="lc-btn soft">📷 ${ph?.data?'Trocar':'Adicionar'}<input type="file" accept="image/*" capture="environment" data-photo-input="${t.key}"></label>${ph?.data?`<button type="button" class="lc-btn danger" data-photo-remove="${t.key}">Excluir</button>`:''}</div>`
+        : '';
+      const status=ph?.data ? `Salva em ${new Date(ph.at||Date.now()).toLocaleString('pt-BR')}` : 'Nenhuma foto adicionada';
+      return `<div class="lc-photo-card"><div class="lc-photo-title">${esc(t.label)}</div><div class="lc-photo-preview">${preview}</div>${buttons}<div class="lc-photo-status">${esc(status)}</div></div>`;
+    }).join('');
+    grid.querySelectorAll('[data-photo-input]').forEach(inp=>inp.addEventListener('change',async e=>{
+      const key=e.target.dataset.photoInput,file=e.target.files?.[0];if(!file)return;
+      try{
+        const data=await compressPhoto(file);
+        const draft=getCurrentPhotoDraft();
+        draft[key]={data,at:new Date().toISOString(),by:window.SupabaseApp?.profile?.nome||window.SupabaseApp?.user?.email||'Usuário'};
+        setCurrentPhotoDraft(draft);renderPhotos();
+      }catch(err){alert(err.message||'Não foi possível adicionar a foto.');}
+      e.target.value='';
+    }));
+    grid.querySelectorAll('[data-photo-remove]').forEach(b=>b.addEventListener('click',()=>{
+      const key=b.dataset.photoRemove,draft=getCurrentPhotoDraft();
+      if(confirm('Excluir esta foto antes de salvar o carregamento?')){delete draft[key];setCurrentPhotoDraft(draft);renderPhotos();}
+    }));
+    grid.querySelectorAll('[data-photo-view]').forEach(img=>img.addEventListener('click',()=>{
+      const ph=getCurrentPhotoDraft()[img.dataset.photoView];if(!ph?.data)return;
+      $('lc-photo-modal-img').src=ph.data;$('lc-photo-modal').classList.add('open');$('lc-photo-modal').setAttribute('aria-hidden','false');
+    }));
+  }
+  window.renderLoadingPhotos=renderPhotos;
+  function closePhotoModal(){
+    $('lc-photo-modal')?.classList.remove('open');$('lc-photo-modal')?.setAttribute('aria-hidden','true');
+    if($('lc-photo-modal-img'))$('lc-photo-modal-img').src='';
+  }
+
   function novo(){
     $('lc-editId').value='';$('lc-formTitle').textContent='Novo carregamento';
     ['lc-lt','lc-destino','lc-motorista','lc-placa','lc-doca','lc-aceitePor','lc-liberadoPor','lc-equipe','lc-obs'].forEach(id=>$(id).value='');
     $('lc-data').value=localISODate();$('lc-veiculo').value='';$('lc-status').value='Aguardando';$('lc-motivo').value='';
     ['lc-chegada','lc-aceite','lc-docaHora','lc-cargaPronta','lc-inicio','lc-fim','lc-liberacao'].forEach(id=>$(id).value='');
-    $('lc-meta').value=60;$('lc-pacotes').value=0;$('lc-peso').value=0;$('lc-comp').innerHTML='';addComp('Gaylote');addComp('Saca');calcComp();
+    $('lc-meta').value=60;$('lc-pacotes').value=0;$('lc-peso').value=0;$('lc-comp').innerHTML='';addComp('Gaylote');addComp('Saca');calcComp();setCurrentPhotoDraft({});renderPhotos();
     $('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }
 
@@ -1259,7 +1379,7 @@
     const req=[['lc-lt','LT / Pedido'],['lc-destino','Destino'],['lc-motorista','Motorista']];
     for(const [id,n] of req){if(!$(id).value.trim()){alert('Preencha: '+n);$(id).focus();return;}}
     const id=$('lc-editId').value||uid();const old=dados.find(x=>x.id===id);
-    const obj={id,data:v('lc-data'),lt:v('lc-lt').trim(),destino:v('lc-destino').trim(),motorista:v('lc-motorista').trim(),placa:v('lc-placa').trim(),veiculo:v('lc-veiculo'),doca:v('lc-doca').trim(),chegada:v('lc-chegada'),aceite:v('lc-aceite'),docaHora:v('lc-docaHora'),cargaPronta:v('lc-cargaPronta'),inicio:v('lc-inicio'),fim:v('lc-fim'),liberacao:v('lc-liberacao'),meta:+v('lc-meta')||60,aceitePor:v('lc-aceitePor').trim(),liberadoPor:v('lc-liberadoPor').trim(),equipe:normalizeLoadersToOPS(v('lc-equipe').trim()),comp:getComp(),pacotes:+v('lc-pacotes')||0,peso:+v('lc-peso')||0,status:v('lc-status'),motivo:v('lc-motivo'),obs:v('lc-obs').trim(),criado:old?.criado||new Date().toISOString()};
+    const obj={id,data:v('lc-data'),lt:v('lc-lt').trim(),destino:v('lc-destino').trim(),motorista:v('lc-motorista').trim(),placa:v('lc-placa').trim(),veiculo:v('lc-veiculo'),doca:v('lc-doca').trim(),chegada:v('lc-chegada'),aceite:v('lc-aceite'),docaHora:v('lc-docaHora'),cargaPronta:v('lc-cargaPronta'),inicio:v('lc-inicio'),fim:v('lc-fim'),liberacao:v('lc-liberacao'),meta:+v('lc-meta')||60,aceitePor:v('lc-aceitePor').trim(),liberadoPor:v('lc-liberadoPor').trim(),equipe:normalizeLoadersToOPS(v('lc-equipe').trim()),fotos:getCurrentPhotoDraft(),comp:getComp(),pacotes:+v('lc-pacotes')||0,peso:+v('lc-peso')||0,status:v('lc-status'),motivo:v('lc-motivo'),obs:v('lc-obs').trim(),criado:old?.criado||new Date().toISOString()};
     const i=dados.findIndex(x=>x.id===id);if(i>=0)dados[i]=obj;else dados.push(obj);persist();render();novo();alert('Carregamento salvo com sucesso.');
   }
 
@@ -1283,14 +1403,14 @@
     }
     const arr=base.filter(x=>(!q||[x.lt,x.placa,x.motorista,x.destino].join(' ').toLowerCase().includes(q))&&(!fd||x.data===fd)&&(!fs||x.status===fs)&&(!dest||(x.destino||'').toLowerCase().includes(dest))).sort((a,b)=>((b.data||'')+(b.chegada||'')).localeCompare((a.data||'')+(a.chegada||'')));
     const tb=$('lc-tbody');tb.innerHTML='';$('lc-empty').style.display=arr.length?'none':'block';$('lc-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;
-    arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');tr.innerHTML=`<td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(minutes(x.inicio,x.fim))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td><button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button></td>`;tb.appendChild(tr);});
+    arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');tr.innerHTML=`<td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(minutes(x.inicio,x.fim))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td><button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> <button class="lc-smallbtn edit" data-lc-photos="${x.id}">📸 Fotos</button> <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button></td>`;tb.appendChild(tr);});
     updateMetrics();
   }
 
   function editar(id){
     const x=dados.find(a=>a.id===id);if(!x)return;$('lc-editId').value=id;$('lc-formTitle').textContent='Editar carregamento — '+x.lt;
     const map={data:'lc-data',lt:'lc-lt',destino:'lc-destino',motorista:'lc-motorista',placa:'lc-placa',veiculo:'lc-veiculo',doca:'lc-doca',chegada:'lc-chegada',aceite:'lc-aceite',docaHora:'lc-docaHora',cargaPronta:'lc-cargaPronta',inicio:'lc-inicio',fim:'lc-fim',liberacao:'lc-liberacao',meta:'lc-meta',aceitePor:'lc-aceitePor',liberadoPor:'lc-liberadoPor',equipe:'lc-equipe',pacotes:'lc-pacotes',peso:'lc-peso',status:'lc-status',motivo:'lc-motivo',obs:'lc-obs'};
-    Object.entries(map).forEach(([k,id2])=>$(id2).value=x[k]??'');$('lc-comp').innerHTML='';(x.comp||[]).forEach(c=>addComp(c.tipo,c.qtd));if(!(x.comp||[]).length){addComp('Gaylote');addComp('Saca');}calcComp();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});
+    Object.entries(map).forEach(([k,id2])=>$(id2).value=x[k]??'');setCurrentPhotoDraft(x.fotos||{});renderPhotos();$('lc-comp').innerHTML='';(x.comp||[]).forEach(c=>addComp(c.tipo,c.qtd));if(!(x.comp||[]).length){addComp('Gaylote');addComp('Saca');}calcComp();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }
   function excluir(id){const x=dados.find(a=>a.id===id);if(!x)return;if(confirm(`Excluir o carregamento ${x.lt}? Esta ação não pode ser desfeita.`)){dados=dados.filter(a=>a.id!==id);persist();render();}}
   function clearFilters(){['lc-busca','lc-fData','lc-fStatus','lc-fDestino'].forEach(id=>$(id).value='');render();}
@@ -1304,9 +1424,9 @@
   function backup(){download(JSON.stringify(dados,null,2),'backup_carregamentos.json','application/json');}
   function restoreFile(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw new Error();if(!confirm(`Restaurar backup com ${d.length} carregamento(s)? Os dados atuais serão substituídos.`))return;dados=d;persist();render();alert('Backup restaurado.');}catch{alert('Arquivo de backup inválido.');}};r.readAsText(file);}
 
-  window.addEventListener('planoEquipeAtualizado',updateOpsDatalist);window.addEventListener('storage',e=>{if(e.key==='shippingAzulPlanner_v1')updateOpsDatalist();});$('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-equipe').addEventListener('blur',()=>{ $('lc-equipe').value=normalizeLoadersToOPS($('lc-equipe').value); });$('lc-export').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
-  ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));
-  $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(del)excluir(del.dataset.lcDel);});
+  window.addEventListener('planoEquipeAtualizado',updateOpsDatalist);window.addEventListener('storage',e=>{if(e.key==='shippingAzulPlanner_v1')updateOpsDatalist();});$('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-equipe').addEventListener('blur',()=>{ $('lc-equipe').value=normalizeLoadersToOPS($('lc-equipe').value); });$('lc-photo-modal-close').addEventListener('click',closePhotoModal);$('lc-photo-modal').addEventListener('click',e=>{if(e.target.id==='lc-photo-modal')closePhotoModal();});$('lc-export').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
+  ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));renderPhotos();
+  $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(ph)editar(ph.dataset.lcPhotos);if(del)excluir(del.dataset.lcDel);});
   novo();render();
 })();
 </script>
@@ -1609,11 +1729,12 @@ async function loginUsuario(){
 async function cadastrarUsuario(){mostrarLogin();}
 function aplicarPermissoes(){
   const perfil=SupabaseApp.profile?.perfil;document.body.dataset.perfil=perfil||'';document.body.classList.toggle('readonly-mode',perfil==='VISUALIZACAO'||perfil==='OPERADOR');
-  const allow={ADMIN:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],LIDER:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],OPERADOR:['productivityModule'],VISUALIZACAO:['plannerModule','loadingModule','historyModule','productivityModule','qrModule']}[perfil]||[];
+  const allow={ADMIN:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],LIDER:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],DM:['plannerModule','loadingModule','historyModule','productivityModule','qrModule'],OPERADOR:['productivityModule'],VISUALIZACAO:['plannerModule','loadingModule','historyModule','productivityModule','qrModule']}[perfil]||[];
   const hasOperatorLoad=perfil==='OPERADOR' && operatorHasLoadAssociation();if(hasOperatorLoad)allow.push('loadingModule');
   document.querySelectorAll('[data-module-target]').forEach(t=>t.style.display=allow.includes(t.dataset.moduleTarget)?'':'none');
   const active=document.querySelector('.module-view.active');if(!active||!allow.includes(active.id)){const first=allow[0];document.querySelectorAll('.module-view').forEach(v=>v.classList.toggle('active',v.id===first));document.querySelectorAll('[data-module-target]').forEach(t=>t.classList.toggle('active',t.dataset.moduleTarget===first));}
   applyOperatorDataFilter();
+  window.renderLoadingPhotos?.();
 }
 function readLocalJson(key){try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
 function operatorHasLoadAssociation(){
@@ -1635,7 +1756,7 @@ async function abrirAdminUsuarios(){
   const panel=document.getElementById('adminUsersPanel'),content=document.getElementById('adminUsersContent');panel.style.display='flex';content.textContent='Carregando...';
   const {data,error}=await SupabaseApp.client.from('perfis').select('id,nome,email,ops,perfil,ativo,created_at').order('created_at',{ascending:true});
   if(error){content.innerHTML='<div class="auth-error">'+escAuth(error.message)+'</div>';return;}
-  content.innerHTML=`<table class="admin-users-table"><thead><tr><th>Nome</th><th>OPS</th><th>Login</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>${(data||[]).map(u=>`<tr><td>${escAuth(u.nome||'—')}</td><td>${escAuth(u.ops||'—')}</td><td>${u.ops?'OPS':'E-mail'}</td><td><select data-admin-profile="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option ${u.perfil==='ADMIN'?'selected':''}>ADMIN</option><option ${u.perfil==='LIDER'?'selected':''}>LIDER</option><option ${u.perfil==='OPERADOR'?'selected':''}>OPERADOR</option><option ${u.perfil==='VISUALIZACAO'?'selected':''}>VISUALIZACAO</option></select></td><td><select data-admin-active="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option value="true" ${u.ativo?'selected':''}>Ativo</option><option value="false" ${!u.ativo?'selected':''}>Desativado</option></select></td><td><button class="btn small" onclick="salvarPerfilAdmin('${u.id}')" ${u.id===SupabaseApp.user.id?'disabled':''}>Salvar</button></td></tr>`).join('')}</tbody></table>`;
+  content.innerHTML=`<table class="admin-users-table"><thead><tr><th>Nome</th><th>OPS</th><th>Login</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody>${(data||[]).map(u=>`<tr><td>${escAuth(u.nome||'—')}</td><td>${escAuth(u.ops||'—')}</td><td>${u.ops?'OPS':'E-mail'}</td><td><select data-admin-profile="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option ${u.perfil==='ADMIN'?'selected':''}>ADMIN</option><option ${u.perfil==='LIDER'?'selected':''}>LIDER</option><option ${u.perfil==='DM'?'selected':''}>DM</option><option ${u.perfil==='OPERADOR'?'selected':''}>OPERADOR</option><option ${u.perfil==='VISUALIZACAO'?'selected':''}>VISUALIZACAO</option></select></td><td><select data-admin-active="${u.id}" ${u.id===SupabaseApp.user.id?'disabled':''}><option value="true" ${u.ativo?'selected':''}>Ativo</option><option value="false" ${!u.ativo?'selected':''}>Desativado</option></select></td><td><button class="btn small" onclick="salvarPerfilAdmin('${u.id}')" ${u.id===SupabaseApp.user.id?'disabled':''}>Salvar</button></td></tr>`).join('')}</tbody></table>`;
 }
 async function criarOperadorAdmin(){
   const ops=document.getElementById('newOperatorOps').value.trim(),nome=document.getElementById('newOperatorName').value.trim(),senha=document.getElementById('newOperatorPassword').value,perfil=document.getElementById('newOperatorRole').value,msg=document.getElementById('newOperatorMsg');msg.textContent='';
