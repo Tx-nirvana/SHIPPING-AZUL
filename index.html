@@ -245,11 +245,44 @@
 <body>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  /* ===== Cliente Supabase (fonte única para Carregamento, Histórico e Produtividade) ===== */
-  window.sbClient = supabase.createClient(
-    'https://emwgvbrrcmhagnxgcgkl.supabase.co',
-    'sb_publishable_3jvRGSo3EdNBsk4emUD-kQ_EW4IWu3I'
-  );
+/* ===== Sincronização entre computadores (Supabase) =====
+   Preencha SUPABASE_URL e SUPABASE_ANON_KEY com os valores do seu projeto
+   (Project Settings → API, no painel do Supabase). */
+(function(){
+  const SUPABASE_URL = 'https://qcfgbcszqadggwvlxqqg.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi';
+  let client = null;
+  try{
+    if(SUPABASE_URL.includes('SEUPROJETO')){
+      console.warn('Supabase não configurado: edite SUPABASE_URL e SUPABASE_ANON_KEY no topo do <body>.');
+    }else{
+      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+  }catch(e){ console.warn('Supabase indisponível', e); }
+
+  async function cloudSave(key, data){
+    if(!client) return;
+    try{ await client.from('app_state').upsert({ key, data, updated_at: new Date().toISOString() }); }
+    catch(e){ console.warn('Falha ao salvar na nuvem ('+key+')', e); }
+  }
+  async function cloudLoad(key){
+    if(!client) return null;
+    try{
+      const { data, error } = await client.from('app_state').select('data').eq('key', key).maybeSingle();
+      if(error){ console.warn('Falha ao carregar da nuvem ('+key+')', error); return null; }
+      return data ? data.data : null;
+    }catch(e){ console.warn('Falha ao carregar da nuvem ('+key+')', e); return null; }
+  }
+  function cloudSubscribe(key, onChange){
+    if(!client) return;
+    client.channel('sync_'+key)
+      .on('postgres_changes', { event:'*', schema:'public', table:'app_state', filter:`key=eq.${key}` }, payload => {
+        if(payload.new && payload.new.data !== undefined) onChange(payload.new.data);
+      })
+      .subscribe();
+  }
+  window.CloudSync = { save: cloudSave, load: cloudLoad, subscribe: cloudSubscribe, ready: !!client };
+})();
 </script>
 <div class="module-switcher-shell">
   <div class="module-switcher">
@@ -665,6 +698,12 @@
   }
 
   let state = loadState();
+  window.CloudSync?.load(STORAGE_KEY).then(remote=>{
+    if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = remote; renderAll(); }
+    window.CloudSync?.subscribe(STORAGE_KEY, remote=>{
+      if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = remote; renderAll(); }
+    });
+  });
   let editingEmployeeId = null;
   let editingSynergyId = null;
 
@@ -682,6 +721,7 @@
   function save(){
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
     catch(err){ console.warn('Não foi possível salvar no localStorage:', err); }
+    window.CloudSync?.save(STORAGE_KEY, state);
   }
 
   function showToast(message){
@@ -1051,30 +1091,20 @@
 /* ===== Controle de Carregamento ===== */
 (() => {
   'use strict';
-  const TABLE='carregamentos';
-  const sb=window.sbClient;
+  const KEY='controle_carregamento_v1';
   let dados=[];
+  try{const raw=JSON.parse(localStorage.getItem(KEY)||'[]');dados=Array.isArray(raw)?raw:[];}catch{dados=[];}
+  window.CloudSync?.load(KEY).then(remote=>{
+    if(Array.isArray(remote)){ dados=remote; render(); }
+    window.CloudSync?.subscribe(KEY, remote=>{ if(Array.isArray(remote)){ dados=remote; render(); } });
+  });
   const $=id=>document.getElementById(id);
   const v=id=>$(id).value;
   const uid=()=> (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
   const localISODate=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const orNull=x=>(x===''||x===undefined)?null:x;
 
-  function rowToObj(r){
-    return {id:r.id,data:r.data||'',lt:r.lt||'',destino:r.destino||'',motorista:r.motorista||'',placa:r.placa||'',veiculo:r.veiculo||'',doca:r.doca||'',chegada:r.chegada||'',aceite:r.aceite||'',docaHora:r.doca_hora||'',cargaPronta:r.carga_pronta||'',inicio:r.inicio||'',fim:r.fim||'',liberacao:r.liberacao||'',meta:r.meta||60,aceitePor:r.aceite_por||'',liberadoPor:r.liberado_por||'',equipe:r.equipe||'',comp:Array.isArray(r.comp)?r.comp:[],pacotes:r.pacotes||0,peso:r.peso||0,status:r.status||'Aguardando',motivo:r.motivo||'',obs:r.obs||'',criado:r.criado||new Date().toISOString()};
-  }
-  function objToRow(o){
-    return {id:o.id,data:orNull(o.data),lt:o.lt,destino:o.destino,motorista:o.motorista,placa:orNull(o.placa),veiculo:orNull(o.veiculo),doca:orNull(o.doca),chegada:orNull(o.chegada),aceite:orNull(o.aceite),doca_hora:orNull(o.docaHora),carga_pronta:orNull(o.cargaPronta),inicio:orNull(o.inicio),fim:orNull(o.fim),liberacao:orNull(o.liberacao),meta:o.meta||60,aceite_por:orNull(o.aceitePor),liberado_por:orNull(o.liberadoPor),equipe:orNull(o.equipe),comp:o.comp||[],pacotes:o.pacotes||0,peso:o.peso||0,status:o.status,motivo:orNull(o.motivo),obs:orNull(o.obs),criado:o.criado};
-  }
-
-  async function reload(){
-    const {data,error}=await sb.from(TABLE).select('*');
-    if(error){console.error(error);alert('Erro ao carregar carregamentos do Supabase: '+error.message);return;}
-    dados=(data||[]).map(rowToObj);
-    render();
-  }
-
+  function persist(){try{localStorage.setItem(KEY,JSON.stringify(dados));}catch(err){console.warn(err)}window.CloudSync?.save(KEY,dados);updateMetrics();}
   function minutes(a,b){if(!a||!b)return null;const n=(new Date(b)-new Date(a))/60000;return n>=0?n:null;}
   function fmtMin(n){if(n==null)return '—';n=Math.round(n);return n>=60?Math.floor(n/60)+'h '+(n%60)+'min':n+' min';}
   function totalVol(x){return (x.comp||[]).reduce((s,c)=>s+(+c.qtd||0),0);}
@@ -1116,16 +1146,12 @@
     }catch{alert('Não foi possível ler o Plano do Dia.');}
   }
 
-  async function salvar(){
+  function salvar(){
     const req=[['lc-lt','LT / Pedido'],['lc-destino','Destino'],['lc-motorista','Motorista']];
     for(const [id,n] of req){if(!$(id).value.trim()){alert('Preencha: '+n);$(id).focus();return;}}
     const id=$('lc-editId').value||uid();const old=dados.find(x=>x.id===id);
     const obj={id,data:v('lc-data'),lt:v('lc-lt').trim(),destino:v('lc-destino').trim(),motorista:v('lc-motorista').trim(),placa:v('lc-placa').trim(),veiculo:v('lc-veiculo'),doca:v('lc-doca').trim(),chegada:v('lc-chegada'),aceite:v('lc-aceite'),docaHora:v('lc-docaHora'),cargaPronta:v('lc-cargaPronta'),inicio:v('lc-inicio'),fim:v('lc-fim'),liberacao:v('lc-liberacao'),meta:+v('lc-meta')||60,aceitePor:v('lc-aceitePor').trim(),liberadoPor:v('lc-liberadoPor').trim(),equipe:v('lc-equipe').trim(),comp:getComp(),pacotes:+v('lc-pacotes')||0,peso:+v('lc-peso')||0,status:v('lc-status'),motivo:v('lc-motivo'),obs:v('lc-obs').trim(),criado:old?.criado||new Date().toISOString()};
-    $('lc-save').disabled=true;
-    const {error}=await sb.from(TABLE).upsert(objToRow(obj));
-    $('lc-save').disabled=false;
-    if(error){alert('Erro ao salvar no Supabase: '+error.message);return;}
-    await reload();novo();alert('Carregamento salvo com sucesso.');
+    const i=dados.findIndex(x=>x.id===id);if(i>=0)dados[i]=obj;else dados.push(obj);persist();render();novo();alert('Carregamento salvo com sucesso.');
   }
 
   function updateMetrics(){
@@ -1148,13 +1174,7 @@
     const map={data:'lc-data',lt:'lc-lt',destino:'lc-destino',motorista:'lc-motorista',placa:'lc-placa',veiculo:'lc-veiculo',doca:'lc-doca',chegada:'lc-chegada',aceite:'lc-aceite',docaHora:'lc-docaHora',cargaPronta:'lc-cargaPronta',inicio:'lc-inicio',fim:'lc-fim',liberacao:'lc-liberacao',meta:'lc-meta',aceitePor:'lc-aceitePor',liberadoPor:'lc-liberadoPor',equipe:'lc-equipe',pacotes:'lc-pacotes',peso:'lc-peso',status:'lc-status',motivo:'lc-motivo',obs:'lc-obs'};
     Object.entries(map).forEach(([k,id2])=>$(id2).value=x[k]??'');$('lc-comp').innerHTML='';(x.comp||[]).forEach(c=>addComp(c.tipo,c.qtd));if(!(x.comp||[]).length){addComp('Gaylote');addComp('Saca');}calcComp();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }
-  async function excluir(id){
-    const x=dados.find(a=>a.id===id);if(!x)return;
-    if(!confirm(`Excluir o carregamento ${x.lt}? Esta ação não pode ser desfeita.`))return;
-    const {error}=await sb.from(TABLE).delete().eq('id',id);
-    if(error){alert('Erro ao excluir no Supabase: '+error.message);return;}
-    await reload();
-  }
+  function excluir(id){const x=dados.find(a=>a.id===id);if(!x)return;if(confirm(`Excluir o carregamento ${x.lt}? Esta ação não pode ser desfeita.`)){dados=dados.filter(a=>a.id!==id);persist();render();}}
   function clearFilters(){['lc-busca','lc-fData','lc-fStatus','lc-fDestino'].forEach(id=>$(id).value='');render();}
 
   function download(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
@@ -1164,26 +1184,12 @@
     const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');download(csv,'controle_carregamento.csv','text/csv;charset=utf-8;');
   }
   function backup(){download(JSON.stringify(dados,null,2),'backup_carregamentos.json','application/json');}
-  function restoreFile(file){
-    if(!file)return;const r=new FileReader();
-    r.onload=async()=>{
-      try{
-        const d=JSON.parse(r.result);if(!Array.isArray(d))throw new Error();
-        if(!confirm(`Restaurar backup com ${d.length} carregamento(s)? Isso vai gravar esses registros no Supabase (registros com o mesmo ID serão sobrescritos).`))return;
-        const rows=d.map(x=>objToRow({...x,id:x.id||uid()}));
-        const {error}=await sb.from(TABLE).upsert(rows);
-        if(error){alert('Erro ao restaurar backup no Supabase: '+error.message);return;}
-        await reload();alert('Backup restaurado.');
-      }catch{alert('Arquivo de backup inválido.');}
-    };
-    r.readAsText(file);
-  }
+  function restoreFile(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw new Error();if(!confirm(`Restaurar backup com ${d.length} carregamento(s)? Os dados atuais serão substituídos.`))return;dados=d;persist();render();alert('Backup restaurado.');}catch{alert('Arquivo de backup inválido.');}};r.readAsText(file);}
 
   $('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-export').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
   ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));
   $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(del)excluir(del.dataset.lcDel);});
-  document.querySelector('[data-module-target="loadingModule"]')?.addEventListener('click',()=>reload());
-  novo();reload();
+  novo();render();
 })();
 </script>
 
@@ -1193,52 +1199,25 @@
 /* ===== Histórico Diário ===== */
 (() => {
   'use strict';
-  // O Plano do Dia (Plano de Equipe) continua em localStorage — módulo fora deste escopo.
-  const PLAN_KEY='shippingAzulPlanner_v1';
-  // Estes dois agora vêm do Supabase (fonte única), não mais de localStorage.
-  const HIST_TABLE='historico_diario', LOAD_TABLE='carregamentos', PROD_TABLE='produtividade_registros';
-  const sb=window.sbClient;
+  const KEY='shippingAzulDailyHistory_v1', PLAN_KEY='shippingAzulPlanner_v1', LOAD_KEY='controle_carregamento_v1', PROD_KEY='shippingAzulProductivity_v1';
   const $=id=>document.getElementById(id);
   const localDate=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const fmtDate=s=>{if(!s)return '—';const [y,m,d]=s.split('-');return `${d}/${m}/${y}`;};
   const fmtSaved=s=>s?new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
   const readJSON=(key,fallback)=>{try{const x=JSON.parse(localStorage.getItem(key)||'');return x??fallback;}catch{return fallback;}};
+  let history=readJSON(KEY,[]);if(!Array.isArray(history))history=[];
+  let selectedDate=history.slice().sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'';
+  const persist=()=>{localStorage.setItem(KEY,JSON.stringify(history));window.CloudSync?.save(KEY,history);};
+  window.CloudSync?.load(KEY).then(remote=>{
+    if(Array.isArray(remote)){ history=remote; selectedDate=history.slice().sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||''; render(); }
+    window.CloudSync?.subscribe(KEY, remote=>{ if(Array.isArray(remote)){ history=remote; render(); } });
+  });
 
-  let history=[];
-  let selectedDate='';
-
-  function rowToSnap(r){
-    return {date:r.date,savedAt:r.saved_at,employees:Array.isArray(r.employees)?r.employees:[],synergy:Array.isArray(r.synergy)?r.synergy:[],functions:Array.isArray(r.functions)?r.functions:[],planning:r.planning||{},real:r.real||{}};
-  }
-  function snapToRow(snap){
-    return {date:snap.date,saved_at:snap.savedAt,employees:snap.employees,synergy:snap.synergy,functions:snap.functions,planning:snap.planning,real:snap.real};
-  }
-
-  async function reload(){
-    const {data,error}=await sb.from(HIST_TABLE).select('*');
-    if(error){console.error(error);alert('Erro ao carregar histórico do Supabase: '+error.message);return;}
-    history=(data||[]).map(rowToSnap);
-  }
-
-  // Busca de uma vez só os "extras ao vivo" (carregamentos e produtividade) de TODAS as
-  // datas, para não disparar 1 consulta por dia exibido na lista.
-  async function liveExtrasAll(){
-    const [loadsRes,prodRes]=await Promise.all([
-      sb.from(LOAD_TABLE).select('data,pacotes'),
-      sb.from(PROD_TABLE).select('date,bipes,sector,person_name')
-    ]);
-    if(loadsRes.error)console.error(loadsRes.error);
-    if(prodRes.error)console.error(prodRes.error);
-    const loadsByDate={},prodByDate={};
-    (loadsRes.data||[]).forEach(r=>{const d=r.data;if(!d)return;if(!loadsByDate[d])loadsByDate[d]={loads:0,packages:0};loadsByDate[d].loads++;loadsByDate[d].packages+=(+r.pacotes||0);});
-    (prodRes.data||[]).forEach(r=>{if(!['Leve','Volumoso'].includes(r.sector)||!r.date)return;if(!prodByDate[r.date])prodByDate[r.date]={bipes:0,people:new Set()};prodByDate[r.date].bipes+=(+r.bipes||0);prodByDate[r.date].people.add(r.person_name);});
-    return {loadsByDate,prodByDate};
-  }
-  function liveExtrasFor(date,cache){
-    const l=cache.loadsByDate[date]||{loads:0,packages:0};
-    const p=cache.prodByDate[date]||{bipes:0,people:new Set()};
-    return {loads:l.loads,packages:l.packages,bipes:p.bipes,prodPeople:p.people.size};
+  function liveExtras(date){
+    const loads=readJSON(LOAD_KEY,[]);const loadRows=Array.isArray(loads)?loads.filter(x=>x.data===date):[];
+    const prod=readJSON(PROD_KEY,{records:[]});const recs=Array.isArray(prod?.records)?prod.records.filter(x=>x.date===date&&['Leve','Volumoso'].includes(x.sector)):[];
+    return {loads:loadRows.length,packages:loadRows.reduce((s,x)=>s+(+x.pacotes||0),0),bipes:recs.reduce((s,x)=>s+(+x.bipes||0),0),prodPeople:new Set(recs.map(x=>x.personName)).size};
   }
 
   function makeSnapshot(date=localDate()){
@@ -1253,15 +1232,12 @@
   }
 
   function hasMeaningfulDay(snap){return !!snap&&(snap.employees.some(e=>e.status||e.function)||snap.synergy.length>0);}
-  async function saveToday(force=true){
+  function saveToday(force=true){
     const snap=makeSnapshot();if(!snap)return false;
     if(!force&&!hasMeaningfulDay(snap))return false;
-    const existed=history.some(x=>x.date===snap.date);
-    const {error}=await sb.from(HIST_TABLE).upsert(snapToRow(snap));
-    if(error){alert('Erro ao salvar histórico no Supabase: '+error.message);return false;}
-    await reload();
-    selectedDate=snap.date;render();
-    const plannerToast=document.getElementById('toast');if(force&&plannerToast){plannerToast.textContent=existed?'Histórico de hoje atualizado.':'Dia salvo no histórico.';plannerToast.classList.add('show');setTimeout(()=>plannerToast.classList.remove('show'),1900);}
+    const i=history.findIndex(x=>x.date===snap.date);if(i>=0)history[i]=snap;else history.push(snap);
+    selectedDate=snap.date;persist();render();
+    const plannerToast=document.getElementById('toast');if(force&&plannerToast){plannerToast.textContent=i>=0?'Histórico de hoje atualizado.':'Dia salvo no histórico.';plannerToast.classList.add('show');setTimeout(()=>plannerToast.classList.remove('show'),1900);}
     return true;
   }
   window.ShippingHistory={saveToday,render};
@@ -1271,38 +1247,26 @@
     return {present,absent,synergy:s.synergy.length,allocated};
   }
 
-  function renderList(cache){
+  function renderList(){
     const arr=history.slice().sort((a,b)=>b.date.localeCompare(a.date));$('history-count').textContent=arr.length;
-    $('history-list').innerHTML=arr.length?arr.map(s=>{const st=stats(s),x=liveExtrasFor(s.date,cache);return `<button class="history-day ${selectedDate===s.date?'active':''}" data-history-date="${s.date}"><strong>${fmtDate(s.date)}</strong><span>Salvo em ${fmtSaved(s.savedAt)}</span><div class="history-day-grid"><div class="history-day-stat"><b>${st.present}</b>Presentes</div><div class="history-day-stat"><b>${st.synergy}</b>Sinergia</div><div class="history-day-stat"><b>${x.loads}</b>Cargas</div><div class="history-day-stat"><b>${x.bipes.toLocaleString('pt-BR')}</b>Bipes</div></div></button>`;}).join(''):'<div class="empty-inline">Nenhum fechamento salvo ainda.</div>';
+    $('history-list').innerHTML=arr.length?arr.map(s=>{const st=stats(s),x=liveExtras(s.date);return `<button class="history-day ${selectedDate===s.date?'active':''}" data-history-date="${s.date}"><strong>${fmtDate(s.date)}</strong><span>Salvo em ${fmtSaved(s.savedAt)}</span><div class="history-day-grid"><div class="history-day-stat"><b>${st.present}</b>Presentes</div><div class="history-day-stat"><b>${st.synergy}</b>Sinergia</div><div class="history-day-stat"><b>${x.loads}</b>Cargas</div><div class="history-day-stat"><b>${x.bipes.toLocaleString('pt-BR')}</b>Bipes</div></div></button>`;}).join(''):'<div class="empty-inline">Nenhum fechamento salvo ainda.</div>';
   }
 
-  function renderDetail(cache){
+  function renderDetail(){
     const s=history.find(x=>x.date===selectedDate);const zero=['hist-kpi-present','hist-kpi-absent','hist-kpi-synergy','hist-kpi-allocated','hist-kpi-loads','hist-kpi-bipes'];
     if(!s){zero.forEach(id=>$(id).textContent='—');$('history-detail-title').textContent='DETALHES DO DIA';$('history-saved-at').textContent='—';$('history-details').innerHTML='<div class="empty"><div class="big">🗓</div><strong>Nenhum dia selecionado</strong>Salve o dia atual ou escolha um fechamento ao lado.</div>';return;}
-    const st=stats(s),x=liveExtrasFor(s.date,cache);$('hist-kpi-present').textContent=st.present;$('hist-kpi-absent').textContent=st.absent;$('hist-kpi-synergy').textContent=st.synergy;$('hist-kpi-allocated').textContent=st.allocated;$('hist-kpi-loads').textContent=x.loads;$('hist-kpi-bipes').textContent=x.bipes.toLocaleString('pt-BR');$('history-detail-title').textContent=`DETALHES • ${fmtDate(s.date)}`;$('history-saved-at').textContent=`Salvo ${fmtSaved(s.savedAt)}`;
+    const st=stats(s),x=liveExtras(s.date);$('hist-kpi-present').textContent=st.present;$('hist-kpi-absent').textContent=st.absent;$('hist-kpi-synergy').textContent=st.synergy;$('hist-kpi-allocated').textContent=st.allocated;$('hist-kpi-loads').textContent=x.loads;$('hist-kpi-bipes').textContent=x.bipes.toLocaleString('pt-BR');$('history-detail-title').textContent=`DETALHES • ${fmtDate(s.date)}`;$('history-saved-at').textContent=`Salvo ${fmtSaved(s.savedAt)}`;
     const teamRows=s.employees.filter(e=>e.status||e.function).map(e=>`<tr><td><b>${esc(e.name)}</b><br><span style="color:var(--muted)">${esc(e.so||'—')} · ${esc(e.ops||'—')}</span></td><td><span class="history-status ${e.status||'sem-status'}">${e.status==='presente'?'Presente':e.status==='ausente'?'Ausente':e.status==='sinergia'?'Sinergia':'Sem status'}</span></td><td>${esc(e.function||'—')}</td></tr>`).join('');
     const planRows=(s.functions||[]).map(fn=>{const pl=+s.planning?.[fn]||0,re=+s.real?.[fn]||0,diff=re-pl;return `<tr><td><b>${esc(fn)}</b></td><td>${pl}</td><td>${re}</td><td style="font-weight:900;color:${diff<0?'var(--red)':diff>0?'var(--amber)':'var(--green)'}">${diff>0?'+':''}${diff}</td></tr>`;}).join('');
     const synRows=(s.synergy||[]).map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${esc(a.origin||'—')}</td><td>${esc(a.function||'—')}</td></tr>`).join('');
-    $('history-details').innerHTML=`<div class="history-detail-grid"><div class="history-box"><h3>Equipe do dia</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Funcionário</th><th>Status</th><th>Função</th></tr></thead><tbody>${teamRows||'<tr><td colspan="3">Sem movimentação registrada.</td></tr>'}</tbody></table></div></div><div class="history-box"><h3>Planejado × Real</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Função</th><th>Plan.</th><th>Real</th><th>Dif.</th></tr></thead><tbody>${planRows}</tbody></table></div></div><div class="history-box"><h3>Sinergia</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Nome</th><th>Origem</th><th>Função</th></tr></thead><tbody>${synRows||'<tr><td colspan="3">Nenhuma sinergia.</td></tr>'}</tbody></table></div></div><div class="history-box"><h3>Resumo operacional</h3><div class="history-box-body" style="font-size:11px;line-height:1.8"><b>Carregamentos:</b> ${x.loads}<br><b>Pacotes registrados:</b> ${x.packages.toLocaleString('pt-BR')}<br><b>Bipes lançados:</b> ${x.bipes.toLocaleString('pt-BR')}<br><b>Pessoas com produtividade:</b> ${x.prodPeople}<br><span style="color:var(--muted)">Carregamentos e produtividade são lidos do Supabase pela mesma data.</span></div></div></div>`;
+    $('history-details').innerHTML=`<div class="history-detail-grid"><div class="history-box"><h3>Equipe do dia</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Funcionário</th><th>Status</th><th>Função</th></tr></thead><tbody>${teamRows||'<tr><td colspan="3">Sem movimentação registrada.</td></tr>'}</tbody></table></div></div><div class="history-box"><h3>Planejado × Real</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Função</th><th>Plan.</th><th>Real</th><th>Dif.</th></tr></thead><tbody>${planRows}</tbody></table></div></div><div class="history-box"><h3>Sinergia</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Nome</th><th>Origem</th><th>Função</th></tr></thead><tbody>${synRows||'<tr><td colspan="3">Nenhuma sinergia.</td></tr>'}</tbody></table></div></div><div class="history-box"><h3>Resumo operacional</h3><div class="history-box-body" style="font-size:11px;line-height:1.8"><b>Carregamentos:</b> ${x.loads}<br><b>Pacotes registrados:</b> ${x.packages.toLocaleString('pt-BR')}<br><b>Bipes lançados:</b> ${x.bipes.toLocaleString('pt-BR')}<br><b>Pessoas com produtividade:</b> ${x.prodPeople}<br><span style="color:var(--muted)">Carregamentos e produtividade são lidos dos respectivos históricos pela mesma data.</span></div></div></div>`;
   }
-  async function render(){
-    const cache=await liveExtrasAll();
-    renderList(cache);
-    renderDetail(cache);
-  }
-  document.querySelector('[data-module-target="historyModule"]')?.addEventListener('click',async()=>{await reload();render();});
+  function render(){renderList();renderDetail();}
+  document.querySelector('[data-module-target="historyModule"]')?.addEventListener('click',render);
   $('history-list').addEventListener('click',e=>{const b=e.target.closest('[data-history-date]');if(!b)return;selectedDate=b.dataset.historyDate;render();});
   $('history-save-today').addEventListener('click',()=>saveToday(true));
-  $('history-delete-day').addEventListener('click',async()=>{
-    if(!selectedDate)return alert('Selecione um dia.');
-    if(!confirm(`Excluir o fechamento de ${fmtDate(selectedDate)}? Os carregamentos e lançamentos de produtividade não serão apagados.`))return;
-    const {error}=await sb.from(HIST_TABLE).delete().eq('date',selectedDate);
-    if(error){alert('Erro ao excluir no Supabase: '+error.message);return;}
-    await reload();
-    selectedDate=history.slice().sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'';
-    render();
-  });
-  (async()=>{await reload();selectedDate=history.slice().sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'';render();})();
+  $('history-delete-day').addEventListener('click',()=>{if(!selectedDate)return alert('Selecione um dia.');if(!confirm(`Excluir o fechamento de ${fmtDate(selectedDate)}? Os carregamentos e lançamentos de produtividade não serão apagados.`))return;history=history.filter(x=>x.date!==selectedDate);persist();selectedDate=history.slice().sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'';render();});
+  render();
 })();
 </script>
 
@@ -1310,33 +1274,19 @@
 /* ===== Produtividade ===== */
 (() => {
   'use strict';
-  const RECORDS_TABLE='produtividade_registros', GOALS_TABLE='produtividade_metas', PLAN_KEY='shippingAzulPlanner_v1';
-  const sb=window.sbClient;
+  const KEY='shippingAzulProductivity_v1', PLAN_KEY='shippingAzulPlanner_v1';
   const $=id=>document.getElementById(id);const uid=()=>crypto.randomUUID?crypto.randomUUID():'p-'+Date.now()+'-'+Math.random().toString(16).slice(2);
   const localDate=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const readPlan=()=>{try{return JSON.parse(localStorage.getItem(PLAN_KEY)||'{}')||{};}catch{return {};}};
-  let data={records:[],goals:{Leve:300,Volumoso:75}};
+  let data;try{data=JSON.parse(localStorage.getItem(KEY)||'');}catch{};if(!data||!Array.isArray(data.records)||typeof data.goals!=='object')data={records:[],goals:{Leve:300,Volumoso:75}};
+  data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)};
   const BIP_SECTORS=['Leve','Volumoso'];
-
-  function rowToRecord(r){
-    return {id:r.id,date:r.date,personKey:r.person_key,personName:r.person_name,sector:r.sector,bipes:r.bipes||0,hours:r.hours??'',note:r.note||'',createdAt:r.created_at,updatedAt:r.updated_at};
-  }
-  function recordToRow(o){
-    return {id:o.id,date:o.date,person_key:o.personKey,person_name:o.personName,sector:o.sector,bipes:o.bipes||0,hours:(o.hours===''||o.hours==null)?null:o.hours,note:o.note||null,created_at:o.createdAt,updated_at:o.updatedAt};
-  }
-
-  async function reload(){
-    const [recRes,goalRes]=await Promise.all([
-      sb.from(RECORDS_TABLE).select('*'),
-      sb.from(GOALS_TABLE).select('*')
-    ]);
-    if(recRes.error){alert('Erro ao carregar produtividade do Supabase: '+recRes.error.message);}
-    if(goalRes.error){alert('Erro ao carregar metas do Supabase: '+goalRes.error.message);}
-    data.records=(recRes.data||[]).map(rowToRecord);
-    const goalsMap={};(goalRes.data||[]).forEach(g=>goalsMap[g.sector]=g.meta);
-    data.goals={Leve:Math.max(0,+goalsMap.Leve||300),Volumoso:Math.max(0,+goalsMap.Volumoso||75)};
-  }
+  const persist=()=>{localStorage.setItem(KEY,JSON.stringify(data));window.CloudSync?.save(KEY,data);window.ShippingHistory?.render?.();};
+  window.CloudSync?.load(KEY).then(remote=>{
+    if(remote && Array.isArray(remote.records)){ data=remote; data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)}; render(); }
+    window.CloudSync?.subscribe(KEY, remote=>{ if(remote && Array.isArray(remote.records)){ data=remote; render(); } });
+  });
   function sectors(){return [...BIP_SECTORS];}
   function syncGoals(){
     data.goals={Leve:Math.max(0,+data.goals.Leve||300),Volumoso:Math.max(0,+data.goals.Volumoso||75)};
@@ -1369,37 +1319,18 @@
   }
   function render(){syncGoals();renderSelectors();renderGoals();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderHistory(rows);}
   function clearForm(){ $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';$('prod-date').value=$('prod-date-filter').value||localDate();$('prod-person').value='';$('prod-sector').value='';$('prod-bipes').value='';$('prod-hours').value='';$('prod-note').value='';}
-  async function saveRecord(){
-    const personVal=$('prod-person').value,sector=$('prod-sector').value,date=$('prod-date').value,bipes=Math.max(0,Math.floor(+$('prod-bipes').value||0)),hours=Math.max(0,+$('prod-hours').value||0);if(!date||!personVal||!sector)return alert('Preencha data, funcionário e setor.');if(!bipes)return alert('Informe a quantidade de bipes.');const p=people().find(x=>x.value===personVal);if(!p)return alert('Funcionário não encontrado no cadastro atual.');const id=$('prod-edit-id').value||uid(),old=data.records.find(x=>x.id===id);const obj={id,date,personKey:personVal,personName:p.name,sector,bipes,hours:hours||'',note:$('prod-note').value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
-    $('prod-save').disabled=true;
-    const {error}=await sb.from(RECORDS_TABLE).upsert(recordToRow(obj));
-    $('prod-save').disabled=false;
-    if(error){alert('Erro ao salvar produtividade no Supabase: '+error.message);return;}
-    await reload();window.ShippingHistory?.render?.();$('prod-date-filter').value=date;clearForm();render();
+  function saveRecord(){
+    const personVal=$('prod-person').value,sector=$('prod-sector').value,date=$('prod-date').value,bipes=Math.max(0,Math.floor(+$('prod-bipes').value||0)),hours=Math.max(0,+$('prod-hours').value||0);if(!date||!personVal||!sector)return alert('Preencha data, funcionário e setor.');if(!bipes)return alert('Informe a quantidade de bipes.');const p=people().find(x=>x.value===personVal);if(!p)return alert('Funcionário não encontrado no cadastro atual.');const id=$('prod-edit-id').value||uid(),old=data.records.find(x=>x.id===id);const obj={id,date,personKey:personVal,personName:p.name,sector,bipes,hours:hours||'',note:$('prod-note').value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};const i=data.records.findIndex(x=>x.id===id);if(i>=0)data.records[i]=obj;else data.records.push(obj);persist();$('prod-date-filter').value=date;clearForm();render();
   }
   function editRecord(id){const r=data.records.find(x=>x.id===id);if(!r)return;$('prod-edit-id').value=id;$('prod-form-title').textContent='Editar produtividade';$('prod-date').value=r.date;renderSelectors();$('prod-person').value=r.personKey;$('prod-sector').value=r.sector;$('prod-bipes').value=r.bipes;$('prod-hours').value=r.hours||'';$('prod-note').value=r.note||'';document.getElementById('productivityModule').scrollIntoView({behavior:'smooth',block:'start'});}
   function exportCSV(){const rows=[['Data','Funcionário','Setor','Bipes','Referência por hora','Índice relativo','Horas informadas','Bipes por hora','% da meta por hora','Observação']];data.records.forEach(r=>rows.push([r.date,r.personName,r.sector,r.bipes,reference(r.sector),indexOf(r)??'',r.hours||'',rateOf(r)??'',achievement(r)??'',r.note||'']));const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='produtividade_shipping.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 
   $('prod-date-filter').value=localDate();$('prod-date').value=localDate();
-  document.querySelector('[data-module-target="productivityModule"]')?.addEventListener('click',()=>setTimeout(async()=>{await reload();render();},0));
+  document.querySelector('[data-module-target="productivityModule"]')?.addEventListener('click',()=>setTimeout(render,0));
   $('prod-save').addEventListener('click',saveRecord);$('prod-clear-form').addEventListener('click',clearForm);$('prod-date-filter').addEventListener('change',()=>{if(!$('prod-edit-id').value)$('prod-date').value=$('prod-date-filter').value;render();});$('prod-sector-filter').addEventListener('change',render);$('prod-export').addEventListener('click',exportCSV);
-  $('prod-goals').addEventListener('change',async e=>{
-    const sec=e.target.dataset.goalSector;if(!sec)return;
-    const val=Math.max(0,+e.target.value||0);data.goals[sec]=val;
-    const {error}=await sb.from(GOALS_TABLE).upsert({sector:sec,meta:val});
-    if(error)alert('Erro ao salvar meta no Supabase: '+error.message);
-    render();
-  });
-  $('prod-history-body').addEventListener('click',async e=>{
-    const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');
-    if(ed)editRecord(ed.dataset.prodEdit);
-    if(del&&confirm('Excluir este lançamento de produtividade?')){
-      const {error}=await sb.from(RECORDS_TABLE).delete().eq('id',del.dataset.prodDel);
-      if(error){alert('Erro ao excluir no Supabase: '+error.message);return;}
-      await reload();window.ShippingHistory?.render?.();render();
-    }
-  });
-  (async()=>{await reload();render();clearForm();})();
+  $('prod-goals').addEventListener('change',e=>{const sec=e.target.dataset.goalSector;if(!sec)return;data.goals[sec]=Math.max(0,+e.target.value||0);persist();render();});
+  $('prod-history-body').addEventListener('click',e=>{const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');if(ed)editRecord(ed.dataset.prodEdit);if(del&&confirm('Excluir este lançamento de produtividade?')){data.records=data.records.filter(r=>r.id!==del.dataset.prodDel);persist();render();}});
+  render();clearForm();
 })();
 </script>
 
