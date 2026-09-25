@@ -1584,20 +1584,8 @@ async function criarOperadorAdmin(){
   try{
     const fnUrl='https://qcfgbcszqadggwvlxqqg.supabase.co/functions/v1/admin-create-operator';
     const {data:{session}}=await SupabaseApp.client.auth.getSession();
-const res = await fetch(fnUrl, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${session.access_token}`,
-    'apikey': 'sb_publishable_b9pWGR9_PV818LsdNtfnqA_IMHq--mi'
-  },
-  body: JSON.stringify({
-    ops,
-    nome,
-    senha,
-    perfil
-  })
-});
+    if(!session?.access_token) throw new Error('Sessão ADMIN não encontrada. Faça login novamente.');
+    const res=await fetch(fnUrl,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({ops,nome,senha,perfil})});
     const out=await res.json();if(!res.ok)throw new Error(out.error||'Falha ao criar operador.');
     msg.style.color='#138a4b';msg.textContent='Usuário criado com sucesso. Login: '+ops;document.getElementById('newOperatorPassword').value='';abrirAdminUsuarios();
   }catch(e){msg.style.color='#d64545';msg.textContent=e.message||'Erro ao criar usuário.';}
