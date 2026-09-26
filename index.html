@@ -664,7 +664,7 @@
   </header>
   <nav class="prod-tabs" aria-label="Abas de produtividade">
     <button class="prod-tab active" type="button" data-prod-tab="main">📈 Minha produtividade</button>
-    <button class="prod-tab" type="button" data-prod-tab="ranking">🏆 Melhores do dia / semana</button>
+    <button class="prod-tab" type="button" data-prod-tab="ranking">🏆 Melhores do dia / mês</button>
   </nav>
   <section class="prod-main-content" data-prod-main="main">
     <div class="prod-goal-main">
@@ -688,7 +688,7 @@
     <div class="mini-kpi"><div class="mk-label">Lançamentos</div><div class="mk-value" id="prod-kpi-records">0</div><div class="mk-sub">na data filtrada</div></div>
   </section>
 
-  <section class="prod-layout prod-main-content" data-prod-main="main">
+  <section class="prod-layout prod-main-content" data-prod-main="main" id="prod-entry-panel">
     <div class="prod-panel">
       <div class="prod-panel-head"><h2 id="prod-form-title">Adicionar produtividade</h2><button class="btn small" type="button" id="prod-clear-form">Limpar</button></div>
       <div class="prod-panel-body">
@@ -751,17 +751,16 @@
   </section>
 
   <section class="prod-panel prod-main-content" data-prod-main="main">
-    <div class="prod-panel-head"><h2>Lançamentos de produtividade</h2><span class="count" id="prod-history-count">0 registros</span></div>
+    <div class="prod-panel-head"><h2>Lançamentos de produtividade</h2><div style="display:flex;align-items:center;gap:8px"><span class="count" id="prod-history-count">0 registros</span><button class="btn small" type="button" id="prod-history-refresh">↻ Atualizar</button></div></div>
     <div class="prod-history-wrap"><table class="prod-history-table"><thead><tr><th>Data</th><th>Hora</th><th>Funcionário</th><th>Setor</th><th>Bipes</th><th>Referência/h</th><th>Índice</th><th>Horas</th><th>Bipes/h</th><th>% Meta/h</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="prod-history-body"></tbody></table><div class="empty-inline" id="prod-history-empty">Nenhum lançamento para os filtros atuais.</div></div>
   </section>
   <section class="prod-panel prod-ranking-tab" data-prod-ranking="ranking" style="display:none">
     <div class="prod-panel-head"><h2>🏆 Ranking de produtividade</h2><span class="count" id="prod-ranking-period-label">Dia</span></div>
     <div class="prod-panel-body">
       <div class="prod-ranking-tools">
-        <div><label>Período</label><select id="prod-ranking-period"><option value="day">Hoje / dia selecionado</option><option value="week">Semana do dia selecionado</option></select></div>
+        <div><label>Período</label><select id="prod-ranking-period"><option value="day">Melhores do dia</option><option value="month">Melhores do mês</option></select></div>
         <div><label>Data de referência</label><input type="date" id="prod-ranking-date"></div>
       </div>
-      <div class="prod-goal-day" id="prod-daily-goal-box"><strong>Meta geral do dia</strong><input type="number" id="prod-daily-goal" min="0" step="1" value="8000"><span>bipes</span><span id="prod-daily-goal-note" class="prod-week-note">Defina a meta diária que o setor precisa processar.</span></div>
       <p class="prod-week-note" id="prod-ranking-week-note"></p>
       <div class="prod-rank-grid">
         <div class="prod-panel" style="box-shadow:none">
@@ -1720,12 +1719,34 @@
     if(current)sel.value=current;
   }
   function operatorPersonKey(){
-    const p=window.SupabaseApp?.profile;
-    if(p?.perfil!=='OPERADOR')return '';
-    const ops=String(p.ops||p.afs||'').trim().toLowerCase(),plan=readPlan();
-    const emp=(plan?.employees||[]).find(e=>String(e.ops||e.afs||'').trim().toLowerCase()===ops);
-    if(emp)return 'emp:'+emp.id;
-    return '';
+    const p=window.SupabaseApp?.profile||{};
+    if(String(p.perfil||'').toUpperCase()!=='OPERADOR')return '';
+    const ops=String(p.ops||'').trim().toLowerCase();
+    const afs=String(p.afs||'').trim().toLowerCase();
+    const plan=readPlan();
+    const emp=(plan?.employees||[]).find(e=>{
+      const eops=String(e.ops||'').trim().toLowerCase(), eafs=String(e.afs||'').trim().toLowerCase();
+      return (ops&&eops===ops)||(afs&&eafs===afs);
+    });
+    return emp?'emp:'+emp.id:'';
+  }
+  function operatorMatchesRecord(r){
+    const p=window.SupabaseApp?.profile||{};
+    if(String(p.perfil||'').toUpperCase()!=='OPERADOR')return true;
+    const key=operatorPersonKey();
+    if(key&&String(r.personKey||'')===key)return true;
+    const ident=String(p.ops||p.afs||'').trim().toLowerCase();
+    const plan=readPlan();
+    const emp=(plan?.employees||[]).find(e=>{
+      const eops=String(e.ops||'').trim().toLowerCase(), eafs=String(e.afs||'').trim().toLowerCase();
+      return ident&&(eops===ident||eafs===ident);
+    });
+    if(emp){
+      const vals=[emp.name,emp.ops,emp.afs].filter(Boolean).map(v=>String(v).trim().toLowerCase());
+      const rn=String(r.personName||'').trim().toLowerCase();
+      if(vals.includes(rn))return true;
+    }
+    return false;
   }
   function renderChartPersonSelector(){
     const sel=$('prod-chart-person');if(!sel)return;
@@ -1743,7 +1764,23 @@
     sel.disabled=!!opKey;
   }
 function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class="goal-row"><strong title="${esc(s)}">${esc(s)}</strong><input type="number" min="0" step="1" value="${reference(s)}" data-goal-sector="${esc(s)}"><span>bipes/h</span></div>`).join('');}
-  function filtered(){const d=$('prod-date-filter').value,sec=$('prod-sector-filter').value;let rows=data.records.filter(r=>BIP_SECTORS.includes(r.sector)&&(!d||r.date===d)&&(sec==='all'||r.sector===sec));const p=window.SupabaseApp?.profile;if(p?.perfil==='OPERADOR'){const ops=String(p.ops||p.afs||'').trim().toLowerCase();const plan=readPlan();const emp=(plan?.employees||[]).find(e=>String(e.ops||e.afs||'').trim().toLowerCase()===ops);const key=emp?`emp:${emp.id}`:'';rows=rows.filter(r=>key&&r.personKey===key);}return rows;}
+  function normalizeRecord(r){
+    if(!r||typeof r!=='object')return null;
+    const sector=String(r.sector||r.setor||'').trim();
+    const date=String(r.date||r.data||'').trim();
+    const personName=String(r.personName||r.funcionario||r.nome||'').trim();
+    const personKey=String(r.personKey||r.person_key||'').trim();
+    const bipes=Math.max(0,+r.bipes||+r.quantidade||+r.quantidadeBipes||0);
+    const hour=String(r.hour||r.hora||'').trim();
+    return {...r,sector,date,personName,personKey,bipes,hour};
+  }
+  function allRecords(){return (Array.isArray(data.records)?data.records:[]).map(normalizeRecord).filter(Boolean);}
+  function filtered(){
+    const d=$('prod-date-filter').value,sec=$('prod-sector-filter').value;
+    let rows=allRecords().filter(r=>BIP_SECTORS.some(x=>x.toLowerCase()===r.sector.toLowerCase())&&(!d||r.date===d)&&(sec==='all'||r.sector===sec));
+    rows=rows.filter(operatorMatchesRecord);
+    return rows;
+  }
   function aggregate(rows){
     const map=new Map();for(const r of rows){const key=r.personKey||r.personName;let x=map.get(key);if(!x){x={name:r.personName,bipes:0,index:0,indexParts:0,sectors:new Set(),hours:0,hasHours:false};map.set(key,x);}x.bipes+=+r.bipes||0;x.sectors.add(r.sector);const idx=indexOf(r);if(idx!=null){x.index+=idx;x.indexParts++;}if(+r.hours>0){x.hours+=+r.hours;x.hasHours=true;}}
     return [...map.values()].sort((a,b)=>(b.indexParts?b.index:-1)-(a.indexParts?a.index:-1)||b.bipes-a.bipes);
@@ -1755,12 +1792,12 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
   }
   function renderRanking(rank){$('prod-rank-count').textContent=`${rank.length} pessoa${rank.length===1?'':'s'}`;$('prod-ranking').innerHTML=rank.length?rank.map((x,i)=>`<div class="rank-card ${i===0?'top1':''}"><div class="rank-pos">${i+1}º</div><div><div class="rank-name">${esc(x.name)}</div><div class="rank-meta">${esc([...x.sectors].join(' • '))}</div></div><div class="rank-num"><b>${fmtN(x.bipes)}</b><span>bipes</span></div><div class="rank-num"><b>${x.indexParts?fmtN(x.index,2)+'×':'—'}</b><span>índice</span></div><div class="rank-num"><b>${x.hasHours?fmtN(x.hours,2):'—'}</b><span>horas inf.</span></div></div>`).join(''):'<div class="empty-inline">Nenhum lançamento nessa data/setor.</div>';}
   function renderHistory(rows){
-    const arr=rows.slice().sort((a,b)=>(b.date+(b.hour||'')+b.createdAt).localeCompare(a.date+(a.hour||'')+a.createdAt));
+    const arr=(rows||[]).slice().sort((a,b)=>(String(b.date)+(b.hour||'')+(b.createdAt||'')).localeCompare(String(a.date)+(a.hour||'')+(a.createdAt||'')));
     $('prod-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;
     $('prod-history-empty').style.display=arr.length?'none':'block';
     $('prod-history-body').innerHTML=arr.map(r=>{
       const idx=indexOf(r),rate=rateOf(r),ach=achievement(r);
-      return `<tr><td>${esc(r.date.split('-').reverse().join('/'))}</td><td><b>${esc(r.hour||'—')}</b></td><td>${esc(r.personName)}</td><td>${esc(r.sector)}</td><td><b>${fmtN(r.bipes)}</b></td><td>${reference(r.sector)?fmtN(reference(r.sector)):'—'}</td><td>${idx!=null?`<span class="score-pill">${fmtN(idx,2)}×</span>`:'—'}</td><td>${+r.hours>0?fmtN(r.hours,2):'—'}</td><td>${rate!=null?fmtN(rate,1):'—'}</td><td>${ach!=null?`<span class="score-pill ${ach>=100?'good':ach>=85?'warn':''}">${fmtN(ach,0)}%</span>`:'—'}</td><td title="${esc(r.note||'')}">${esc((r.note||'').slice(0,42)||'—')}</td><td><button class="btn small" data-prod-edit="${r.id}">Editar</button> <button class="btn small danger" data-prod-del="${r.id}">Excluir</button></td></tr>`;
+      return `<tr><td>${esc(String(r.date||'').split('-').reverse().join('/'))}</td><td><b>${esc(r.hour||'—')}</b></td><td>${esc(resolvePersonName(r))}</td><td>${esc(r.sector)}</td><td><b>${fmtN(r.bipes)}</b></td><td>${reference(r.sector)?fmtN(reference(r.sector)):'—'}</td><td>${idx!=null?`<span class="score-pill">${fmtN(idx,2)}×</span>`:'—'}</td><td>${+r.hours>0?fmtN(r.hours,2):'—'}</td><td>${rate!=null?fmtN(rate,1):'—'}</td><td>${ach!=null?`<span class="score-pill ${ach>=100?'good':ach>=85?'warn':''}">${fmtN(ach,0)}%</span>`:'—'}</td><td title="${esc(r.note||'')}">${esc((r.note||'').slice(0,42)||'—')}</td><td>${['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase())?`<button class="btn small" data-prod-edit="${esc(r.id)}">Editar</button> <button class="btn small danger" data-prod-del="${esc(r.id)}">Excluir</button>`:'<span class="muted">Somente leitura</span>'}</td></tr>`;
     }).join('');
   }
 
@@ -1846,10 +1883,8 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
   function dateRangeForPeriod(date,period){
     if(period==='day')return {start:date,end:date};
     const d=new Date(date+'T12:00:00');
-    const day=d.getDay();
-    const diff=(day+6)%7;
-    const start=new Date(d);start.setDate(d.getDate()-diff);
-    const end=new Date(start);end.setDate(start.getDate()+6);
+    const start=new Date(d.getFullYear(),d.getMonth(),1,12);
+    const end=new Date(d.getFullYear(),d.getMonth()+1,0,12);
     const f=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
     return {start:f(start),end:f(end)};
   }
@@ -1860,21 +1895,42 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const hit=ppl.find(p=>p.value===key);
     return hit?.name||'Colaborador não identificado';
   }
+  function resolvePersonName(r){
+    const direct=String(r.personName||'').trim();
+    if(direct)return direct;
+    const key=String(r.personKey||'');
+    const hit=people().find(p=>p.value===key);
+    return hit?.name||'Colaborador não identificado';
+  }
   function rankingRows(sector,period,date){
     const range=dateRangeForPeriod(date,period);
     const wanted=String(sector||'').trim().toLowerCase();
     const map=new Map();
-    data.records.filter(r=>String(r.sector||'').trim().toLowerCase()===wanted&&r.date>=range.start&&r.date<=range.end).forEach(r=>{
-      const key=r.personKey||resolvePersonName(r);
+    allRecords().filter(r=>{
+      const rs=String(r.sector||'').trim().toLowerCase();
+      return rs===wanted&&r.date>=range.start&&r.date<=range.end;
+    }).forEach(r=>{
+      const name=resolvePersonName(r);
+      const key=String(r.personKey||'').trim()||('name:'+name.toLowerCase());
       let x=map.get(key);
-      if(!x)x={key,name:resolvePersonName(r),bipes:0};
+      if(!x)x={key,name,bipes:0};
       x.bipes+=Math.max(0,+r.bipes||0);
       map.set(key,x);
     });
     return [...map.values()].sort((a,b)=>b.bipes-a.bipes||a.name.localeCompare(b.name,'pt-BR'));
   }
+  function renderRankingTable(sector,period,date){
+    const rows=rankingRows(sector,period,date);
+    const id=sector.toLowerCase();
+    const body=$('prod-rank-'+id+'-body'),count=$('prod-rank-'+id+'-count'),me=operatorPersonKey();
+    if(count)count.textContent=`${rows.length} pessoa${rows.length===1?'':'s'}`;
+    if(body)body.innerHTML=rows.length?rows.map((x,i)=>{
+      const mine=me&&x.key===me;
+      return `<tr class="${mine?'prod-rank-me':''}"><td class="prod-rank-pos">${i+1}º</td><td>${esc(x.name)}${mine?' <small>(você)</small>':''}</td><td><b>${fmtN(x.bipes)}</b></td></tr>`;
+    }).join(''):'<tr><td colspan="3" class="prod-rank-empty">Nenhum lançamento encontrado para este período.</td></tr>';
+  }
   function renderQuickRanking(){
-    const date=$('prod-date-filter')?.value||localDate(), me=currentOperatorKey();
+    const date=$('prod-date-filter')?.value||localDate(), me=operatorPersonKey();
     for(const sec of BIP_SECTORS){
       const rows=rankingRows(sec,'day',date).slice(0,10);
       const body=$('prod-quick-'+sec.toLowerCase()+'-body');
@@ -1884,7 +1940,7 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
   function renderMainDailyGoal(){
     const date=$('prod-date-filter')?.value||localDate();
     const goal=dailyGoalFor(date);
-    const actual=data.records.filter(r=>r.date===date&&BIP_SECTORS.includes(r.sector)).reduce((s,r)=>s+Math.max(0,+r.bipes||0),0);
+    const actual=allRecords().filter(r=>r.date===date&&BIP_SECTORS.some(s=>s.toLowerCase()===r.sector.toLowerCase())).reduce((s,r)=>s+Math.max(0,+r.bipes||0),0);
     const pct=goal>0?actual/goal*100:0;
     const p=currentProfile(),canEdit=['ADMIN','LIDER'].includes(String(p.perfil||'').toUpperCase());
     const input=$('prod-main-daily-goal');if(input){input.value=goal;input.disabled=!canEdit;}
@@ -1896,25 +1952,26 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
   }
 
   function renderRankingTab(){
-    const date=$('prod-ranking-date')?.value||$('prod-date-filter')?.value||localDate(),period=$('prod-ranking-period')?.value||'day';
-    const selectedGoal=dailyGoalFor(date);if($('prod-daily-goal'))$('prod-daily-goal').value=selectedGoal;
-    const profile=currentProfile(),canGoal=['ADMIN','LIDER'].includes(String(profile.perfil||'').toUpperCase());
-    const goalBox=$('prod-daily-goal-box');if(goalBox)goalBox.style.display=canGoal?'flex':'none';
+    const date=$('prod-ranking-date')?.value||$('prod-date-filter')?.value||localDate();
+    const period=$('prod-ranking-period')?.value||'day';
     const range=dateRangeForPeriod(date,period);
-    const label=period==='day'?'Dia':'Semana';
+    const label=period==='day'?'Melhores do dia':'Melhores do mês';
     if($('prod-ranking-period-label'))$('prod-ranking-period-label').textContent=label;
-    if($('prod-ranking-week-note'))$('prod-ranking-week-note').textContent=period==='week'?`Semana: ${range.start.split('-').reverse().join('/')} até ${range.end.split('-').reverse().join('/')}`:'';
-    const me=currentOperatorKey();
-    for(const sec of BIP_SECTORS){
-      const rows=rankingRows(sec,period,date),body=$('prod-rank-'+sec.toLowerCase()+'-body'),count=$('prod-rank-'+sec.toLowerCase()+'-count');
-      if(count)count.textContent=`${rows.length} pessoa${rows.length===1?'':'s'}`;
-      if(body)body.innerHTML=rows.length?rows.map((x,i)=>`<tr class="${me&&x.key===me?'prod-rank-me':''}"><td class="prod-rank-pos">${i+1}º</td><td>${esc(x.name)}${me&&x.key===me?' <small>(você)</small>':''}</td><td><b>${fmtN(x.bipes)}</b></td></tr>`).join(''):'<tr><td colspan="3" class="prod-rank-empty">Nenhum lançamento.</td></tr>';
+    if($('prod-ranking-week-note'))$('prod-ranking-week-note').textContent=period==='month'
+      ?`Mês: ${range.start.split('-').reverse().join('/')} até ${range.end.split('-').reverse().join('/')}`
+      :'';
+    for(const sec of BIP_SECTORS)renderRankingTable(sec,period,date);
+
+    const all=allRecords().filter(r=>BIP_SECTORS.some(s=>s.toLowerCase()===r.sector.toLowerCase())&&r.date>=range.start&&r.date<=range.end);
+    const total=all.reduce((sum,r)=>sum+Math.max(0,+r.bipes||0),0);
+    let goal=0;
+    for(let d=new Date(range.start+'T12:00:00');d<=new Date(range.end+'T12:00:00');d.setDate(d.getDate()+1)){
+      const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      goal+=dailyGoalFor(ds);
     }
-    const all=data.records.filter(r=>BIP_SECTORS.includes(r.sector)&&r.date>=range.start&&r.date<=range.end);
-    const total=all.reduce((s,r)=>s+(+r.bipes||0),0);
-    const dates=[];for(let d=new Date(range.start+'T12:00:00');d<=new Date(range.end+'T12:00:00');d.setDate(d.getDate()+1)){dates.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);}
-    const goal=dates.reduce((sum,d)=>sum+dailyGoalFor(d),0);
-    if($('prod-ranking-summary'))$('prod-ranking-summary').innerHTML=period==='day'?`Meta geral do dia: <b>${fmtN(dailyGoalFor(date))} bipes</b> • Bipado: <b>${fmtN(total)}</b> • ${dailyGoalFor(date)?fmtN(total/dailyGoalFor(date)*100,0):0}% da meta.`:`Meta acumulada da semana: <b>${fmtN(goal)} bipes</b> • Bipado no período: <b>${fmtN(total)}</b> • ${goal?fmtN(total/goal*100,0):0}% da meta.`;
+    if($('prod-ranking-summary'))$('prod-ranking-summary').innerHTML=period==='day'
+      ?`Meta geral do dia: <b>${fmtN(dailyGoalFor(date))} bipes</b> • Bipado: <b>${fmtN(total)}</b> • ${dailyGoalFor(date)?fmtN(total/dailyGoalFor(date)*100,0):0}% da meta.`
+      :`Meta acumulada do mês: <b>${fmtN(goal)} bipes</b> • Bipado no período: <b>${fmtN(total)}</b> • ${goal?fmtN(total/goal*100,0):0}% da meta.`;
   }
   function setProductivityTab(tab){
     document.querySelectorAll('[data-prod-tab]').forEach(b=>b.classList.toggle('active',b.dataset.prodTab===tab));
@@ -1922,7 +1979,18 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const rank=$('[data-prod-ranking="ranking"]');if(rank)rank.style.display=tab==='ranking'?'block':'none';
     if(tab==='ranking')renderRankingTab();
   }
-  function render(){syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();}
+  function updateProductivityPermissions(){
+    const perfil=String(currentProfile().perfil||'').toUpperCase();
+    const canEdit=['ADMIN','LIDER'].includes(perfil);
+    const panel=$('prod-entry-panel');
+    if(panel)panel.style.display=canEdit?'':'none';
+    const refresh=$('prod-history-refresh');
+    if(refresh)refresh.style.display='';
+    const note=document.querySelector('.prod-main-content[data-prod-main="main"] .prod-panel-head h2');
+    if(note && !canEdit)note.textContent='Lançamentos de produtividade';
+    if(!canEdit && $('prod-edit-id'))clearForm();
+  }
+  function render(){updateProductivityPermissions();syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();}
   function clearForm(){
     $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';
     $('prod-date').value=$('prod-date-filter').value||localDate();$('prod-hour').value='';
@@ -1942,9 +2010,15 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
   }
 
 function editRecord(id){
-    const r=data.records.find(x=>x.id===id);if(!r)return;
+    const raw=data.records.find(x=>x.id===id);if(!raw)return;
+    const r=normalizeRecord(raw);
     $('prod-edit-id').value=id;$('prod-form-title').textContent='Editar produtividade';$('prod-date').value=r.date;
-    renderSelectors();$('prod-person').value=r.personKey;$('prod-sector').value=r.sector;$('prod-hour').value=r.hour||'';
+    renderSelectors();$('prod-person').value=r.personKey||'';
+    if(!$('prod-person').value){
+      const hit=people().find(p=>String(p.name||'').trim().toLowerCase()===String(r.personName||'').trim().toLowerCase());
+      if(hit)$('prod-person').value=hit.value;
+    }
+    $('prod-sector').value=r.sector;$('prod-hour').value=r.hour||'';
     $('prod-bipes').value=r.bipes;$('prod-hours').value=r.hours||'';$('prod-note').value=r.note||'';
     document.getElementById('productivityModule').scrollIntoView({behavior:'smooth',block:'start'});
   }
@@ -1957,12 +2031,13 @@ function editRecord(id){
 
 renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value=localDate();
   document.querySelector('[data-module-target="productivityModule"]')?.addEventListener('click',()=>setTimeout(render,0));
-  $('prod-save').addEventListener('click',saveRecord);$('prod-clear-form').addEventListener('click',clearForm);
+  $('prod-save').addEventListener('click',()=>{if(['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase()))saveRecord();});$('prod-clear-form').addEventListener('click',()=>{if(['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase()))clearForm();});
   $('prod-date-filter').addEventListener('change',()=>{if(!$('prod-edit-id').value)$('prod-date').value=$('prod-date-filter').value;if($('prod-ranking-date'))$('prod-ranking-date').value=$('prod-date-filter').value;render();});
   $('prod-sector-filter').addEventListener('change',render);$('prod-chart-person').addEventListener('change',renderPersonChart);
   $('prod-export').addEventListener('click',exportCSV);
   $('prod-goals').addEventListener('change',e=>{const sec=e.target.dataset.goalSector;if(!sec)return;data.goals[sec]=Math.max(0,+e.target.value||0);persist();render();});
-  $('prod-history-body').addEventListener('click',e=>{const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');if(ed)editRecord(ed.dataset.prodEdit);if(del&&confirm('Excluir este lançamento de produtividade?')){data.records=data.records.filter(r=>r.id!==del.dataset.prodDel);persist();render();}});
+  $('prod-history-body').addEventListener('click',e=>{const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');if(ed&&['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase()))editRecord(ed.dataset.prodEdit);if(del&&['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase())&&confirm('Excluir este lançamento de produtividade?')){data.records=data.records.filter(r=>r.id!==del.dataset.prodDel);persist();render();}});
+  $('prod-history-refresh')?.addEventListener('click',()=>render());
   document.querySelectorAll('[data-prod-tab]').forEach(b=>b.addEventListener('click',()=>setProductivityTab(b.dataset.prodTab)));
   $('prod-main-goal-save').addEventListener('click',()=>{
     const perfil=String(currentProfile().perfil||'').toUpperCase();
@@ -1974,7 +2049,6 @@ renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value
   $('prod-main-daily-goal').addEventListener('keydown',e=>{if(e.key==='Enter')$('prod-main-goal-save').click();});
   $('prod-ranking-date').value=localDate();
   $('prod-ranking-period').addEventListener('change',renderRankingTab);$('prod-ranking-date').addEventListener('change',()=>{if($('prod-date-filter'))$('prod-date-filter').value=$('prod-ranking-date').value;renderRankingTab();render();});
-  $('prod-daily-goal').addEventListener('change',()=>{const perfil=String(currentProfile().perfil||'').toUpperCase();if(!['ADMIN','LIDER'].includes(perfil))return;const d=$('prod-ranking-date').value||localDate();data.dailyGoals[d]=Math.max(0,Math.floor(+$('prod-daily-goal').value||0));persist();renderRankingTab();renderGeneralChart();});
   render();clearForm();setProductivityTab('main');
 })();
 </script>
