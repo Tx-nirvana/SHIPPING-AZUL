@@ -229,10 +229,11 @@
   #loadingModule .lc-badge{display:inline-flex;padding:4px 7px;border-radius:99px;font-size:10px;font-weight:900}#loadingModule .lc-aguardando{background:#fff7ed;color:#9a3412}#loadingModule .lc-carregando{background:#dbeafe;color:#1d4ed8}#loadingModule .lc-pausado{background:#fef9c3;color:#854d0e}#loadingModule .lc-finalizado{background:#dcfce7;color:#166534}#loadingModule .lc-atrasado{background:#fee2e2;color:#991b1b}
   #loadingModule .lc-smallbtn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 7px;cursor:pointer;font-weight:800;font-size:10px}#loadingModule .lc-smallbtn.edit{color:#1d4ed8}#loadingModule .lc-smallbtn.del{color:#991b1b}
   #loadingModule .lc-smallbtn.crono-start{color:#166534;border-color:#bbf7d0}#loadingModule .lc-smallbtn.crono-pause{color:#92400e;border-color:#fde68a}#loadingModule .lc-smallbtn.crono-resume{color:#1d4ed8;border-color:#bfdbfe}#loadingModule .lc-smallbtn.crono-finish{color:#991b1b;border-color:#fecaca}
+  #loadingModule .lc-smallbtn.crono-reset{color:#57606f;border-color:#d7dce3;background:#f8fafc}
   #loadingModule .lc-crono-live{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
   #loadingModule .lc-crono-time{font-variant-numeric:tabular-nums;font-weight:900;font-size:13px;color:#1d4ed8}
   #loadingModule .lc-crono-live.paused .lc-crono-time{color:#92400e}
-  #loadingModule .lc-crono-btns{display:flex;gap:4px}
+  #loadingModule .lc-crono-btns{display:flex;gap:4px;flex-wrap:wrap}
   #loadingModule .lc-crono-done{font-weight:800;color:#166534;font-variant-numeric:tabular-nums}
   #loadingModule .lc-crono-idle{color:#94a3b8;font-size:11px}
   #loadingModule .lc-crono-pauses{font-size:9px;color:#94a3b8;font-weight:700}
@@ -332,6 +333,30 @@
 
   .lc-photo-card.active{outline:2px solid #2563eb;outline-offset:2px;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
   .lc-photo-card:focus{outline:2px solid #2563eb;outline-offset:2px}
+
+  /* ===== Café (turnos de café do Plano de Equipe) ===== */
+  .coffee-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+  .coffee-toolbar .hint{margin:0;max-width:640px}
+  .coffee-progress{font-size:11px;color:var(--muted);font-weight:800;white-space:nowrap;background:#f7f9fc;border:1px solid var(--line);border-radius:99px;padding:6px 12px}
+  .coffee-progress b{color:var(--text)}
+  .coffee-shifts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+  .coffee-shift-card{border:1px solid #f0d5aa;border-radius:14px;background:#fffaf2;padding:12px;box-shadow:0 3px 10px rgba(200,122,10,.07)}
+  .coffee-shift-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .coffee-shift-time-inputs{display:flex;gap:7px;flex:1;min-width:0}
+  .coffee-shift-time-inputs>div{flex:1;min-width:0}
+  .coffee-shift-time-inputs label{display:block;font-size:9px;text-transform:uppercase;color:#a2712c;font-weight:900;margin-bottom:3px;letter-spacing:.04em}
+  .coffee-shift-time-inputs input{width:100%;height:32px;border:1px solid #f0d5aa;border-radius:8px;padding:0 6px;background:#fff;font-weight:800;text-align:center;font-size:12px}
+  .coffee-return{background:#fff4df;border-radius:8px;padding:0 8px;display:flex;flex-direction:column;justify-content:center;align-items:center;height:32px;margin-top:14px;min-width:58px}
+  .coffee-return span:first-child{font-size:8px;color:#a2712c;font-weight:900;letter-spacing:.04em}
+  .coffee-return-value{font-weight:900;color:var(--amber);font-size:12px;line-height:1.3}
+  .coffee-shift-people{border-top:1px dashed #f0d5aa;padding-top:9px}
+  .coffee-people-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:24px}
+  .coffee-person-tag{display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #f0d5aa;border-radius:99px;padding:4px 5px 4px 9px;font-size:11px;font-weight:800;color:#7a4d0f}
+  .coffee-person-tag button{border:0;background:#fff4df;color:#c87a0a;cursor:pointer;font-size:12px;line-height:1;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;padding:0}
+  .coffee-person-tag button:hover{background:#ffe6bd}
+  .coffee-shift-empty-tag{font-size:10px;color:#a08a6f}
+  .coffee-add-person-row select{width:100%;height:33px;border:1px solid #f0d5aa;border-radius:8px;padding:0 8px;background:#fff;font-size:12px;color:#7a4d0f}
+  .coffee-empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
@@ -508,14 +533,32 @@
   <section class="panel synergy-section">
     <div class="panel-head">
       <div class="panel-title"><h2>SINERGIA</h2><span class="count" id="synergyCountLabel">0</span></div>
-      <button class="btn primary small" id="addSynergyBtnBottom">＋ Adicionar pessoa da sinergia</button>
+      <button class="btn primary small" id="addSynergyBtnBottom">＋ Cadastrar pessoa de sinergia</button>
+    </div>
+    <div class="toolbar" style="grid-template-columns:1fr">
+      <div class="search-wrap"><input class="field" id="synergySearchInput" placeholder="Buscar por nome, SO, OPS ou setor de origem..."></div>
     </div>
     <div class="synergy-table-wrap">
       <table>
-        <thead><tr><th>Nome</th><th>SO</th><th>OPS</th><th>Setor de origem</th><th>Função no setor</th><th style="text-align:right">Ações</th></tr></thead>
+        <thead><tr><th>Nome</th><th>SO</th><th>OPS</th><th>Setor de origem</th><th>Função hoje</th><th style="text-align:right">Ações</th></tr></thead>
         <tbody id="synergyTableBody"></tbody>
       </table>
-      <div class="synergy-empty" id="synergyEmpty">Nenhuma pessoa de sinergia cadastrada para hoje.</div>
+      <div class="synergy-empty" id="synergyEmpty">Nenhuma pessoa de sinergia cadastrada ainda.</div>
+    </div>
+  </section>
+
+  <section class="panel synergy-section" id="coffeePanel">
+    <div class="panel-head">
+      <div class="panel-title"><h2>☕ HORÁRIOS DE CAFÉ</h2><span class="count" id="coffeeCountLabel">0 turnos</span></div>
+      <button class="btn primary small" id="addCoffeeShiftBtn">＋ Novo horário de café</button>
+    </div>
+    <div class="panel-body">
+      <div class="coffee-toolbar">
+        <p class="hint">Organize a saída para o café em grupos, sem liberar todo mundo de uma vez — por exemplo, 4 pessoas às 16:30 e mais 2 às 18:00. Cada turno tem um horário de saída e uma duração (padrão 30 min); o horário de volta é calculado automaticamente.</p>
+        <div class="coffee-progress" id="coffeeProgress">0 de 0 pessoas com café definido</div>
+      </div>
+      <div class="coffee-shifts-grid" id="coffeeShiftsList"></div>
+      <div class="coffee-empty" id="coffeeEmpty">Nenhum horário de café configurado para hoje. Marque quem está presente e clique em "＋ Novo horário de café".</div>
     </div>
   </section>
 </div>
@@ -569,7 +612,7 @@
           <div class="lc-timebox"><label>Liberação</label><input type="datetime-local" id="lc-liberacao"></div>
           <div class="lc-timebox"><label>Meta de carregamento (min)</label><input type="number" id="lc-meta" min="1" value="60"></div>
         </div>
-        <p class="lc-help">⏱ Dica: salve o carregamento e use o <b>cronômetro</b> na coluna "Cronômetro" do histórico para medir o tempo real de carga (com pausar/retomar). Os campos "Início" e "Fim" acima são preenchidos automaticamente pelo cronômetro, mas também podem ser digitados manualmente.</p>
+        <p class="lc-help">⏱ Dica: salve o carregamento e use o <b>cronômetro</b> na coluna "Cronômetro" do histórico para medir o tempo real de carga (com pausar/retomar). Os campos "Início" e "Fim" acima são preenchidos automaticamente pelo cronômetro, mas também podem ser digitados manualmente. Se o cronômetro for iniciado sem querer, use o botão <b>↺ Zerar</b> para apagar o tempo cronometrado.</p>
       </div>
 
       <div class="lc-section"><h3>Responsáveis</h3>
@@ -830,14 +873,15 @@
 
 <dialog id="synergyDialog">
   <form id="synergyForm">
-    <div class="modal-head"><h3 id="synergyDialogTitle">Adicionar sinergia</h3><button type="button" class="modal-close" data-close="synergyDialog">×</button></div>
+    <div class="modal-head"><h3 id="synergyDialogTitle">Cadastrar sinergia</h3><button type="button" class="modal-close" data-close="synergyDialog">×</button></div>
     <div class="modal-body">
+      <p class="hint">O cadastro de sinergia fica salvo permanentemente (nome, SO, OPS e setor de origem), mesmo que a pessoa não esteja com a gente hoje. Quando ela vier trabalhar, basta escolher a função dela na tabela — sem precisar recadastrar.</p>
       <div class="form-grid">
         <div class="form-row full"><label>Nome</label><input class="modal-input" id="synergyName" required></div>
         <div class="form-row"><label>SO / S0 (opcional)</label><input class="modal-input" id="synergySo"></div>
         <div class="form-row"><label>OPS (opcional)</label><input class="modal-input" id="synergyOps"></div>
         <div class="form-row"><label>Setor de origem</label><input class="modal-input" id="synergyOrigin" placeholder="Ex.: Receiving" required></div>
-        <div class="form-row"><label>Função no nosso setor</label><select class="modal-input" id="synergyFunction" required></select></div>
+        <div class="form-row"><label>Função hoje (opcional)</label><select class="modal-input" id="synergyFunction"></select></div>
       </div>
     </div>
     <div class="modal-foot"><button type="button" class="btn" data-close="synergyDialog">Cancelar</button><button type="submit" class="btn primary">Salvar sinergia</button></div>
@@ -902,7 +946,8 @@
       employees: seedEmployees.map(([name,so,ops]) => ({id:uid(), name, so, ops, status:'', function:''})),
       functions:[...defaultFunctions],
       planning:{...seedPlan},
-      synergy:[]
+      synergy:[],
+      coffeeBreaks:[]
     };
   }
 
@@ -914,7 +959,9 @@
       if(!parsed || !Array.isArray(parsed.employees) || !Array.isArray(parsed.functions)) return buildInitialState();
       parsed.planning = parsed.planning || {};
       parsed.synergy = Array.isArray(parsed.synergy) ? parsed.synergy : [];
+      parsed.coffeeBreaks = Array.isArray(parsed.coffeeBreaks) ? parsed.coffeeBreaks : [];
       parsed.employees = parsed.employees.map(e=>({id:e.id||uid(),name:normalize(e.name),so:normalize(e.so),ops:normalize(e.ops),status:e.status||'',function:e.function||''}));
+      parsed.synergy = parsed.synergy.map(s=>({id:s.id||uid(),name:normalize(s.name),so:normalize(s.so),ops:normalize(s.ops),origin:normalize(s.origin),function:s.function||''}));
       return parsed;
     }catch(err){
       console.warn('Falha ao carregar dados locais:', err);
@@ -924,9 +971,9 @@
 
   let state = loadState();
   window.CloudSync?.load(STORAGE_KEY).then(remote=>{
-    if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = remote; renderAll(); }
+    if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = remote; state.coffeeBreaks = Array.isArray(state.coffeeBreaks) ? state.coffeeBreaks : []; renderAll(); }
     window.CloudSync?.subscribe(STORAGE_KEY, remote=>{
-      if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = remote; renderAll(); }
+      if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = remote; state.coffeeBreaks = Array.isArray(state.coffeeBreaks) ? state.coffeeBreaks : []; renderAll(); }
     });
   });
   let editingEmployeeId = null;
@@ -936,11 +983,12 @@
   const els = {
     todayLabel:$('#todayLabel'), kpiTotal:$('#kpiTotal'), kpiPresent:$('#kpiPresent'), kpiAbsent:$('#kpiAbsent'), kpiSynergy:$('#kpiSynergy'), kpiAvailable:$('#kpiAvailable'),
     employeeCountLabel:$('#employeeCountLabel'), employeeTableBody:$('#employeeTableBody'), planningRows:$('#planningRows'), dayPlan:$('#dayPlan'), planCountLabel:$('#planCountLabel'), coverageLabel:$('#coverageLabel'),
-    synergyTableBody:$('#synergyTableBody'), synergyEmpty:$('#synergyEmpty'), synergyCountLabel:$('#synergyCountLabel'),
+    synergyTableBody:$('#synergyTableBody'), synergyEmpty:$('#synergyEmpty'), synergyCountLabel:$('#synergyCountLabel'), synergySearchInput:$('#synergySearchInput'),
     searchInput:$('#searchInput'), statusFilter:$('#statusFilter'), functionFilter:$('#functionFilter'),
     employeeDialog:$('#employeeDialog'), employeeForm:$('#employeeForm'), employeeDialogTitle:$('#employeeDialogTitle'), employeeName:$('#employeeName'), employeeSo:$('#employeeSo'), employeeOps:$('#employeeOps'),
     synergyDialog:$('#synergyDialog'), synergyForm:$('#synergyForm'), synergyDialogTitle:$('#synergyDialogTitle'), synergyName:$('#synergyName'), synergySo:$('#synergySo'), synergyOps:$('#synergyOps'), synergyOrigin:$('#synergyOrigin'), synergyFunction:$('#synergyFunction'),
-    functionsDialog:$('#functionsDialog'), functionsList:$('#functionsList'), newFunctionName:$('#newFunctionName'), toast:$('#toast')
+    functionsDialog:$('#functionsDialog'), functionsList:$('#functionsList'), newFunctionName:$('#newFunctionName'), toast:$('#toast'),
+    coffeeShiftsList:$('#coffeeShiftsList'), coffeeEmpty:$('#coffeeEmpty'), coffeeCountLabel:$('#coffeeCountLabel'), coffeeProgress:$('#coffeeProgress')
   };
 
   function save(){
@@ -986,6 +1034,12 @@
     });
   }
 
+  function filteredSynergy(){
+    const q = normalize(els.synergySearchInput ? els.synergySearchInput.value : '').toLowerCase();
+    if(!q) return state.synergy;
+    return state.synergy.filter(s=>`${s.name} ${s.so} ${s.ops} ${s.origin}`.toLowerCase().includes(q));
+  }
+
   function realCounts(){
     const counts = Object.fromEntries(state.functions.map(fn=>[fn,0]));
     state.employees.forEach(e=>{
@@ -1011,12 +1065,12 @@
   function renderKpis(){
     const present = state.employees.filter(e=>e.status==='presente').length;
     const absent = state.employees.filter(e=>e.status==='ausente').length;
-    const synergyCount = state.synergy.length;
+    const synergyToday = state.synergy.filter(s=>s.function).length;
     els.kpiTotal.textContent = state.employees.length;
     els.kpiPresent.textContent = present;
     els.kpiAbsent.textContent = absent;
-    els.kpiSynergy.textContent = synergyCount;
-    els.kpiAvailable.textContent = present + synergyCount;
+    els.kpiSynergy.textContent = synergyToday;
+    els.kpiAvailable.textContent = present + synergyToday;
   }
 
   function renderFilters(){
@@ -1091,15 +1145,21 @@
   }
 
   function renderSynergy(){
-    els.synergyCountLabel.textContent = state.synergy.length;
+    const rows = filteredSynergy();
+    const workingToday = state.synergy.filter(s=>s.function).length;
+    els.synergyCountLabel.textContent = `${workingToday} hoje · ${state.synergy.length} cadastrados`;
     els.synergyEmpty.style.display = state.synergy.length ? 'none' : 'block';
-    els.synergyTableBody.innerHTML = state.synergy.map(s=>`
+    if(!rows.length && state.synergy.length){
+      els.synergyTableBody.innerHTML = '<tr><td colspan="6"><div class="empty" style="padding:22px"><strong>Nenhum resultado</strong>Ajuste a busca.</div></td></tr>';
+      return;
+    }
+    els.synergyTableBody.innerHTML = rows.map(s=>`
       <tr class="synergy-row">
-        <td><div class="person"><div class="avatar" style="background:var(--purple-soft);color:var(--purple)">${esc(initials(s.name))}</div><div><div class="person-name" style="max-width:260px">${esc(s.name)}</div><div class="person-meta">Pessoa de sinergia</div></div></div></td>
+        <td><div class="person"><div class="avatar" style="background:var(--purple-soft);color:var(--purple)">${esc(initials(s.name))}</div><div><div class="person-name" style="max-width:260px">${esc(s.name)}</div><div class="person-meta">${s.function?'Trabalhando hoje':'Não escalado hoje'}</div></div></div></td>
         <td>${esc(s.so||'—')}</td><td>${esc(s.ops||'—')}</td>
         <td><strong>${esc(s.origin||'—')}</strong></td>
-        <td><select class="inline-select" data-synergy-action="function" data-id="${s.id}">${functionOptions(s.function,false)}</select></td>
-        <td><div class="action-row"><button class="mini-action" data-synergy-action="edit" data-id="${s.id}" title="Editar">✎</button><button class="mini-action delete" data-synergy-action="delete" data-id="${s.id}" title="Excluir">🗑</button></div></td>
+        <td><select class="inline-select" data-synergy-action="function" data-id="${s.id}">${functionOptions(s.function,true)}</select></td>
+        <td><div class="action-row"><button class="mini-action" data-synergy-action="edit" data-id="${s.id}" title="Editar cadastro">✎</button><button class="mini-action delete" data-synergy-action="delete" data-id="${s.id}" title="Excluir do cadastro permanente">🗑</button></div></td>
       </tr>`).join('');
   }
 
@@ -1112,6 +1172,97 @@
       </div>`).join('');
   }
 
+  /* ===== Horários de café ===== */
+  function timeToMinutes(t){
+    if(!t) return null;
+    const parts = String(t).split(':');
+    const h = Number(parts[0]), m = Number(parts[1]);
+    if(Number.isNaN(h) || Number.isNaN(m)) return null;
+    return h*60+m;
+  }
+  function minutesToTime(mins){
+    mins = ((mins % 1440) + 1440) % 1440;
+    const h = Math.floor(mins/60), m = mins%60;
+    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  }
+  function coffeeReturnTime(shift){
+    const start = timeToMinutes(shift.time);
+    if(start==null) return '—';
+    return minutesToTime(start + (Number(shift.duration)||30));
+  }
+  function todayWorkingPeople(){
+    const list = [];
+    state.employees.forEach(e=>{ if(e.status==='presente') list.push({key:'emp:'+e.id, name:e.name}); });
+    state.synergy.forEach(s=>{ if(s.function) list.push({key:'syn:'+s.id, name:s.name}); });
+    return list;
+  }
+  function coffeeAssignedKeys(){
+    const set = new Set();
+    (state.coffeeBreaks||[]).forEach(sh=>(sh.people||[]).forEach(p=>set.add(p.key)));
+    return set;
+  }
+  function addCoffeeShift(){
+    state.coffeeBreaks = state.coffeeBreaks || [];
+    state.coffeeBreaks.push({id:uid(), time:'', duration:30, people:[]});
+    renderCoffee(); save();
+  }
+  function deleteCoffeeShift(id){
+    if(!confirm('Excluir este horário de café?')) return;
+    state.coffeeBreaks = (state.coffeeBreaks||[]).filter(s=>s.id!==id);
+    renderCoffee(); save();
+  }
+  function updateCoffeeField(id, field, value){
+    const sh = (state.coffeeBreaks||[]).find(s=>s.id===id); if(!sh) return;
+    if(field==='time') sh.time = value;
+    if(field==='duration') sh.duration = Math.max(5, parseInt(value||'30',10)||30);
+    renderCoffee(); save();
+  }
+  function addPersonToCoffeeShift(shiftId, personKey){
+    if(!personKey) return;
+    const sh = (state.coffeeBreaks||[]).find(s=>s.id===shiftId); if(!sh) return;
+    const assigned = coffeeAssignedKeys();
+    if(assigned.has(personKey)){ showToast('Essa pessoa já tem um horário de café definido em outro turno.'); renderCoffee(); return; }
+    const person = todayWorkingPeople().find(p=>p.key===personKey); if(!person) return;
+    sh.people = sh.people || [];
+    sh.people.push({key:person.key, name:person.name});
+    renderCoffee(); save();
+  }
+  function removePersonFromCoffeeShift(shiftId, personKey){
+    const sh = (state.coffeeBreaks||[]).find(s=>s.id===shiftId); if(!sh) return;
+    sh.people = (sh.people||[]).filter(p=>p.key!==personKey);
+    renderCoffee(); save();
+  }
+  function renderCoffee(){
+    if(!els.coffeeShiftsList) return;
+    const shifts = (state.coffeeBreaks||[]).slice().sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+    els.coffeeCountLabel.textContent = `${shifts.length} ${shifts.length===1?'turno':'turnos'}`;
+    els.coffeeEmpty.style.display = shifts.length ? 'none' : 'block';
+    const working = todayWorkingPeople();
+    const assigned = coffeeAssignedKeys();
+    const assignedWorkingCount = working.filter(p=>assigned.has(p.key)).length;
+    els.coffeeProgress.innerHTML = `<b>${assignedWorkingCount}</b> de <b>${working.length}</b> pessoas com café definido`;
+    els.coffeeShiftsList.innerHTML = shifts.map(sh=>{
+      const options = working.filter(p=>!assigned.has(p.key)).map(p=>`<option value="${esc(p.key)}">${esc(firstName(p.name))}</option>`).join('');
+      const tags = (sh.people||[]).length
+        ? (sh.people||[]).map(p=>`<span class="coffee-person-tag">${esc(firstName(p.name))}<button type="button" data-coffee-remove-shift="${sh.id}" data-coffee-remove-person="${esc(p.key)}" title="Remover deste turno">×</button></span>`).join('')
+        : '<span class="coffee-shift-empty-tag">Nenhuma pessoa neste turno ainda.</span>';
+      return `<div class="coffee-shift-card" data-coffee-id="${sh.id}">
+        <div class="coffee-shift-head">
+          <div class="coffee-shift-time-inputs">
+            <div><label>Saída</label><input type="time" data-coffee-field="time" data-coffee-id="${sh.id}" value="${esc(sh.time||'')}"></div>
+            <div><label>Duração (min)</label><input type="number" min="5" step="5" data-coffee-field="duration" data-coffee-id="${sh.id}" value="${Number(sh.duration)||30}"></div>
+          </div>
+          <div class="coffee-return"><span>VOLTA</span><span class="coffee-return-value">${coffeeReturnTime(sh)}</span></div>
+          <button class="mini-action delete" data-coffee-delete="${sh.id}" title="Excluir turno">🗑</button>
+        </div>
+        <div class="coffee-shift-people">
+          <div class="coffee-people-tags">${tags}</div>
+          <div class="coffee-add-person-row"><select data-coffee-add="${sh.id}"><option value="">＋ Adicionar pessoa a este turno...</option>${options}</select></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   function renderAll(){
     renderKpis();
     renderFilters();
@@ -1119,6 +1270,7 @@
     renderPlanning();
     renderDayPlan();
     renderSynergy();
+    renderCoffee();
     save();
   }
 
@@ -1136,12 +1288,12 @@
   function openSynergyDialog(id=null){
     editingSynergyId = id;
     const s = id ? state.synergy.find(x=>x.id===id) : null;
-    els.synergyDialogTitle.textContent = s ? 'Editar sinergia' : 'Adicionar sinergia';
+    els.synergyDialogTitle.textContent = s ? 'Editar sinergia' : 'Cadastrar sinergia';
     els.synergyName.value = s?.name || '';
     els.synergySo.value = s?.so || '';
     els.synergyOps.value = s?.ops || '';
     els.synergyOrigin.value = s?.origin || '';
-    els.synergyFunction.innerHTML = functionOptions(s?.function || '', false);
+    els.synergyFunction.innerHTML = functionOptions(s?.function || '', true);
     els.synergyDialog.showModal();
     setTimeout(()=>els.synergyName.focus(),30);
   }
@@ -1189,12 +1341,12 @@
   els.synergyForm.addEventListener('submit', e=>{
     e.preventDefault();
     const data={name:normalize(els.synergyName.value),so:normalize(els.synergySo.value),ops:normalize(els.synergyOps.value),origin:normalize(els.synergyOrigin.value),function:els.synergyFunction.value};
-    if(!data.name || !data.origin || !data.function) return;
+    if(!data.name || !data.origin) return;
     if(editingSynergyId){
       const item=state.synergy.find(x=>x.id===editingSynergyId); if(item) Object.assign(item,data);
-      showToast('Sinergia atualizada.');
+      showToast('Cadastro de sinergia atualizado.');
     }else{
-      state.synergy.push({id:uid(),...data}); showToast('Pessoa de sinergia adicionada.');
+      state.synergy.push({id:uid(),...data}); showToast('Pessoa de sinergia cadastrada.');
     }
     els.synergyDialog.close(); renderAll();
   });
@@ -1228,6 +1380,8 @@
     save(); renderPlanning(); renderDayPlan();
   });
 
+  if(els.synergySearchInput) els.synergySearchInput.addEventListener('input', renderSynergy);
+
   els.synergyTableBody.addEventListener('change', e=>{
     const id=e.target.dataset.id, action=e.target.dataset.synergyAction; if(!id||!action) return;
     const s=state.synergy.find(x=>x.id===id); if(!s) return;
@@ -1238,8 +1392,8 @@
     const btn=e.target.closest('button[data-synergy-action]'); if(!btn) return;
     const s=state.synergy.find(x=>x.id===btn.dataset.id); if(!s) return;
     if(btn.dataset.synergyAction==='edit') openSynergyDialog(s.id);
-    if(btn.dataset.synergyAction==='delete' && confirm(`Remover ${s.name} da sinergia de hoje?`)){
-      state.synergy=state.synergy.filter(x=>x.id!==s.id);renderAll();showToast('Sinergia removida.');
+    if(btn.dataset.synergyAction==='delete' && confirm(`Excluir ${s.name} do cadastro permanente de sinergia? Essa ação remove o histórico salvo dessa pessoa.`)){
+      state.synergy=state.synergy.filter(x=>x.id!==s.id);renderAll();showToast('Cadastro de sinergia excluído.');
     }
   });
 
@@ -1267,10 +1421,11 @@
   });
 
   $('#newDayBtn').addEventListener('click',()=>{
-    if(!confirm('Iniciar um novo dia?\n\nAntes de limpar, o sistema salvará automaticamente o estado atual no Histórico Diário. Depois serão limpos status, funções do dia e sinergias temporárias. O cadastro permanente, as funções e o planejamento serão mantidos.')) return;
+    if(!confirm('Iniciar um novo dia?\n\nAntes de limpar, o sistema salvará automaticamente o estado atual no Histórico Diário. Depois serão limpos status, funções do dia, as funções de hoje das pessoas de sinergia e os horários de café. O cadastro permanente (funcionários e sinergia), as funções e o planejamento serão mantidos.')) return;
     if(window.ShippingHistory?.saveToday) window.ShippingHistory.saveToday(false);
     state.employees.forEach(e=>{e.status='';e.function='';});
-    state.synergy=[];
+    state.synergy.forEach(s=>{s.function='';});
+    state.coffeeBreaks=[];
     renderAll(); showToast('Dia arquivado e novo dia iniciado.');
   });
 
@@ -1282,6 +1437,20 @@
   els.searchInput.addEventListener('input',renderEmployees);
   els.statusFilter.addEventListener('change',renderEmployees);
   els.functionFilter.addEventListener('change',renderEmployees);
+
+  $('#addCoffeeShiftBtn').addEventListener('click', addCoffeeShift);
+  els.coffeeShiftsList.addEventListener('change', e=>{
+    const field = e.target.dataset.coffeeField;
+    if(field){ updateCoffeeField(e.target.dataset.coffeeId, field, e.target.value); return; }
+    const addId = e.target.dataset.coffeeAdd;
+    if(addId){ addPersonToCoffeeShift(addId, e.target.value); e.target.value=''; }
+  });
+  els.coffeeShiftsList.addEventListener('click', e=>{
+    const del = e.target.closest('[data-coffee-delete]');
+    if(del){ deleteCoffeeShift(del.dataset.coffeeDelete); return; }
+    const rem = e.target.closest('[data-coffee-remove-shift]');
+    if(rem){ removePersonFromCoffeeShift(rem.dataset.coffeeRemoveShift, rem.dataset.coffeeRemovePerson); }
+  });
 
   document.addEventListener('click',e=>{
     const close=e.target.closest('[data-close]'); if(close){const d=document.getElementById(close.dataset.close); if(d?.open)d.close();}
@@ -1404,19 +1573,28 @@
     x.status='Finalizado';
     persist();render();
   }
+  function resetCrono(id){
+    const x=dados.find(a=>a.id===id);if(!x)return;
+    if(!confirm('Zerar o cronômetro deste carregamento?\n\nUse esta opção quando o cronômetro foi iniciado sem querer. Isso apaga o tempo cronometrado (e as pausas) e volta o carregamento para "Aguardando". Os campos de Início/Fim preenchidos automaticamente também serão limpos.'))return;
+    x.cronometro={status:'parado',segundosAcumulados:0,inicioAtual:null,pausas:0};
+    if(x.status==='Carregando'||x.status==='Pausado'||x.status==='Finalizado')x.status='Aguardando';
+    x.inicio='';x.fim='';
+    persist();render();
+  }
   function cronoCellHTML(x,somenteLeitura){
     const c=x.cronometro;
     if(!c||c.status==='parado'){
       return somenteLeitura?'<span class="lc-crono-idle">Não iniciado</span>':`<button class="lc-smallbtn crono-start" data-readonly-allowed="1" data-crono-start="${x.id}">▶ Iniciar</button>`;
     }
     const pausasTxt=c.pausas?`<span class="lc-crono-pauses">${c.pausas} pausa${c.pausas===1?'':'s'}</span>`:'';
+    const resetBtn=somenteLeitura?'':`<button class="lc-smallbtn crono-reset" data-readonly-allowed="1" data-crono-reset="${x.id}" title="Zerar cronômetro (iniciado sem querer)">↺ Zerar</button>`;
     if(c.status==='rodando'){
-      return `<div class="lc-crono-live"><span class="lc-crono-time" data-crono-timer="${x.id}">${fmtHMS(cronoSegundos(x))}</span>${somenteLeitura?'':`<div class="lc-crono-btns"><button class="lc-smallbtn crono-pause" data-readonly-allowed="1" data-crono-pause="${x.id}" title="Pausar">⏸ Pausar</button><button class="lc-smallbtn crono-finish" data-readonly-allowed="1" data-crono-finish="${x.id}" title="Finalizar">⏹ Finalizar</button></div>`}${pausasTxt}</div>`;
+      return `<div class="lc-crono-live"><span class="lc-crono-time" data-crono-timer="${x.id}">${fmtHMS(cronoSegundos(x))}</span>${somenteLeitura?'':`<div class="lc-crono-btns"><button class="lc-smallbtn crono-pause" data-readonly-allowed="1" data-crono-pause="${x.id}" title="Pausar">⏸ Pausar</button><button class="lc-smallbtn crono-finish" data-readonly-allowed="1" data-crono-finish="${x.id}" title="Finalizar">⏹ Finalizar</button>${resetBtn}</div>`}${pausasTxt}</div>`;
     }
     if(c.status==='pausado'){
-      return `<div class="lc-crono-live paused"><span class="lc-crono-time">${fmtHMS(cronoSegundos(x))}</span>${somenteLeitura?'':`<div class="lc-crono-btns"><button class="lc-smallbtn crono-resume" data-readonly-allowed="1" data-crono-resume="${x.id}" title="Retomar">▶ Retomar</button><button class="lc-smallbtn crono-finish" data-readonly-allowed="1" data-crono-finish="${x.id}" title="Finalizar">⏹ Finalizar</button></div>`}${pausasTxt}</div>`;
+      return `<div class="lc-crono-live paused"><span class="lc-crono-time">${fmtHMS(cronoSegundos(x))}</span>${somenteLeitura?'':`<div class="lc-crono-btns"><button class="lc-smallbtn crono-resume" data-readonly-allowed="1" data-crono-resume="${x.id}" title="Retomar">▶ Retomar</button><button class="lc-smallbtn crono-finish" data-readonly-allowed="1" data-crono-finish="${x.id}" title="Finalizar">⏹ Finalizar</button>${resetBtn}</div>`}${pausasTxt}</div>`;
     }
-    return `<span class="lc-crono-done" title="Tempo real medido pelo cronômetro">${fmtHMS(cronoSegundos(x))}</span>`;
+    return `<span class="lc-crono-done" title="Tempo real medido pelo cronômetro">${fmtHMS(cronoSegundos(x))}</span>${resetBtn?` ${resetBtn}`:''}`;
   }
   if(!window.__lcCronoTickBound){
     window.__lcCronoTickBound=true;
@@ -1671,7 +1849,7 @@
   window.addEventListener('planoEquipeAtualizado',updateOpsDatalist);window.addEventListener('storage',e=>{if(e.key==='shippingAzulPlanner_v1')updateOpsDatalist();});$('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-equipe').addEventListener('blur',()=>{ $('lc-equipe').value=normalizeLoadersToOPS($('lc-equipe').value); });$('lc-photo-modal-close').addEventListener('click',closePhotoModal);$('lc-photo-modal').addEventListener('click',e=>{if(e.target.id==='lc-photo-modal')closePhotoModal();});$('lc-export').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
   ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));renderPhotos();
   function visualizarFotos(id){const x=dados.find(r=>r.id===id);if(!x)return;setCurrentPhotoDraft(x.fotos||{});renderPhotos();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>document.getElementById('lc-photo-grid')?.scrollIntoView({behavior:'smooth',block:'center'}),120);}
-  $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');const cs=e.target.closest('[data-crono-start]'),cp=e.target.closest('[data-crono-pause]'),cres=e.target.closest('[data-crono-resume]'),cf=e.target.closest('[data-crono-finish]');if(ed)editar(ed.dataset.lcEdit);if(ph){const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();if(['DM','VISUALIZACAO'].includes(perfil))visualizarFotos(ph.dataset.lcPhotos);else editar(ph.dataset.lcPhotos);}if(del)excluir(del.dataset.lcDel);if(cs)iniciarCrono(cs.dataset.cronoStart);if(cp)pausarCrono(cp.dataset.cronoPause);if(cres)retomarCrono(cres.dataset.cronoResume);if(cf)finalizarCrono(cf.dataset.cronoFinish);});
+  $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');const cs=e.target.closest('[data-crono-start]'),cp=e.target.closest('[data-crono-pause]'),cres=e.target.closest('[data-crono-resume]'),cf=e.target.closest('[data-crono-finish]'),crz=e.target.closest('[data-crono-reset]');if(ed)editar(ed.dataset.lcEdit);if(ph){const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();if(['DM','VISUALIZACAO'].includes(perfil))visualizarFotos(ph.dataset.lcPhotos);else editar(ph.dataset.lcPhotos);}if(del)excluir(del.dataset.lcDel);if(cs)iniciarCrono(cs.dataset.cronoStart);if(cp)pausarCrono(cp.dataset.cronoPause);if(cres)retomarCrono(cres.dataset.cronoResume);if(cf)finalizarCrono(cf.dataset.cronoFinish);if(crz)resetCrono(crz.dataset.cronoReset);});
   novo();render();
 })();
 </script>
@@ -1715,7 +1893,7 @@
     return {date,savedAt:new Date().toISOString(),employees,synergy,functions,planning,real};
   }
 
-  function hasMeaningfulDay(snap){return !!snap&&(snap.employees.some(e=>e.status||e.function)||snap.synergy.length>0);}
+  function hasMeaningfulDay(snap){return !!snap&&(snap.employees.some(e=>e.status||e.function)||snap.synergy.some(s=>s.function));}
   function saveToday(force=true){
     const snap=makeSnapshot();if(!snap)return false;
     if(!force&&!hasMeaningfulDay(snap))return false;
@@ -1728,7 +1906,7 @@
 
   function stats(s){
     const present=s.employees.filter(e=>e.status==='presente').length,absent=s.employees.filter(e=>e.status==='ausente').length,allocated=s.employees.filter(e=>e.status==='presente'&&e.function).length+s.synergy.filter(x=>x.function).length;
-    return {present,absent,synergy:s.synergy.length,allocated};
+    return {present,absent,synergy:s.synergy.filter(x=>x.function).length,allocated};
   }
 
   function renderList(){
@@ -1742,8 +1920,8 @@
     const st=stats(s),x=liveExtras(s.date);$('hist-kpi-present').textContent=st.present;$('hist-kpi-absent').textContent=st.absent;$('hist-kpi-synergy').textContent=st.synergy;$('hist-kpi-allocated').textContent=st.allocated;$('hist-kpi-loads').textContent=x.loads;$('hist-kpi-bipes').textContent=x.bipes.toLocaleString('pt-BR');$('history-detail-title').textContent=`DETALHES • ${fmtDate(s.date)}`;$('history-saved-at').textContent=`Salvo ${fmtSaved(s.savedAt)}`;
     const teamRows=s.employees.filter(e=>e.status||e.function).map(e=>`<tr><td><b>${esc(e.name)}</b><br><span style="color:var(--muted)">${esc(e.so||'—')} · ${esc(e.ops||'—')}</span></td><td><span class="history-status ${e.status||'sem-status'}">${e.status==='presente'?'Presente':e.status==='ausente'?'Ausente':e.status==='sinergia'?'Sinergia':'Sem status'}</span></td><td>${esc(e.function||'—')}</td></tr>`).join('');
     const planRows=(s.functions||[]).map(fn=>{const pl=+s.planning?.[fn]||0,re=+s.real?.[fn]||0,diff=re-pl;return `<tr><td><b>${esc(fn)}</b></td><td>${pl}</td><td>${re}</td><td style="font-weight:900;color:${diff<0?'var(--red)':diff>0?'var(--amber)':'var(--green)'}">${diff>0?'+':''}${diff}</td></tr>`;}).join('');
-    const synRows=(s.synergy||[]).map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${esc(a.origin||'—')}</td><td>${esc(a.function||'—')}</td></tr>`).join('');
-    $('history-details').innerHTML=`<div class="history-detail-grid"><div class="history-box"><h3>Equipe do dia</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Funcionário</th><th>Status</th><th>Função</th></tr></thead><tbody>${teamRows||'<tr><td colspan="3">Sem movimentação registrada.</td></tr>'}</tbody></table></div></div><div class="history-box"><h3>Planejado × Real</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Função</th><th>Plan.</th><th>Real</th><th>Dif.</th></tr></thead><tbody>${planRows}</tbody></table></div></div><div class="history-box"><h3>Sinergia</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Nome</th><th>Origem</th><th>Função</th></tr></thead><tbody>${synRows||'<tr><td colspan="3">Nenhuma sinergia.</td></tr>'}</tbody></table></div></div><div class="history-box"><h3>Resumo operacional</h3><div class="history-box-body" style="font-size:11px;line-height:1.8"><b>Carregamentos:</b> ${x.loads}<br><b>Pacotes registrados:</b> ${x.packages.toLocaleString('pt-BR')}<br><b>Bipes lançados:</b> ${x.bipes.toLocaleString('pt-BR')}<br><b>Pessoas com produtividade:</b> ${x.prodPeople}<br><span style="color:var(--muted)">Carregamentos e produtividade são lidos dos respectivos históricos pela mesma data.</span></div></div></div>`;
+    const synRows=(s.synergy||[]).filter(a=>a.function).map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${esc(a.origin||'—')}</td><td>${esc(a.function||'—')}</td></tr>`).join('');
+    $('history-details').innerHTML=`<div class="history-detail-grid"><div class="history-box"><h3>Equipe do dia</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Funcionário</th><th>Status</th><th>Função</th></tr></thead><tbody>${teamRows||'<tr><td colspan="3">Sem movimentação registrada.</td></tr>'}</tbody></table></div></div><div class="history-box"><h3>Planejado × Real</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Função</th><th>Plan.</th><th>Real</th><th>Dif.</th></tr></thead><tbody>${planRows}</tbody></table></div></div><div class="history-box"><h3>Sinergia</h3><div class="history-box-body"><table class="history-table"><thead><tr><th>Nome</th><th>Origem</th><th>Função</th></tr></thead><tbody>${synRows||'<tr><td colspan="3">Nenhuma sinergia trabalhando neste dia.</td></tr>'}</tbody></table></div></div><div class="history-box"><h3>Resumo operacional</h3><div class="history-box-body" style="font-size:11px;line-height:1.8"><b>Carregamentos:</b> ${x.loads}<br><b>Pacotes registrados:</b> ${x.packages.toLocaleString('pt-BR')}<br><b>Bipes lançados:</b> ${x.bipes.toLocaleString('pt-BR')}<br><b>Pessoas com produtividade:</b> ${x.prodPeople}<br><span style="color:var(--muted)">Carregamentos e produtividade são lidos dos respectivos históricos pela mesma data.</span></div></div></div>`;
   }
   function render(){renderList();renderDetail();}
   document.querySelector('[data-module-target="historyModule"]')?.addEventListener('click',render);
