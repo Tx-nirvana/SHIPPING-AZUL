@@ -271,6 +271,8 @@
   .prod-tab{border:0;background:transparent;border-radius:9px;padding:9px 14px;font:inherit;font-size:12px;font-weight:900;color:#5b6678;cursor:pointer}
   .prod-tab.active{background:#fff;color:#1f2937;box-shadow:0 1px 4px rgba(15,23,42,.08)}
   .prod-main-content.prod-tab-hidden{display:none!important}
+  .prod-ranking-tab{display:none!important}
+  .prod-ranking-tab.prod-ranking-visible{display:block!important}
   .prod-ranking-tools{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin-bottom:12px}
   .prod-ranking-tools>div{min-width:150px}
   .prod-ranking-tools label{font-size:10px;font-weight:900;color:#566176;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
@@ -756,7 +758,7 @@
     <div class="prod-panel-head"><h2>Lançamentos de produtividade</h2><div style="display:flex;align-items:center;gap:8px"><span class="count" id="prod-history-count">0 registros</span><button class="btn small" type="button" id="prod-history-refresh">↻ Atualizar</button></div></div>
     <div class="prod-history-wrap"><table class="prod-history-table"><thead><tr><th>Data</th><th>Hora</th><th>Funcionário</th><th>Setor</th><th>Bipes</th><th>Referência/h</th><th>Índice</th><th>Horas</th><th>Bipes/h</th><th>% Meta/h</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="prod-history-body"></tbody></table><div class="empty-inline" id="prod-history-empty">Nenhum lançamento para os filtros atuais.</div></div>
   </section>
-  <section class="prod-panel prod-ranking-tab" data-prod-ranking="ranking" style="display:none">
+  <section class="prod-panel prod-ranking-tab" data-prod-ranking="ranking">
     <div class="prod-panel-head"><h2>🏆 Ranking de produtividade</h2><span class="count" id="prod-ranking-period-label">Dia</span></div>
     <div class="prod-panel-body">
       <div class="prod-ranking-tools">
@@ -1695,7 +1697,7 @@
     data.dailyGoal=Math.max(0,+data.dailyGoal||8000);data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{};data.closedDays=(data.closedDays&&typeof data.closedDays==='object')?data.closedDays:{};
   }
   function dailyGoalFor(date){return Math.max(0,+data.dailyGoals?.[date]||data.dailyGoal||8000);}
-  function people(){const p=readPlan(),arr=[];(p.employees||[]).forEach(e=>arr.push({value:'emp:'+e.id,name:e.name,meta:[e.so,e.ops].filter(Boolean).join(' · ')}));(p.synergy||[]).forEach(e=>arr.push({value:'syn:'+e.id,name:e.name,meta:'Sinergia • '+(e.origin||'') }));return arr;}
+  function people(){const p=readPlan(),arr=[];(p.employees||[]).forEach(e=>arr.push({value:'emp:'+e.id,name:e.name,meta:[e.so,e.ops,e.afs].filter(Boolean).join(' · ')}));(p.synergy||[]).forEach(e=>arr.push({value:'syn:'+e.id,name:e.name,meta:'Sinergia • '+(e.origin||'') }));return arr;}
   function fmtN(n,dec=0){return Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
   function reference(sector){return Math.max(0,+data.goals[sector]||0);}
   function indexOf(r){const g=reference(r.sector);return g>0?(+r.bipes||0)/g:null;}
@@ -1775,7 +1777,7 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const personKey=String(r.personKey||r.person_key||'').trim();
     const bipes=Math.max(0,+r.bipes||+r.quantidade||+r.quantidadeBipes||0);
     const hour=String(r.hour||r.hora||'').trim();
-    return {...r,sector,date,personName,personKey,bipes,hour};
+    return {...r,sector,date,personName,personKey,bipes,hour,ops:String(r.ops||r.OPS||'').trim(),afs:String(r.afs||r.AFS||'').trim()};
   }
   function allRecords(){return (Array.isArray(data.records)?data.records:[]).map(normalizeRecord).filter(Boolean);}
   function filtered(){
@@ -1847,6 +1849,15 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     if(String(r.personKey||'')===String(key||''))return true;
     const rn=String(r.personName||r.funcionario||r.nome||'').trim().toLowerCase();
     if(person?.name && rn===String(person.name).trim().toLowerCase())return true;
+    const recOps=String(r.ops||r.OPS||'').trim().toLowerCase();
+    const recAfs=String(r.afs||r.AFS||'').trim().toLowerCase();
+    if(person?.value?.startsWith('emp:')){
+      const emp=(readPlan().employees||[]).find(e=>('emp:'+e.id)===person.value);
+      if(emp){
+        const eo=String(emp.ops||'').trim().toLowerCase(), ea=String(emp.afs||'').trim().toLowerCase();
+        if((eo&&recOps===eo)||(ea&&recAfs===ea))return true;
+      }
+    }
     if(String(key||'').startsWith('emp:')){
       const id=String(key).slice(4);
       const emp=(readPlan().employees||[]).find(e=>String(e.id)===id);
@@ -2018,11 +2029,19 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
       ?`Meta geral do dia: <b>${fmtN(dailyGoalFor(date))} bipes</b> • Bipado: <b>${fmtN(total)}</b> • ${dailyGoalFor(date)?fmtN(total/dailyGoalFor(date)*100,0):0}% da meta.`
       :`Meta acumulada do mês: <b>${fmtN(goal)} bipes</b> • Bipado no período: <b>${fmtN(total)}</b> • ${goal?fmtN(total/goal*100,0):0}% da meta.`;
   }
+  let activeProdTab='main';
   function setProductivityTab(tab){
-    document.querySelectorAll('[data-prod-tab]').forEach(b=>b.classList.toggle('active',b.dataset.prodTab===tab));
-    document.querySelectorAll('[data-prod-main]').forEach(el=>el.classList.toggle('prod-tab-hidden',tab!=='main'));
-    const rank=$('[data-prod-ranking="ranking"]');if(rank)rank.style.display=tab==='ranking'?'block':'none';
-    if(tab==='ranking')renderRankingTab();
+    activeProdTab=(tab==='ranking')?'ranking':'main';
+    document.querySelectorAll('[data-prod-tab]').forEach(b=>b.classList.toggle('active',b.dataset.prodTab===activeProdTab));
+    document.querySelectorAll('[data-prod-main]').forEach(el=>el.classList.toggle('prod-tab-hidden',activeProdTab!=='main'));
+    const rank=$('[data-prod-ranking="ranking"]');
+    if(rank)rank.classList.toggle('prod-ranking-visible',activeProdTab==='ranking');
+    if(activeProdTab==='ranking')renderRankingTab();
+  }
+  function applyProductivityTabVisibility(){
+    document.querySelectorAll('[data-prod-main]').forEach(el=>el.classList.toggle('prod-tab-hidden',activeProdTab!=='main'));
+    const rank=$('[data-prod-ranking="ranking"]');
+    if(rank)rank.classList.toggle('prod-ranking-visible',activeProdTab==='ranking');
   }
   function updateProductivityPermissions(){
     const perfil=String(currentProfile().perfil||'').toUpperCase();
@@ -2035,7 +2054,7 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     if(note && !canEdit)note.textContent='Lançamentos de produtividade';
     if(!canEdit && $('prod-edit-id'))clearForm();
   }
-  function render(){updateProductivityPermissions();syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();updateDayFinalizeUI();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();}
+  function render(){updateProductivityPermissions();syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();updateDayFinalizeUI();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();applyProductivityTabVisibility();}
   function clearForm(){
     $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';
     $('prod-date').value=$('prod-date-filter').value||localDate();$('prod-hour').value='';
@@ -2097,7 +2116,8 @@ renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value
   });
   $('prod-main-daily-goal').addEventListener('keydown',e=>{if(e.key==='Enter')$('prod-main-goal-save').click();});
   $('prod-ranking-date').value=localDate();
-  $('prod-ranking-period').addEventListener('change',renderRankingTab);$('prod-ranking-date').addEventListener('change',()=>{if($('prod-date-filter'))$('prod-date-filter').value=$('prod-ranking-date').value;renderRankingTab();render();});
+  $('prod-ranking-period').addEventListener('change',()=>{renderRankingTab();applyProductivityTabVisibility();});
+  $('prod-ranking-date').addEventListener('change',()=>{if($('prod-date-filter'))$('prod-date-filter').value=$('prod-ranking-date').value;render();});
   render();clearForm();setProductivityTab('main');
 })();
 </script>
