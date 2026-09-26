@@ -225,9 +225,17 @@
   #loadingModule .lc-form-actions{display:flex;gap:7px;margin-top:15px;position:sticky;bottom:0;background:#fff;padding-top:9px;border-top:1px solid #edf0f5}
   #loadingModule .lc-history-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}#loadingModule .lc-history-head h2{margin:0}
   #loadingModule .lc-filters{display:grid;grid-template-columns:minmax(180px,1.2fr) 145px 150px minmax(120px,.8fr) auto;gap:7px;margin-bottom:10px}
-  #loadingModule .lc-tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:670px}#loadingModule table{width:100%;border-collapse:collapse;min-width:1260px;background:#fff}#loadingModule th,#loadingModule td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:11px;white-space:nowrap}#loadingModule th{background:#f6f8fa;color:#4b5563;position:sticky;top:0;z-index:2}#loadingModule tr:hover td{background:#fafafa}
-  #loadingModule .lc-badge{display:inline-flex;padding:4px 7px;border-radius:99px;font-size:10px;font-weight:900}#loadingModule .lc-aguardando{background:#fff7ed;color:#9a3412}#loadingModule .lc-carregando{background:#dbeafe;color:#1d4ed8}#loadingModule .lc-finalizado{background:#dcfce7;color:#166534}#loadingModule .lc-atrasado{background:#fee2e2;color:#991b1b}
+  #loadingModule .lc-tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:670px}#loadingModule table{width:100%;border-collapse:collapse;min-width:1420px;background:#fff}#loadingModule th,#loadingModule td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:11px;white-space:nowrap}#loadingModule th{background:#f6f8fa;color:#4b5563;position:sticky;top:0;z-index:2}#loadingModule tr:hover td{background:#fafafa}
+  #loadingModule .lc-badge{display:inline-flex;padding:4px 7px;border-radius:99px;font-size:10px;font-weight:900}#loadingModule .lc-aguardando{background:#fff7ed;color:#9a3412}#loadingModule .lc-carregando{background:#dbeafe;color:#1d4ed8}#loadingModule .lc-pausado{background:#fef9c3;color:#854d0e}#loadingModule .lc-finalizado{background:#dcfce7;color:#166534}#loadingModule .lc-atrasado{background:#fee2e2;color:#991b1b}
   #loadingModule .lc-smallbtn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 7px;cursor:pointer;font-weight:800;font-size:10px}#loadingModule .lc-smallbtn.edit{color:#1d4ed8}#loadingModule .lc-smallbtn.del{color:#991b1b}
+  #loadingModule .lc-smallbtn.crono-start{color:#166534;border-color:#bbf7d0}#loadingModule .lc-smallbtn.crono-pause{color:#92400e;border-color:#fde68a}#loadingModule .lc-smallbtn.crono-resume{color:#1d4ed8;border-color:#bfdbfe}#loadingModule .lc-smallbtn.crono-finish{color:#991b1b;border-color:#fecaca}
+  #loadingModule .lc-crono-live{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+  #loadingModule .lc-crono-time{font-variant-numeric:tabular-nums;font-weight:900;font-size:13px;color:#1d4ed8}
+  #loadingModule .lc-crono-live.paused .lc-crono-time{color:#92400e}
+  #loadingModule .lc-crono-btns{display:flex;gap:4px}
+  #loadingModule .lc-crono-done{font-weight:800;color:#166534;font-variant-numeric:tabular-nums}
+  #loadingModule .lc-crono-idle{color:#94a3b8;font-size:11px}
+  #loadingModule .lc-crono-pauses{font-size:9px;color:#94a3b8;font-weight:700}
   #loadingModule .lc-empty{text-align:center;color:var(--muted);padding:34px}
   @media(max-width:1450px){#loadingModule .lc-layout{grid-template-columns:395px minmax(0,1fr)}#loadingModule .lc-cards{grid-template-columns:repeat(3,1fr)}#loadingModule .lc-filters{grid-template-columns:1fr 125px 130px 120px auto}}
 
@@ -561,6 +569,7 @@
           <div class="lc-timebox"><label>Liberação</label><input type="datetime-local" id="lc-liberacao"></div>
           <div class="lc-timebox"><label>Meta de carregamento (min)</label><input type="number" id="lc-meta" min="1" value="60"></div>
         </div>
+        <p class="lc-help">⏱ Dica: salve o carregamento e use o <b>cronômetro</b> na coluna "Cronômetro" do histórico para medir o tempo real de carga (com pausar/retomar). Os campos "Início" e "Fim" acima são preenchidos automaticamente pelo cronômetro, mas também podem ser digitados manualmente.</p>
       </div>
 
       <div class="lc-section"><h3>Responsáveis</h3>
@@ -588,7 +597,7 @@
 
       <div class="lc-section"><h3>Status e observações</h3>
         <div class="lc-formgrid">
-          <div><label>Status</label><select id="lc-status"><option>Aguardando</option><option>Carregando</option><option>Finalizado</option><option>Atrasado</option></select></div>
+          <div><label>Status</label><select id="lc-status"><option>Aguardando</option><option>Carregando</option><option>Pausado</option><option>Finalizado</option><option>Atrasado</option></select></div>
           <div><label>Motivo da espera/atraso</label><select id="lc-motivo"><option value="">Nenhum</option><option>Carga não pronta</option><option>Aguardando doca</option><option>Aguardando operador</option><option>Aguardando equipamento</option><option>Problema documental</option><option>Problema com veículo</option><option>Aguardando liberação</option><option>Outro</option></select></div>
           <div class="lc-full"><label>Observações</label><textarea id="lc-obs" placeholder="Registre ocorrências, divergências ou informações importantes..."></textarea></div>
         </div>
@@ -609,12 +618,12 @@
       <div class="lc-filters">
         <input id="lc-busca" placeholder="🔎 LT, placa, motorista...">
         <input type="date" id="lc-fData">
-        <select id="lc-fStatus"><option value="">Todos os status</option><option>Aguardando</option><option>Carregando</option><option>Finalizado</option><option>Atrasado</option></select>
+        <select id="lc-fStatus"><option value="">Todos os status</option><option>Aguardando</option><option>Carregando</option><option>Pausado</option><option>Finalizado</option><option>Atrasado</option></select>
         <input id="lc-fDestino" placeholder="Destino">
         <button class="lc-btn" id="lc-clear-filters" type="button">Limpar filtros</button>
       </div>
       <div class="lc-tablewrap"><table><thead><tr>
-        <th>LT</th><th>Destino</th><th>Motorista</th><th>Placa</th><th>Doca</th><th>Status</th><th>Chegada</th><th>Início</th><th>Fim</th><th>Liberação</th><th>Tempo carga</th><th>Tempo total</th><th>Volumes</th><th>Pacotes</th><th>Ações</th>
+        <th>LT</th><th>Destino</th><th>Motorista</th><th>Placa</th><th>Doca</th><th>Status</th><th>Cronômetro</th><th>Chegada</th><th>Início</th><th>Fim</th><th>Liberação</th><th>Tempo carga</th><th>Tempo total</th><th>Volumes</th><th>Pacotes</th><th>Ações</th>
       </tr></thead><tbody id="lc-tbody"></tbody></table></div>
       <div id="lc-empty" class="lc-empty" style="display:none">Nenhum carregamento encontrado.</div>
     </div>
@@ -1344,6 +1353,81 @@
   function totalVol(x){return (x.comp||[]).reduce((s,c)=>s+(+c.qtd||0),0);}
   function fmtDateTime(s){if(!s)return '—';const d=new Date(s);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
 
+  /* ===== Cronômetro de carregamento (suporta vários caminhões simultâneos) ===== */
+  function nowLocalDT(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
+  function fmtHMS(totalSeg){
+    totalSeg=Math.max(0,Math.round(+totalSeg||0));
+    const h=Math.floor(totalSeg/3600),m=Math.floor((totalSeg%3600)/60),s=totalSeg%60,p=n=>String(n).padStart(2,'0');
+    return (h>0?p(h)+':':'')+p(m)+':'+p(s);
+  }
+  function cronoSegundos(x){
+    const c=x.cronometro;if(!c)return 0;
+    let seg=c.segundosAcumulados||0;
+    if(c.status==='rodando'&&c.inicioAtual)seg+=(Date.now()-new Date(c.inicioAtual).getTime())/1000;
+    return seg;
+  }
+  function temCronoMedido(x){return !!(x.cronometro&&(x.cronometro.segundosAcumulados>0||x.cronometro.status==='rodando'||x.cronometro.status==='finalizado'));}
+  function tempoCargaMin(x){return temCronoMedido(x)?cronoSegundos(x)/60:minutes(x.inicio,x.fim);}
+
+  function iniciarCrono(id){
+    const x=dados.find(a=>a.id===id);if(!x)return;
+    if(!x.cronometro)x.cronometro={status:'parado',segundosAcumulados:0,inicioAtual:null,pausas:0};
+    if(x.cronometro.status==='rodando')return;
+    x.cronometro.status='rodando';x.cronometro.inicioAtual=new Date().toISOString();
+    if(!x.inicio)x.inicio=nowLocalDT();
+    if(!x.status||x.status==='Aguardando')x.status='Carregando';
+    persist();render();
+  }
+  function pausarCrono(id){
+    const x=dados.find(a=>a.id===id);if(!x||!x.cronometro||x.cronometro.status!=='rodando')return;
+    const elapsed=(Date.now()-new Date(x.cronometro.inicioAtual).getTime())/1000;
+    x.cronometro.segundosAcumulados=(x.cronometro.segundosAcumulados||0)+elapsed;
+    x.cronometro.inicioAtual=null;x.cronometro.status='pausado';x.cronometro.pausas=(x.cronometro.pausas||0)+1;
+    x.status='Pausado';
+    persist();render();
+  }
+  function retomarCrono(id){
+    const x=dados.find(a=>a.id===id);if(!x||!x.cronometro||x.cronometro.status!=='pausado')return;
+    x.cronometro.status='rodando';x.cronometro.inicioAtual=new Date().toISOString();
+    x.status='Carregando';
+    persist();render();
+  }
+  function finalizarCrono(id){
+    const x=dados.find(a=>a.id===id);if(!x||!x.cronometro)return;
+    if(!confirm('Finalizar o carregamento e parar o cronômetro?'))return;
+    if(x.cronometro.status==='rodando'){
+      const elapsed=(Date.now()-new Date(x.cronometro.inicioAtual).getTime())/1000;
+      x.cronometro.segundosAcumulados=(x.cronometro.segundosAcumulados||0)+elapsed;
+    }
+    x.cronometro.inicioAtual=null;x.cronometro.status='finalizado';
+    if(!x.fim)x.fim=nowLocalDT();
+    x.status='Finalizado';
+    persist();render();
+  }
+  function cronoCellHTML(x,somenteLeitura){
+    const c=x.cronometro;
+    if(!c||c.status==='parado'){
+      return somenteLeitura?'<span class="lc-crono-idle">Não iniciado</span>':`<button class="lc-smallbtn crono-start" data-readonly-allowed="1" data-crono-start="${x.id}">▶ Iniciar</button>`;
+    }
+    const pausasTxt=c.pausas?`<span class="lc-crono-pauses">${c.pausas} pausa${c.pausas===1?'':'s'}</span>`:'';
+    if(c.status==='rodando'){
+      return `<div class="lc-crono-live"><span class="lc-crono-time" data-crono-timer="${x.id}">${fmtHMS(cronoSegundos(x))}</span>${somenteLeitura?'':`<div class="lc-crono-btns"><button class="lc-smallbtn crono-pause" data-readonly-allowed="1" data-crono-pause="${x.id}" title="Pausar">⏸ Pausar</button><button class="lc-smallbtn crono-finish" data-readonly-allowed="1" data-crono-finish="${x.id}" title="Finalizar">⏹ Finalizar</button></div>`}${pausasTxt}</div>`;
+    }
+    if(c.status==='pausado'){
+      return `<div class="lc-crono-live paused"><span class="lc-crono-time">${fmtHMS(cronoSegundos(x))}</span>${somenteLeitura?'':`<div class="lc-crono-btns"><button class="lc-smallbtn crono-resume" data-readonly-allowed="1" data-crono-resume="${x.id}" title="Retomar">▶ Retomar</button><button class="lc-smallbtn crono-finish" data-readonly-allowed="1" data-crono-finish="${x.id}" title="Finalizar">⏹ Finalizar</button></div>`}${pausasTxt}</div>`;
+    }
+    return `<span class="lc-crono-done" title="Tempo real medido pelo cronômetro">${fmtHMS(cronoSegundos(x))}</span>`;
+  }
+  if(!window.__lcCronoTickBound){
+    window.__lcCronoTickBound=true;
+    setInterval(()=>{
+      document.querySelectorAll('#loadingModule [data-crono-timer]').forEach(el=>{
+        const x=dados.find(a=>a.id===el.dataset.cronoTimer);
+        if(x)el.textContent=fmtHMS(cronoSegundos(x));
+      });
+    },1000);
+  }
+
   function addComp(tipo='',qtd=0){
     const div=document.createElement('div');div.className='lc-composition-row';
     div.innerHTML=`<div><label>Tipo de volume</label><input class="lc-ctipo" value="${esc(tipo)}" placeholder="Ex.: Saca, Gaylote, Caixa"></div><div><label>Qtd.</label><input class="lc-cqt" type="number" min="0" value="${+qtd||0}"></div><div class="lc-pct">0%</div><button type="button" class="lc-remove" title="Remover">×</button>`;
@@ -1539,14 +1623,14 @@
     const req=[['lc-lt','LT / Pedido'],['lc-destino','Destino'],['lc-motorista','Motorista']];
     for(const [id,n] of req){if(!$(id).value.trim()){alert('Preencha: '+n);$(id).focus();return;}}
     const id=$('lc-editId').value||uid();const old=dados.find(x=>x.id===id);
-    const obj={id,data:v('lc-data'),lt:v('lc-lt').trim(),destino:v('lc-destino').trim(),motorista:v('lc-motorista').trim(),placa:v('lc-placa').trim(),veiculo:v('lc-veiculo'),doca:v('lc-doca').trim(),chegada:v('lc-chegada'),aceite:v('lc-aceite'),docaHora:v('lc-docaHora'),cargaPronta:v('lc-cargaPronta'),inicio:v('lc-inicio'),fim:v('lc-fim'),liberacao:v('lc-liberacao'),meta:+v('lc-meta')||60,aceitePor:v('lc-aceitePor').trim(),liberadoPor:v('lc-liberadoPor').trim(),equipe:normalizeLoadersToOPS(v('lc-equipe').trim()),fotos:getCurrentPhotoDraft(),comp:getComp(),pacotes:+v('lc-pacotes')||0,peso:+v('lc-peso')||0,status:v('lc-status'),motivo:v('lc-motivo'),obs:v('lc-obs').trim(),criado:old?.criado||new Date().toISOString()};
+    const obj={id,data:v('lc-data'),lt:v('lc-lt').trim(),destino:v('lc-destino').trim(),motorista:v('lc-motorista').trim(),placa:v('lc-placa').trim(),veiculo:v('lc-veiculo'),doca:v('lc-doca').trim(),chegada:v('lc-chegada'),aceite:v('lc-aceite'),docaHora:v('lc-docaHora'),cargaPronta:v('lc-cargaPronta'),inicio:v('lc-inicio'),fim:v('lc-fim'),liberacao:v('lc-liberacao'),meta:+v('lc-meta')||60,aceitePor:v('lc-aceitePor').trim(),liberadoPor:v('lc-liberadoPor').trim(),equipe:normalizeLoadersToOPS(v('lc-equipe').trim()),fotos:getCurrentPhotoDraft(),comp:getComp(),pacotes:+v('lc-pacotes')||0,peso:+v('lc-peso')||0,status:v('lc-status'),motivo:v('lc-motivo'),obs:v('lc-obs').trim(),cronometro:old?.cronometro||null,criado:old?.criado||new Date().toISOString()};
     const i=dados.findIndex(x=>x.id===id);if(i>=0)dados[i]=obj;else dados.push(obj);persist();render();novo();alert('Carregamento salvo com sucesso.');
   }
 
   function updateMetrics(){
     const d=localISODate(),arr=dados.filter(x=>x.data===d),fins=arr.filter(x=>x.status==='Finalizado');
-    $('lc-mTotal').textContent=arr.length;$('lc-mOp').textContent=arr.filter(x=>x.status==='Aguardando'||x.status==='Carregando').length;$('lc-mFin').textContent=fins.length;$('lc-mPac').textContent=arr.reduce((s,x)=>s+(x.pacotes||0),0).toLocaleString('pt-BR');
-    const cargas=fins.map(x=>minutes(x.inicio,x.fim)).filter(x=>x!=null),totais=arr.map(x=>minutes(x.chegada,x.liberacao)).filter(x=>x!=null);
+    $('lc-mTotal').textContent=arr.length;$('lc-mOp').textContent=arr.filter(x=>x.status==='Aguardando'||x.status==='Carregando'||x.status==='Pausado').length;$('lc-mFin').textContent=fins.length;$('lc-mPac').textContent=arr.reduce((s,x)=>s+(x.pacotes||0),0).toLocaleString('pt-BR');
+    const cargas=fins.map(x=>tempoCargaMin(x)).filter(x=>x!=null),totais=arr.map(x=>minutes(x.chegada,x.liberacao)).filter(x=>x!=null);
     $('lc-mAvg').textContent=cargas.length?fmtMin(cargas.reduce((a,b)=>a+b,0)/cargas.length):'—';$('lc-mTotalAvg').textContent=totais.length?fmtMin(totais.reduce((a,b)=>a+b,0)/totais.length):'—';
   }
 
@@ -1563,7 +1647,7 @@
     }
     const arr=base.filter(x=>(!q||[x.lt,x.placa,x.motorista,x.destino].join(' ').toLowerCase().includes(q))&&(!fd||x.data===fd)&&(!fs||x.status===fs)&&(!dest||(x.destino||'').toLowerCase().includes(dest))).sort((a,b)=>((b.data||'')+(b.chegada||'')).localeCompare((a.data||'')+(a.chegada||'')));
     const tb=$('lc-tbody');tb.innerHTML='';$('lc-empty').style.display=arr.length?'none':'block';$('lc-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;
-    arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();const somenteLeitura=['DM','VISUALIZACAO'].includes(perfil);const fotoBtn=`<button class="lc-smallbtn edit" data-readonly-allowed="1" data-lc-photos="${x.id}">📸 ${somenteLeitura?'Ver fotos':'Fotos'}</button>`;tr.innerHTML=`<td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(minutes(x.inicio,x.fim))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td>${somenteLeitura?'':`<button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> `}${fotoBtn}${somenteLeitura?'':` <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button>`}</td>`;tb.appendChild(tr);});
+    arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();const somenteLeitura=['DM','VISUALIZACAO'].includes(perfil);const fotoBtn=`<button class="lc-smallbtn edit" data-readonly-allowed="1" data-lc-photos="${x.id}">📸 ${somenteLeitura?'Ver fotos':'Fotos'}</button>`;tr.innerHTML=`<td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${cronoCellHTML(x,somenteLeitura)}</td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(tempoCargaMin(x))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td>${somenteLeitura?'':`<button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> `}${fotoBtn}${somenteLeitura?'':` <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button>`}</td>`;tb.appendChild(tr);});
     updateMetrics();
   }
 
@@ -1577,8 +1661,8 @@
 
   function download(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
   function exportCSV(){
-    const rows=[['Data','LT','Destino','Motorista','Placa','Veículo','Doca','Status','Chegada','Aceite','Entrada Doca','Carga Pronta','Início','Fim','Liberação','Tempo Carga (min)','Tempo Total (min)','OPS Carregadores','Aceite Por','Liberado Por','Volumes','Pacotes','Peso kg','Motivo','Observações','Composição']];
-    dados.forEach(x=>rows.push([x.data,x.lt,x.destino,x.motorista,x.placa,x.veiculo,x.doca,x.status,x.chegada,x.aceite,x.docaHora,x.cargaPronta,x.inicio,x.fim,x.liberacao,minutes(x.inicio,x.fim),minutes(x.chegada,x.liberacao),x.equipe,x.aceitePor,x.liberadoPor,totalVol(x),x.pacotes,x.peso,x.motivo,x.obs,(x.comp||[]).map(c=>`${c.tipo}: ${c.qtd}`).join(' | ')]));
+    const rows=[['Data','LT','Destino','Motorista','Placa','Veículo','Doca','Status','Chegada','Aceite','Entrada Doca','Carga Pronta','Início','Fim','Liberação','Tempo Carga Cronômetro (min)','Pausas do Cronômetro','Tempo Total (min)','OPS Carregadores','Aceite Por','Liberado Por','Volumes','Pacotes','Peso kg','Motivo','Observações','Composição']];
+    dados.forEach(x=>rows.push([x.data,x.lt,x.destino,x.motorista,x.placa,x.veiculo,x.doca,x.status,x.chegada,x.aceite,x.docaHora,x.cargaPronta,x.inicio,x.fim,x.liberacao,tempoCargaMin(x)!=null?Math.round(tempoCargaMin(x)):'',x.cronometro?.pausas||0,minutes(x.chegada,x.liberacao),x.equipe,x.aceitePor,x.liberadoPor,totalVol(x),x.pacotes,x.peso,x.motivo,x.obs,(x.comp||[]).map(c=>`${c.tipo}: ${c.qtd}`).join(' | ')]));
     const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');download(csv,'controle_carregamento.csv','text/csv;charset=utf-8;');
   }
   function backup(){download(JSON.stringify(dados,null,2),'backup_carregamentos.json','application/json');}
@@ -1587,7 +1671,7 @@
   window.addEventListener('planoEquipeAtualizado',updateOpsDatalist);window.addEventListener('storage',e=>{if(e.key==='shippingAzulPlanner_v1')updateOpsDatalist();});$('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-equipe').addEventListener('blur',()=>{ $('lc-equipe').value=normalizeLoadersToOPS($('lc-equipe').value); });$('lc-photo-modal-close').addEventListener('click',closePhotoModal);$('lc-photo-modal').addEventListener('click',e=>{if(e.target.id==='lc-photo-modal')closePhotoModal();});$('lc-export').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
   ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));renderPhotos();
   function visualizarFotos(id){const x=dados.find(r=>r.id===id);if(!x)return;setCurrentPhotoDraft(x.fotos||{});renderPhotos();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>document.getElementById('lc-photo-grid')?.scrollIntoView({behavior:'smooth',block:'center'}),120);}
-  $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(ph){const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();if(['DM','VISUALIZACAO'].includes(perfil))visualizarFotos(ph.dataset.lcPhotos);else editar(ph.dataset.lcPhotos);}if(del)excluir(del.dataset.lcDel);});
+  $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');const cs=e.target.closest('[data-crono-start]'),cp=e.target.closest('[data-crono-pause]'),cres=e.target.closest('[data-crono-resume]'),cf=e.target.closest('[data-crono-finish]');if(ed)editar(ed.dataset.lcEdit);if(ph){const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();if(['DM','VISUALIZACAO'].includes(perfil))visualizarFotos(ph.dataset.lcPhotos);else editar(ph.dataset.lcPhotos);}if(del)excluir(del.dataset.lcDel);if(cs)iniciarCrono(cs.dataset.cronoStart);if(cp)pausarCrono(cp.dataset.cronoPause);if(cres)retomarCrono(cres.dataset.cronoResume);if(cf)finalizarCrono(cf.dataset.cronoFinish);});
   novo();render();
 })();
 </script>
