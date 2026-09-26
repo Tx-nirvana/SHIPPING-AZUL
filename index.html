@@ -358,6 +358,21 @@
   .coffee-add-person-row select{width:100%;height:33px;border:1px solid #f0d5aa;border-radius:8px;padding:0 8px;background:#fff;font-size:12px;color:#7a4d0f}
   .coffee-empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:12px}
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+window.formatReportSheet=function(ws,colCount,rowCount){
+  const widths=[12,18,22,22,14,14,10,15,18,18,18,18,18,18,18,16,10,16,24,20,20,12,12,14,28,36,34];
+  ws['!cols']=Array.from({length:colCount},(_,i)=>({wch:Math.min(widths[i]||18,42)}));
+  ws['!autofilter']={ref:`A1:${XLSX.utils.encode_col(colCount-1)}${rowCount}`};
+  ws['!freeze']={xSplit:0,ySplit:1};
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let c=range.s.c;c<=range.e.c;c++){
+    const cell=ws[XLSX.utils.encode_cell({r:0,c})];
+    if(cell)cell.s={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'17365D'}},alignment:{horizontal:'center',vertical:'center',wrap_text:true}};
+  }
+  ws['!rows']=[{hpt:28}];
+};
+</script>
 </head>
 <body>
 <div id="authScreen">
@@ -569,7 +584,7 @@
     <div class="lc-brand"><h1>🚛 Controle de Carregamento</h1><p>LT • carga • equipe • tempos • doca • liberação • histórico</p></div>
     <div class="lc-actions">
       <button class="lc-btn" id="lc-new-top" type="button">＋ Novo carregamento</button>
-      <button class="lc-btn dark" id="lc-export" type="button">⇩ Exportar CSV</button>
+      <button class="lc-btn dark" id="lc-export" type="button">📊 Exportar Excel</button>
       <button class="lc-btn dark" id="lc-backup" type="button">💾 Backup</button>
       <label class="lc-btn dark" style="cursor:pointer">↥ Restaurar<input id="lc-restore" type="file" accept=".json" hidden></label>
     </div>
@@ -713,7 +728,7 @@
     <div class="submodule-actions">
       <label style="font-size:11px;font-weight:800;color:#d5deea">Data</label><input type="date" id="prod-date-filter" data-readonly-allowed="1">
       <select id="prod-sector-filter" data-readonly-allowed="1"><option value="all">Todos os setores</option></select>
-      <button class="btn" type="button" id="prod-export" data-readonly-allowed="1">⇩ CSV</button><button class="btn" type="button" id="prod-export-day" data-readonly-allowed="1">📊 Excel dia</button><button class="btn" type="button" id="prod-export-month" data-readonly-allowed="1">📊 Excel mês</button>
+      <button class="btn" type="button" id="prod-export" data-readonly-allowed="1">📊 Excel completo</button><button class="btn" type="button" id="prod-export-day" data-readonly-allowed="1">📊 Excel dia</button><button class="btn" type="button" id="prod-export-month" data-readonly-allowed="1">📊 Excel mês</button>
     </div>
   </header>
   <nav class="prod-tabs" aria-label="Abas de produtividade">
@@ -1838,10 +1853,35 @@
   function clearFilters(){['lc-busca','lc-fData','lc-fStatus','lc-fDestino'].forEach(id=>$(id).value='');render();}
 
   function download(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
+  function formatReportSheet(ws,colCount,rowCount){
+     const widths=[12,18,22,22,14,14,10,15,18,18,18,18,18,18,18,16,10,16,24,20,20,12,12,14,28,36,34];
+     ws['!cols']=Array.from({length:colCount},(_,i)=>({wch:Math.min(widths[i]||18,42)}));
+     ws['!autofilter']={ref:`A1:${XLSX.utils.encode_col(colCount-1)}${rowCount}`};
+     ws['!freeze']={xSplit:0,ySplit:1};
+     const range=XLSX.utils.decode_range(ws['!ref']);
+     for(let c=range.s.c;c<=range.e.c;c++){
+       const cell=ws[XLSX.utils.encode_cell({r:0,c})];
+       if(cell) cell.s={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'17365D'}},alignment:{horizontal:'center',vertical:'center',wrap_text:true}};
+     }
+     for(let r=1;r<=range.e.r;r++){
+       for(let c=0;c<=range.e.c;c++){
+         const cell=ws[XLSX.utils.encode_cell({r,c})];
+         if(cell) cell.s={alignment:{vertical:'center',wrap_text:false}};
+       }
+     }
+     ws['!rows']=[{hpt:28}];
+   }
+
   function exportCSV(){
-    const rows=[['Data','LT','Destino','Motorista','Placa','Veículo','Doca','Status','Chegada','Aceite','Entrada Doca','Carga Pronta','Início','Fim','Liberação','Tempo Carga Cronômetro (min)','Pausas do Cronômetro','Tempo Total (min)','OPS Carregadores','Aceite Por','Liberado Por','Volumes','Pacotes','Peso kg','Motivo','Observações','Composição']];
-    dados.forEach(x=>rows.push([x.data,x.lt,x.destino,x.motorista,x.placa,x.veiculo,x.doca,x.status,x.chegada,x.aceite,x.docaHora,x.cargaPronta,x.inicio,x.fim,x.liberacao,tempoCargaMin(x)!=null?Math.round(tempoCargaMin(x)):'',x.cronometro?.pausas||0,minutes(x.chegada,x.liberacao),x.equipe,x.aceitePor,x.liberadoPor,totalVol(x),x.pacotes,x.peso,x.motivo,x.obs,(x.comp||[]).map(c=>`${c.tipo}: ${c.qtd}`).join(' | ')]));
-    const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');download(csv,'controle_carregamento.csv','text/csv;charset=utf-8;');
+    if(!window.XLSX){return alert('Biblioteca do Excel ainda não carregou. Tente novamente em alguns segundos.');}
+    const headers=['Data','LT','Destino','Motorista','Placa','Veículo','Doca','Status','Chegada','Aceite','Entrada Doca','Carga Pronta','Início','Fim','Liberação','Tempo Carga (min)','Pausas','Tempo Total (min)','OPS Carregadores','Aceite Por','Liberado Por','Volumes','Pacotes','Peso (kg)','Motivo','Observações','Composição'];
+    const rows=dados.map(x=>[x.data,x.lt,x.destino,x.motorista,x.placa,x.veiculo,x.doca,x.status,x.chegada,x.aceite,x.docaHora,x.cargaPronta,x.inicio,x.fim,x.liberacao,tempoCargaMin(x)!=null?Math.round(tempoCargaMin(x)):'',x.cronometro?.pausas||0,minutes(x.chegada,x.liberacao),x.equipe,x.aceitePor,x.liberadoPor,totalVol(x),x.pacotes,x.peso,x.motivo,x.obs,(x.comp||[]).map(c=>`${c.tipo}: ${c.qtd}`).join(' | ')]);
+    const wb=XLSX.utils.book_new();
+    const resumo=[['RELATÓRIO DE CONTROLE DE CARREGAMENTO'],['Gerado em',new Date().toLocaleString('pt-BR')],['Total de carregamentos',dados.length],['Finalizados',dados.filter(x=>String(x.status||'').toLowerCase().includes('final')).length],['Pacotes',dados.reduce((a,x)=>a+(+x.pacotes||0),0)],['Peso total (kg)',dados.reduce((a,x)=>a+(+x.peso||0),0)]];
+    const wsResumo=XLSX.utils.aoa_to_sheet(resumo);wsResumo['!cols']=[{wch:32},{wch:24}];
+    const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);formatReportSheet(ws,headers.length,rows.length+1);
+    XLSX.utils.book_append_sheet(wb,wsResumo,'Resumo');XLSX.utils.book_append_sheet(wb,ws,'Carregamentos');
+    XLSX.writeFile(wb,`Relatorio_Carregamentos_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
   function backup(){download(JSON.stringify(dados,null,2),'backup_carregamentos.json','application/json');}
   function restoreFile(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw new Error();if(!confirm(`Restaurar backup com ${d.length} carregamento(s)? Os dados atuais serão substituídos.`))return;dados=d;persist();render();alert('Backup restaurado.');}catch{alert('Arquivo de backup inválido.');}};r.readAsText(file);}
@@ -2137,14 +2177,23 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     if(btn){btn.style.display=canManage()&&rows.length&&!closed?'inline-flex':'none';btn.disabled=closed;}
   }
   function exportExcel(period){
-    const date=$('prod-date-filter').value||localDate();
-    const range=dateRangeForPeriod(date,period);
-    const rows=allRecords().filter(r=>r.date>=range.start&&r.date<=range.end&&BIP_SECTORS.some(s=>s.toLowerCase()===String(r.sector).toLowerCase()));
-    const label=period==='day'?'dia':'mes';
-    const title=period==='day'?`Produtividade ${date.split('-').reverse().join('/')}`:`Produtividade ${date.slice(0,7)}`;
-    const meta=rows.reduce((sum,r)=>sum+Math.max(0,+r.bipes||0),0);
-    const html=`<html><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px}th{background:#eee}</style></head><body><h2>${esc(title)}</h2><p>Período: ${esc(range.start)} a ${esc(range.end)} • Bipes: ${fmtN(meta)}</p><table><tr><th>Data</th><th>Hora</th><th>Colaborador</th><th>Setor</th><th>Bipes</th><th>Horas</th><th>Observação</th></tr>${rows.sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour)).map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.hour||'')}</td><td>${esc(resolvePersonName(r))}</td><td>${esc(r.sector)}</td><td>${fmtN(r.bipes)}</td><td>${esc(r.hours||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</table></body></html>`;
-    const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`produtividade_${label}_${date}.xls`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    if(!window.XLSX){return alert('Biblioteca do Excel ainda não carregou. Tente novamente em alguns segundos.');}
+    const date=$('prod-date-filter').value||localDate(),range=dateRangeForPeriod(date,period);
+    const rows=allRecords().filter(r=>r.date>=range.start&&r.date<=range.end&&BIP_SECTORS.some(s=>s.toLowerCase()===String(r.sector).toLowerCase())).sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour));
+    if(!rows.length)return alert('Não há lançamentos de produtividade no período selecionado.');
+    const total=rows.reduce((sum,r)=>sum+Math.max(0,+r.bipes||0),0),pessoas=new Set(rows.map(r=>resolvePersonName(r))).size,meta=dailyGoalFor(date);
+    const wb=XLSX.utils.book_new();
+    const resumo=[['RELATÓRIO DE PRODUTIVIDADE'],['Período',`${range.start.split('-').reverse().join('/')} a ${range.end.split('-').reverse().join('/')}`],['Total de bipagens',total],['Colaboradores',pessoas],['Média por colaborador',pessoas?Math.round(total/pessoas):0],['Meta geral',meta],['Atingimento da meta',meta?total/meta:0]];
+    const wsResumo=XLSX.utils.aoa_to_sheet(resumo);wsResumo['!cols']=[{wch:32},{wch:30}];if(wsResumo['B7'])wsResumo['B7'].z='0.0%';
+    const headers=['Data','Hora','Funcionário','Setor','Bipes','Referência por hora','Índice relativo','Horas informadas','Bipes por hora','% da meta por hora','Observação'];
+    const detail=rows.map(r=>[r.date,r.hour||'',resolvePersonName(r),r.sector,r.bipes,reference(r.sector),indexOf(r)??'',r.hours||'',rateOf(r)??'',achievement(r)??'',r.note||'']);
+    const ws=XLSX.utils.aoa_to_sheet([headers,...detail]);window.formatReportSheet(ws,headers.length,detail.length+1);
+    for(let r=1;r<=detail.length;r++){const a=ws[XLSX.utils.encode_cell({r,c:8})],b=ws[XLSX.utils.encode_cell({r,c:9})];if(a)a.z='0.00';if(b)b.z='0.0%';}
+    const rankMap={};rows.forEach(r=>{const n=resolvePersonName(r);rankMap[n]=(rankMap[n]||0)+Math.max(0,+r.bipes||0);});
+    const ranking=Object.entries(rankMap).sort((a,b)=>b[1]-a[1]).map((x,i)=>[i+1,x[0],x[1]]);
+    const wsRank=XLSX.utils.aoa_to_sheet([['Posição','Colaborador','Bipes'],...ranking]);window.formatReportSheet(wsRank,3,ranking.length+1);wsRank['!cols']=[{wch:10},{wch:34},{wch:14}];
+    XLSX.utils.book_append_sheet(wb,wsResumo,'Resumo');XLSX.utils.book_append_sheet(wb,ws,'Lançamentos');XLSX.utils.book_append_sheet(wb,wsRank,'Ranking');
+    XLSX.writeFile(wb,`Relatorio_Produtividade_${period==='day'?'Dia':'Mes'}_${date}.xlsx`);
   }
 
   function renderPersonChart(){
@@ -2343,10 +2392,11 @@ function editRecord(id){
     document.getElementById('productivityModule').scrollIntoView({behavior:'smooth',block:'start'});
   }
   function exportCSV(){
-    const rows=[['Data','Hora','Funcionário','Setor','Bipes','Referência por hora','Índice relativo','Horas informadas','Bipes por hora','% da meta por hora','Observação']];
-    data.records.forEach(r=>rows.push([r.date,r.hour||'',r.personName,r.sector,r.bipes,reference(r.sector),indexOf(r)??'',r.hours||'',rateOf(r)??'',achievement(r)??'',r.note||'']));
-    const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='produtividade_shipping.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    if(!window.XLSX){return alert('Biblioteca do Excel ainda não carregou. Tente novamente em alguns segundos.');}
+    const headers=['Data','Hora','Funcionário','Setor','Bipes','Referência por hora','Índice relativo','Horas informadas','Bipes por hora','% da meta por hora','Observação'];
+    const rows=data.records.map(r=>[r.date,r.hour||'',r.personName,r.sector,r.bipes,reference(r.sector),indexOf(r)??'',r.hours||'',rateOf(r)??'',achievement(r)??'',r.note||'']);
+    const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([headers,...rows]);window.formatReportSheet(ws,headers.length,rows.length+1);
+    XLSX.utils.book_append_sheet(wb,ws,'Produtividade');XLSX.writeFile(wb,`Relatorio_Produtividade_Completo_${localDate()}.xlsx`);
   }
 
 renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value=localDate();
