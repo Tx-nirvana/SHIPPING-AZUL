@@ -316,7 +316,7 @@
 .auth-logo{width:64px;height:64px;margin:0 auto 14px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(145deg,#1273ff,#0647ac);color:#fff;font-size:21px;font-weight:900;box-shadow:0 10px 25px rgba(18,102,241,.3)}
 .auth-box h1{margin:0;font-size:24px}.auth-subtitle{margin:5px 0 24px;color:#657085;font-size:13px}.auth-box input{box-sizing:border-box;width:100%;height:44px;margin-bottom:10px;padding:0 13px;border:1px solid #d8dee9;border-radius:10px;outline:none;font-size:13px}.auth-box input:focus{border-color:#1266f1;box-shadow:0 0 0 3px rgba(18,102,241,.10)}
 .auth-main-btn{width:100%;height:44px;margin-top:6px;border:0;border-radius:10px;background:#1266f1;color:#fff;font-weight:900;cursor:pointer}.auth-main-btn:hover{background:#0c4fc4}.auth-link{border:0;background:transparent;color:#1266f1;margin-top:15px;cursor:pointer;font-size:12px;font-weight:800}.auth-hint{margin-top:12px;color:#657085;font-size:11px;line-height:1.45}.admin-operator-create{margin:0 0 18px;padding:14px;border:1px solid #e6ebf2;border-radius:12px;background:#f8fafc}.admin-operator-create h3{margin:0 0 10px;font-size:13px}.admin-create-grid{display:grid;grid-template-columns:1.1fr 1.6fr 1.1fr 1fr auto;gap:8px}.admin-create-grid input,.admin-create-grid select{height:36px;box-sizing:border-box;padding:0 9px;border:1px solid #d8dee9;border-radius:8px;background:#fff}.auth-error{min-height:18px;margin-top:12px;color:#d64545;font-size:11px;font-weight:700}
-.user-area{display:flex;align-items:center;gap:10px;margin-left:auto}.user-info{color:#cbd7e5;font-size:10px;font-weight:800;text-align:right;line-height:1.25}.user-info small{color:#8fa4bd;font-size:9px}.logout-btn{border:1px solid #34475f!important;background:#172334!important;color:#dce7f5!important}.readonly-mode button:not(.module-tab):not(.logout-btn):not([data-readonly-allowed]),.readonly-mode input:not([data-readonly-allowed]),.readonly-mode select:not([data-readonly-allowed]),.readonly-mode textarea{pointer-events:none!important;opacity:.55!important}.readonly-mode .module-tab,.readonly-mode .logout-btn{pointer-events:auto!important;opacity:1!important}
+.user-area{display:flex;align-items:center;gap:10px;margin-left:auto}.user-info{color:#cbd7e5;font-size:10px;font-weight:800;text-align:right;line-height:1.25}.user-info small{color:#8fa4bd;font-size:9px}.logout-btn{border:1px solid #34475f!important;background:#172334!important;color:#dce7f5!important}.readonly-mode button:not(.module-tab):not(.logout-btn):not(.prod-tab):not([data-readonly-allowed]),.readonly-mode input:not([data-readonly-allowed]),.readonly-mode select:not([data-readonly-allowed]),.readonly-mode textarea{pointer-events:none!important;opacity:.55!important}.readonly-mode .module-tab,.readonly-mode .logout-btn{pointer-events:auto!important;opacity:1!important}
 #adminUsersPanel{display:none;position:fixed;inset:0;z-index:9990;background:rgba(3,10,20,.65);align-items:center;justify-content:center;padding:20px}.admin-users-card{width:min(900px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.35)}.admin-users-head{padding:18px 20px;border-bottom:1px solid #e6ebf2;display:flex;justify-content:space-between;align-items:center}.admin-users-head h2{margin:0;font-size:17px}.admin-users-body{padding:18px 20px}.admin-users-table{width:100%;border-collapse:collapse;font-size:11px}.admin-users-table th,.admin-users-table td{padding:9px;border-bottom:1px solid #edf0f4;text-align:left}.admin-users-table select{padding:6px;border:1px solid #d8dee9;border-radius:7px}.admin-user-actions{display:flex;gap:7px;align-items:center}.admin-users-note{font-size:11px;color:#657085;margin-bottom:14px}
 
 
@@ -657,14 +657,14 @@
   <header class="submodule-header">
     <div><h1>📈 Produtividade</h1><p>Bipagem por hora • acompanhamento individual e meta geral do setor</p></div>
     <div class="submodule-actions">
-      <label style="font-size:11px;font-weight:800;color:#d5deea">Data</label><input type="date" id="prod-date-filter">
-      <select id="prod-sector-filter"><option value="all">Todos os setores</option></select>
-      <button class="btn" type="button" id="prod-export">⇩ Exportar CSV</button>
+      <label style="font-size:11px;font-weight:800;color:#d5deea">Data</label><input type="date" id="prod-date-filter" data-readonly-allowed="1">
+      <select id="prod-sector-filter" data-readonly-allowed="1"><option value="all">Todos os setores</option></select>
+      <button class="btn" type="button" id="prod-export" data-readonly-allowed="1">⇩ CSV</button><button class="btn" type="button" id="prod-export-day" data-readonly-allowed="1">📊 Excel dia</button><button class="btn" type="button" id="prod-export-month" data-readonly-allowed="1">📊 Excel mês</button>
     </div>
   </header>
   <nav class="prod-tabs" aria-label="Abas de produtividade">
-    <button class="prod-tab active" type="button" data-prod-tab="main">📈 Minha produtividade</button>
-    <button class="prod-tab" type="button" data-prod-tab="ranking">🏆 Melhores do dia / mês</button>
+    <button class="prod-tab active" type="button" data-prod-tab="main" data-readonly-allowed="1">📈 Minha produtividade</button>
+    <button class="prod-tab" type="button" data-prod-tab="ranking" data-readonly-allowed="1">🏆 Melhores do dia / mês</button>
   </nav>
   <section class="prod-main-content" data-prod-main="main">
     <div class="prod-goal-main">
@@ -676,6 +676,8 @@
       <span class="prod-goal-stat">Esperado: <b id="prod-main-goal-expected">0</b></span>
       <span class="prod-goal-stat">Batido: <b id="prod-main-goal-actual">0</b></span>
       <span class="prod-goal-stat">Atingimento: <b id="prod-main-goal-pct">0%</b></span>
+      <span class="prod-goal-status" id="prod-day-status">Dia em aberto</span>
+      <button class="btn small primary" type="button" id="prod-finalize-day" style="display:none">🔒 Finalizar dia</button>
     </div>
   </section>
 
@@ -730,7 +732,7 @@
     <div class="prod-panel-body">
       <div class="prod-chart-toolbar">
         <label for="prod-chart-person">Colaborador</label>
-        <select id="prod-chart-person"></select>
+        <select id="prod-chart-person" data-readonly-allowed="1"></select>
       </div>
       <div class="prod-chart-box" id="prod-person-chart"></div>
       <div class="prod-chart-legend"><span><i class="prod-legend-dot prod-legend-blue"></i>Bipes realizados por hora</span></div>
@@ -758,8 +760,8 @@
     <div class="prod-panel-head"><h2>🏆 Ranking de produtividade</h2><span class="count" id="prod-ranking-period-label">Dia</span></div>
     <div class="prod-panel-body">
       <div class="prod-ranking-tools">
-        <div><label>Período</label><select id="prod-ranking-period"><option value="day">Melhores do dia</option><option value="month">Melhores do mês</option></select></div>
-        <div><label>Data de referência</label><input type="date" id="prod-ranking-date"></div>
+        <div><label>Período</label><select id="prod-ranking-period" data-readonly-allowed="1"><option value="day">Melhores do dia</option><option value="month">Melhores do mês</option></select></div>
+        <div><label>Data de referência</label><input type="date" id="prod-ranking-date" data-readonly-allowed="1"></div>
       </div>
       <p class="prod-week-note" id="prod-ranking-week-note"></p>
       <div class="prod-rank-grid">
@@ -1679,17 +1681,18 @@
   data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)};
   data.dailyGoal=Math.max(0,+data.dailyGoal||8000);
   data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{};
+  data.closedDays=(data.closedDays&&typeof data.closedDays==='object')?data.closedDays:{};
   const BIP_SECTORS=['Leve','Volumoso'];
   const persist=()=>{localStorage.setItem(KEY,JSON.stringify(data));window.CloudSync?.save(KEY,data);window.ShippingHistory?.render?.();};
   window.CloudSync?.load(KEY).then(remote=>{
-    if(remote && Array.isArray(remote.records)){ data=remote; data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)}; data.dailyGoal=Math.max(0,+data.dailyGoal||8000); data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{}; render(); }
+    if(remote && Array.isArray(remote.records)){ data=remote; data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)}; data.dailyGoal=Math.max(0,+data.dailyGoal||8000); data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{}; data.closedDays=(data.closedDays&&typeof data.closedDays==='object')?data.closedDays:{}; render(); }
     window.CloudSync?.subscribe(KEY, remote=>{ if(remote && Array.isArray(remote.records)){ data=remote; render(); } });
   });
   window.addEventListener('planoEquipeAtualizado', ()=>render());
   function sectors(){return [...BIP_SECTORS];}
   function syncGoals(){
     data.goals={Leve:Math.max(0,+data.goals.Leve||300),Volumoso:Math.max(0,+data.goals.Volumoso||75)};
-    data.dailyGoal=Math.max(0,+data.dailyGoal||8000);data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{};
+    data.dailyGoal=Math.max(0,+data.dailyGoal||8000);data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{};data.closedDays=(data.closedDays&&typeof data.closedDays==='object')?data.closedDays:{};
   }
   function dailyGoalFor(date){return Math.max(0,+data.dailyGoals?.[date]||data.dailyGoal||8000);}
   function people(){const p=readPlan(),arr=[];(p.employees||[]).forEach(e=>arr.push({value:'emp:'+e.id,name:e.name,meta:[e.so,e.ops].filter(Boolean).join(' · ')}));(p.synergy||[]).forEach(e=>arr.push({value:'syn:'+e.id,name:e.name,meta:'Sinergia • '+(e.origin||'') }));return arr;}
@@ -1839,12 +1842,54 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     });
     svg+='</svg>';return svg;
   }
+  function recordBelongsToPerson(r,key,person){
+    if(!r)return false;
+    if(String(r.personKey||'')===String(key||''))return true;
+    const rn=String(r.personName||r.funcionario||r.nome||'').trim().toLowerCase();
+    if(person?.name && rn===String(person.name).trim().toLowerCase())return true;
+    if(String(key||'').startsWith('emp:')){
+      const id=String(key).slice(4);
+      const emp=(readPlan().employees||[]).find(e=>String(e.id)===id);
+      if(emp){const vals=[emp.name,emp.ops,emp.afs].filter(Boolean).map(v=>String(v).trim().toLowerCase());if(vals.includes(rn)||vals.includes(String(r.ops||'').trim().toLowerCase())||vals.includes(String(r.afs||'').trim().toLowerCase()))return true;}
+    }
+    return false;
+  }
+  function isClosed(date){return !!data.closedDays?.[date];}
+  function canManage(){return ['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase());}
+  function finalizeDay(){
+    if(!canManage())return;
+    const date=$('prod-date-filter').value||localDate();
+    const rows=allRecords().filter(r=>r.date===date&&BIP_SECTORS.some(s=>s.toLowerCase()===String(r.sector).toLowerCase()));
+    if(!rows.length)return alert('Ainda não há lançamentos de produtividade para este dia.');
+    if(isClosed(date))return alert('Este dia já foi finalizado.');
+    const goal=dailyGoalFor(date),actual=rows.reduce((sum,r)=>sum+Math.max(0,+r.bipes||0),0);
+    if(!confirm(`Finalizar o dia ${date.split('-').reverse().join('/')}?\n\nBipes registrados: ${fmtN(actual)}\nMeta do dia: ${fmtN(goal)}\n\nDepois de finalizado, os lançamentos desse dia ficam bloqueados para edição/exclusão.`))return;
+    data.closedDays[date]={closedAt:new Date().toISOString(),closedBy:currentProfile().nome||currentProfile().email||currentProfile().ops||'ADMIN',bipes:actual,meta:goal};
+    persist();render();
+  }
+  function updateDayFinalizeUI(){
+    const date=$('prod-date-filter')?.value||localDate(),rows=allRecords().filter(r=>r.date===date&&BIP_SECTORS.some(s=>s.toLowerCase()===String(r.sector).toLowerCase()));
+    const closed=isClosed(date),btn=$('prod-finalize-day'),status=$('prod-day-status');
+    if(status){status.textContent=closed?`🔒 Dia finalizado${data.closedDays[date]?.closedAt?' • '+new Date(data.closedDays[date].closedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''}`:(rows.length?'Dia em aberto':'Sem lançamentos');status.className='prod-goal-status '+(closed?'closed':'');}
+    if(btn){btn.style.display=canManage()&&rows.length&&!closed?'inline-flex':'none';btn.disabled=closed;}
+  }
+  function exportExcel(period){
+    const date=$('prod-date-filter').value||localDate();
+    const range=dateRangeForPeriod(date,period);
+    const rows=allRecords().filter(r=>r.date>=range.start&&r.date<=range.end&&BIP_SECTORS.some(s=>s.toLowerCase()===String(r.sector).toLowerCase()));
+    const label=period==='day'?'dia':'mes';
+    const title=period==='day'?`Produtividade ${date.split('-').reverse().join('/')}`:`Produtividade ${date.slice(0,7)}`;
+    const meta=rows.reduce((sum,r)=>sum+Math.max(0,+r.bipes||0),0);
+    const html=`<html><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px}th{background:#eee}</style></head><body><h2>${esc(title)}</h2><p>Período: ${esc(range.start)} a ${esc(range.end)} • Bipes: ${fmtN(meta)}</p><table><tr><th>Data</th><th>Hora</th><th>Colaborador</th><th>Setor</th><th>Bipes</th><th>Horas</th><th>Observação</th></tr>${rows.sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour)).map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.hour||'')}</td><td>${esc(resolvePersonName(r))}</td><td>${esc(r.sector)}</td><td>${fmtN(r.bipes)}</td><td>${esc(r.hours||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('')}</table></body></html>`;
+    const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`produtividade_${label}_${date}.xls`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+
   function renderPersonChart(){
     const box=$('prod-person-chart');if(!box)return;
     const key=$('prod-chart-person').value;
-    const rows=chartRows().filter(r=>r.personKey===key);
-    const values=CHART_HOURS.map(h=>rows.filter(r=>recordHour(r)===h).reduce((sum,r)=>sum+(+r.bipes||0),0));
     const person=people().find(p=>p.value===key);
+    const rows=chartRows().filter(r=>recordBelongsToPerson(r,key,person));
+    const values=CHART_HOURS.map(h=>rows.filter(r=>recordHour(r)===h).reduce((sum,r)=>sum+(+r.bipes||0),0));
     if(!person){box.innerHTML='<div class="prod-chart-empty">Selecione um colaborador para visualizar a produtividade.</div>';return;}
     if(!rows.length){box.innerHTML=`<div class="prod-chart-empty">Nenhuma bipagem com horário registrada para <b>${esc(person.name)}</b> nesta data.</div>`;return;}
     box.innerHTML=lineChartSvg([{values,color:'#2563eb'}],'Produtividade de '+person.name);
@@ -1990,7 +2035,7 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     if(note && !canEdit)note.textContent='Lançamentos de produtividade';
     if(!canEdit && $('prod-edit-id'))clearForm();
   }
-  function render(){updateProductivityPermissions();syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();}
+  function render(){updateProductivityPermissions();syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();updateDayFinalizeUI();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();}
   function clearForm(){
     $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';
     $('prod-date').value=$('prod-date-filter').value||localDate();$('prod-hour').value='';
@@ -2003,6 +2048,7 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     if(!date||!hour||!personVal||!sector)return alert('Preencha data, hora, funcionário e setor.');
     if(!bipes)return alert('Informe a quantidade de bipes.');
     const p=people().find(x=>x.value===personVal);if(!p)return alert('Funcionário não encontrado no cadastro atual.');
+    if(isClosed(date))return alert('Este dia já foi finalizado e não pode mais ser alterado.');
     const id=$('prod-edit-id').value||uid(),old=data.records.find(x=>x.id===id);
     const obj={id,date,hour,personKey:personVal,personName:p.name,sector,bipes,hours:hours||'',note:$('prod-note').value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
     const i=data.records.findIndex(x=>x.id===id);if(i>=0)data.records[i]=obj;else data.records.push(obj);
@@ -2036,8 +2082,11 @@ renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value
   $('prod-sector-filter').addEventListener('change',render);$('prod-chart-person').addEventListener('change',renderPersonChart);
   $('prod-export').addEventListener('click',exportCSV);
   $('prod-goals').addEventListener('change',e=>{const sec=e.target.dataset.goalSector;if(!sec)return;data.goals[sec]=Math.max(0,+e.target.value||0);persist();render();});
-  $('prod-history-body').addEventListener('click',e=>{const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');if(ed&&['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase()))editRecord(ed.dataset.prodEdit);if(del&&['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase())&&confirm('Excluir este lançamento de produtividade?')){data.records=data.records.filter(r=>r.id!==del.dataset.prodDel);persist();render();}});
+  $('prod-history-body').addEventListener('click',e=>{const ed=e.target.closest('[data-prod-edit]'),del=e.target.closest('[data-prod-del]');if(ed&&['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase()))editRecord(ed.dataset.prodEdit);if(del&&['ADMIN','LIDER'].includes(String(currentProfile().perfil||'').toUpperCase())){const raw=data.records.find(r=>r.id===del.dataset.prodDel);if(raw&&isClosed(String(raw.date||'')))return alert('Este dia já foi finalizado e não pode mais ser alterado.');if(confirm('Excluir este lançamento de produtividade?')){data.records=data.records.filter(r=>r.id!==del.dataset.prodDel);persist();render();}}});
   $('prod-history-refresh')?.addEventListener('click',()=>render());
+  $('prod-finalize-day')?.addEventListener('click',finalizeDay);
+  $('prod-export-day')?.addEventListener('click',()=>exportExcel('day'));
+  $('prod-export-month')?.addEventListener('click',()=>exportExcel('month'));
   document.querySelectorAll('[data-prod-tab]').forEach(b=>b.addEventListener('click',()=>setProductivityTab(b.dataset.prodTab)));
   $('prod-main-goal-save').addEventListener('click',()=>{
     const perfil=String(currentProfile().perfil||'').toUpperCase();
