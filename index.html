@@ -1687,8 +1687,8 @@
   const BIP_SECTORS=['Leve','Volumoso'];
   const persist=()=>{localStorage.setItem(KEY,JSON.stringify(data));window.CloudSync?.save(KEY,data);window.ShippingHistory?.render?.();};
   window.CloudSync?.load(KEY).then(remote=>{
-    if(remote && Array.isArray(remote.records)){ data=remote; data.goals={Leve:Math.max(0,+data.goals?.Leve||300),Volumoso:Math.max(0,+data.goals?.Volumoso||75)}; data.dailyGoal=Math.max(0,+data.dailyGoal||8000); data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{}; data.closedDays=(data.closedDays&&typeof data.closedDays==='object')?data.closedDays:{}; render(); }
-    window.CloudSync?.subscribe(KEY, remote=>{ if(remote && Array.isArray(remote.records)){ data=remote; render(); } });
+    if(remote && Array.isArray(remote.records)){ data=remote; syncGoals(); render(); }
+    window.CloudSync?.subscribe(KEY, remote=>{ if(remote && Array.isArray(remote.records)){ data=remote; syncGoals(); render(); } });
   });
   window.addEventListener('planoEquipeAtualizado', ()=>render());
   function sectors(){return [...BIP_SECTORS];}
@@ -1697,7 +1697,7 @@
     data.dailyGoal=Math.max(0,+data.dailyGoal||8000);data.dailyGoals=(data.dailyGoals&&typeof data.dailyGoals==='object')?data.dailyGoals:{};data.closedDays=(data.closedDays&&typeof data.closedDays==='object')?data.closedDays:{};
   }
   function dailyGoalFor(date){return Math.max(0,+data.dailyGoals?.[date]||data.dailyGoal||8000);}
-  function people(){const p=readPlan(),arr=[];(p.employees||[]).forEach(e=>arr.push({value:'emp:'+e.id,name:e.name,meta:[e.so,e.ops,e.afs].filter(Boolean).join(' · ')}));(p.synergy||[]).forEach(e=>arr.push({value:'syn:'+e.id,name:e.name,meta:'Sinergia • '+(e.origin||'') }));return arr;}
+  function people(){const p=readPlan(),arr=[];(p.employees||[]).forEach(e=>arr.push({value:'emp:'+e.id,name:e.name,meta:[e.so,e.ops].filter(Boolean).join(' · ')}));(p.synergy||[]).forEach(e=>arr.push({value:'syn:'+e.id,name:e.name,meta:'Sinergia • '+(e.origin||'') }));return arr;}
   function fmtN(n,dec=0){return Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
   function reference(sector){return Math.max(0,+data.goals[sector]||0);}
   function indexOf(r){const g=reference(r.sector);return g>0?(+r.bipes||0)/g:null;}
@@ -1727,12 +1727,9 @@
     const p=window.SupabaseApp?.profile||{};
     if(String(p.perfil||'').toUpperCase()!=='OPERADOR')return '';
     const ops=String(p.ops||'').trim().toLowerCase();
-    const afs=String(p.afs||'').trim().toLowerCase();
+    if(!ops)return '';
     const plan=readPlan();
-    const emp=(plan?.employees||[]).find(e=>{
-      const eops=String(e.ops||'').trim().toLowerCase(), eafs=String(e.afs||'').trim().toLowerCase();
-      return (ops&&eops===ops)||(afs&&eafs===afs);
-    });
+    const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);
     return emp?'emp:'+emp.id:'';
   }
   function operatorMatchesRecord(r){
@@ -1740,17 +1737,12 @@
     if(String(p.perfil||'').toUpperCase()!=='OPERADOR')return true;
     const key=operatorPersonKey();
     if(key&&String(r.personKey||'')===key)return true;
-    const ident=String(p.ops||p.afs||'').trim().toLowerCase();
+    const ops=String(p.ops||'').trim().toLowerCase();
+    const recOps=String(r.ops||r.OPS||'').trim().toLowerCase();
+    if(ops&&recOps===ops)return true;
     const plan=readPlan();
-    const emp=(plan?.employees||[]).find(e=>{
-      const eops=String(e.ops||'').trim().toLowerCase(), eafs=String(e.afs||'').trim().toLowerCase();
-      return ident&&(eops===ident||eafs===ident);
-    });
-    if(emp){
-      const vals=[emp.name,emp.ops,emp.afs].filter(Boolean).map(v=>String(v).trim().toLowerCase());
-      const rn=String(r.personName||'').trim().toLowerCase();
-      if(vals.includes(rn))return true;
-    }
+    const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);
+    if(emp&&String(r.personName||'').trim().toLowerCase()===String(emp.name||'').trim().toLowerCase())return true;
     return false;
   }
   function renderChartPersonSelector(){
@@ -1759,7 +1751,7 @@
     const current=sel.value;
     let options=ppl;
     if(opKey)options=ppl.filter(p=>p.value===opKey);
-    const rows=data.records.filter(r=>r.date===date&&BIP_SECTORS.includes(r.sector));
+    const rows=allRecords().filter(r=>r.date===date&&BIP_SECTORS.some(s=>s.toLowerCase()===String(r.sector).toLowerCase()));
     const used=new Set(rows.map(r=>r.personKey));
     const ordered=[...options].sort((a,b)=>((used.has(b.value)?1:0)-(used.has(a.value)?1:0))||a.name.localeCompare(b.name,'pt-BR'));
     sel.innerHTML=ordered.length?ordered.map(p=>`<option value="${esc(p.value)}">${esc(p.name)}</option>`).join(''):'<option value="">Nenhum colaborador</option>';
@@ -1777,7 +1769,7 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const personKey=String(r.personKey||r.person_key||'').trim();
     const bipes=Math.max(0,+r.bipes||+r.quantidade||+r.quantidadeBipes||0);
     const hour=String(r.hour||r.hora||'').trim();
-    return {...r,sector,date,personName,personKey,bipes,hour,ops:String(r.ops||r.OPS||'').trim(),afs:String(r.afs||r.AFS||'').trim()};
+    return {...r,sector,date,personName,personKey,bipes,hour,ops:String(r.ops||r.OPS||'').trim()};
   }
   function allRecords(){return (Array.isArray(data.records)?data.records:[]).map(normalizeRecord).filter(Boolean);}
   function filtered(){
@@ -1808,14 +1800,14 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
 
   const CHART_HOURS=Array.from({length:13},(_,i)=>i+8);
   function recordHour(r){
-    const raw=String(r.hour||'').trim();
+    const raw=String(r.hour||r.hora||'').trim();
     const m=raw.match(/^(\d{1,2})(?::\d{2})?$/);
     if(!m)return null;
     const h=+m[1];return h>=8&&h<=20?h:null;
   }
   function chartRows(){
     const date=$('prod-date-filter').value,sec=$('prod-sector-filter').value;
-    return data.records.filter(r=>r.date===date&&BIP_SECTORS.includes(r.sector)&&(sec==='all'||r.sector===sec)&&recordHour(r)!=null);
+    return allRecords().filter(r=>r.date===date&&BIP_SECTORS.some(s=>s.toLowerCase()===String(r.sector).toLowerCase())&&(sec==='all'||String(r.sector).toLowerCase()===String(sec).toLowerCase())&&recordHour(r)!=null);
   }
   function lineChartSvg(series,title){
     const W=900,H=300,L=58,R=18,T=20,B=46,plotW=W-L-R,plotH=H-T-B;
@@ -1850,18 +1842,17 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const rn=String(r.personName||r.funcionario||r.nome||'').trim().toLowerCase();
     if(person?.name && rn===String(person.name).trim().toLowerCase())return true;
     const recOps=String(r.ops||r.OPS||'').trim().toLowerCase();
-    const recAfs=String(r.afs||r.AFS||'').trim().toLowerCase();
     if(person?.value?.startsWith('emp:')){
       const emp=(readPlan().employees||[]).find(e=>('emp:'+e.id)===person.value);
-      if(emp){
-        const eo=String(emp.ops||'').trim().toLowerCase(), ea=String(emp.afs||'').trim().toLowerCase();
-        if((eo&&recOps===eo)||(ea&&recAfs===ea))return true;
-      }
+      if(emp && String(emp.ops||'').trim().toLowerCase()===recOps)return true;
     }
     if(String(key||'').startsWith('emp:')){
       const id=String(key).slice(4);
       const emp=(readPlan().employees||[]).find(e=>String(e.id)===id);
-      if(emp){const vals=[emp.name,emp.ops,emp.afs].filter(Boolean).map(v=>String(v).trim().toLowerCase());if(vals.includes(rn)||vals.includes(String(r.ops||'').trim().toLowerCase())||vals.includes(String(r.afs||'').trim().toLowerCase()))return true;}
+      if(emp){
+        const eo=String(emp.ops||'').trim().toLowerCase();
+        if(eo && eo===recOps)return true;
+      }
     }
     return false;
   }
@@ -1930,10 +1921,10 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
   function currentOperatorKey(){
     const p=currentProfile();
     if(String(p.perfil||'').toUpperCase()!=='OPERADOR')return '';
-    const ident=String(p.ops||p.afs||'').trim().toLowerCase();
-    if(!ident)return '';
+    const ops=String(p.ops||'').trim().toLowerCase();
+    if(!ops)return '';
     const plan=readPlan();
-    const emp=(plan.employees||[]).find(e=>String(e.ops||e.afs||'').trim().toLowerCase()===ident);
+    const emp=(plan.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);
     return emp?'emp:'+emp.id:'';
   }
   function dateRangeForPeriod(date,period){
