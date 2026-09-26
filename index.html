@@ -271,8 +271,8 @@
   .prod-tab{border:0;background:transparent;border-radius:9px;padding:9px 14px;font:inherit;font-size:12px;font-weight:900;color:#5b6678;cursor:pointer}
   .prod-tab.active{background:#fff;color:#1f2937;box-shadow:0 1px 4px rgba(15,23,42,.08)}
   .prod-main-content.prod-tab-hidden{display:none!important}
-  .prod-ranking-tab{display:none!important}
-  .prod-ranking-tab.prod-ranking-visible{display:block!important}
+  .prod-ranking-tab{display:none}
+  .prod-ranking-tab.prod-ranking-visible{display:block}
   .prod-ranking-tools{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin-bottom:12px}
   .prod-ranking-tools>div{min-width:150px}
   .prod-ranking-tools label{font-size:10px;font-weight:900;color:#566176;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
@@ -1726,10 +1726,10 @@
   function operatorPersonKey(){
     const p=window.SupabaseApp?.profile||{};
     if(String(p.perfil||'').toUpperCase()!=='OPERADOR')return '';
-    const ops=String(p.ops||'').trim().toLowerCase();
+    const ops=String(p.ops||p.OPS||'').trim().toLowerCase();
     if(!ops)return '';
     const plan=readPlan();
-    const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);
+    const emp=(plan?.employees||[]).find(e=>String(e.ops||e.OPS||'').trim().toLowerCase()===ops);
     return emp?'emp:'+emp.id:'';
   }
   function operatorMatchesRecord(r){
@@ -1737,11 +1737,11 @@
     if(String(p.perfil||'').toUpperCase()!=='OPERADOR')return true;
     const key=operatorPersonKey();
     if(key&&String(r.personKey||'')===key)return true;
-    const ops=String(p.ops||'').trim().toLowerCase();
+    const ops=String(p.ops||p.OPS||'').trim().toLowerCase();
     const recOps=String(r.ops||r.OPS||'').trim().toLowerCase();
     if(ops&&recOps===ops)return true;
     const plan=readPlan();
-    const emp=(plan?.employees||[]).find(e=>String(e.ops||'').trim().toLowerCase()===ops);
+    const emp=(plan?.employees||[]).find(e=>String(e.ops||e.OPS||'').trim().toLowerCase()===ops);
     if(emp&&String(r.personName||'').trim().toLowerCase()===String(emp.name||'').trim().toLowerCase())return true;
     return false;
   }
@@ -2024,15 +2024,15 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
   function setProductivityTab(tab){
     activeProdTab=(tab==='ranking')?'ranking':'main';
     document.querySelectorAll('[data-prod-tab]').forEach(b=>b.classList.toggle('active',b.dataset.prodTab===activeProdTab));
-    document.querySelectorAll('[data-prod-main]').forEach(el=>el.classList.toggle('prod-tab-hidden',activeProdTab!=='main'));
+    document.querySelectorAll('[data-prod-main]').forEach(el=>el.style.display=activeProdTab==='main'?'':'none');
     const rank=$('[data-prod-ranking="ranking"]');
-    if(rank)rank.classList.toggle('prod-ranking-visible',activeProdTab==='ranking');
+    if(rank)rank.style.display=activeProdTab==='ranking'?'block':'none';
     if(activeProdTab==='ranking')renderRankingTab();
   }
   function applyProductivityTabVisibility(){
-    document.querySelectorAll('[data-prod-main]').forEach(el=>el.classList.toggle('prod-tab-hidden',activeProdTab!=='main'));
+    document.querySelectorAll('[data-prod-main]').forEach(el=>el.style.display=activeProdTab==='main'?'':'none');
     const rank=$('[data-prod-ranking="ranking"]');
-    if(rank)rank.classList.toggle('prod-ranking-visible',activeProdTab==='ranking');
+    if(rank)rank.style.display=activeProdTab==='ranking'?'block':'none';
   }
   function updateProductivityPermissions(){
     const perfil=String(currentProfile().perfil||'').toUpperCase();
@@ -2059,8 +2059,11 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     if(!bipes)return alert('Informe a quantidade de bipes.');
     const p=people().find(x=>x.value===personVal);if(!p)return alert('Funcionário não encontrado no cadastro atual.');
     if(isClosed(date))return alert('Este dia já foi finalizado e não pode mais ser alterado.');
+    const plan=readPlan();
+    const emp=String(personVal).startsWith('emp:')?(plan?.employees||[]).find(e=>'emp:'+e.id===personVal):null;
+    const recordOps=String(emp?.ops||emp?.OPS||'').trim();
     const id=$('prod-edit-id').value||uid(),old=data.records.find(x=>x.id===id);
-    const obj={id,date,hour,personKey:personVal,personName:p.name,sector,bipes,hours:hours||'',note:$('prod-note').value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+    const obj={id,date,hour,personKey:personVal,personName:p.name,ops:recordOps,sector,bipes,hours:hours||'',note:$('prod-note').value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
     const i=data.records.findIndex(x=>x.id===id);if(i>=0)data.records[i]=obj;else data.records.push(obj);
     persist();$('prod-date-filter').value=date;clearForm();render();
   }
@@ -2098,6 +2101,7 @@ renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value
   $('prod-export-day')?.addEventListener('click',()=>exportExcel('day'));
   $('prod-export-month')?.addEventListener('click',()=>exportExcel('month'));
   document.querySelectorAll('[data-prod-tab]').forEach(b=>b.addEventListener('click',()=>setProductivityTab(b.dataset.prodTab)));
+  document.addEventListener('click',e=>{const b=e.target.closest?.('[data-prod-tab]');if(b&&document.getElementById('productivityModule')?.contains(b)){e.preventDefault();setProductivityTab(b.dataset.prodTab);}});
   $('prod-main-goal-save').addEventListener('click',()=>{
     const perfil=String(currentProfile().perfil||'').toUpperCase();
     if(!['ADMIN','LIDER'].includes(perfil))return;
