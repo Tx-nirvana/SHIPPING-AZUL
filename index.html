@@ -1787,7 +1787,6 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     const best=rank.find(x=>x.indexParts);$('prod-kpi-best').textContent=best?best.name.split(/\s+/)[0]:'—';$('prod-kpi-best-sub').textContent=best?`Índice ${fmtN(best.index,2)}× referência`:'sem referência configurada';
     const sm={};rows.forEach(r=>{const i=indexOf(r);if(i!=null)sm[r.sector]=(sm[r.sector]||0)+i;});const top=Object.entries(sm).sort((a,b)=>b[1]-a[1])[0];$('prod-kpi-sector').textContent=top?top[0]:'—';
   }
-  function renderRanking(rank){$('prod-rank-count').textContent=`${rank.length} pessoa${rank.length===1?'':'s'}`;$('prod-ranking').innerHTML=rank.length?rank.map((x,i)=>`<div class="rank-card ${i===0?'top1':''}"><div class="rank-pos">${i+1}º</div><div><div class="rank-name">${esc(x.name)}</div><div class="rank-meta">${esc([...x.sectors].join(' • '))}</div></div><div class="rank-num"><b>${fmtN(x.bipes)}</b><span>bipes</span></div><div class="rank-num"><b>${x.indexParts?fmtN(x.index,2)+'×':'—'}</b><span>índice</span></div><div class="rank-num"><b>${x.hasHours?fmtN(x.hours,2):'—'}</b><span>horas inf.</span></div></div>`).join(''):'<div class="empty-inline">Nenhum lançamento nessa data/setor.</div>';}
   function renderHistory(rows){
     const arr=(rows||[]).slice().sort((a,b)=>(String(b.date)+(b.hour||'')+(b.createdAt||'')).localeCompare(String(a.date)+(a.hour||'')+(a.createdAt||'')));
     $('prod-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;
@@ -2025,13 +2024,13 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     activeProdTab=(tab==='ranking')?'ranking':'main';
     document.querySelectorAll('[data-prod-tab]').forEach(b=>b.classList.toggle('active',b.dataset.prodTab===activeProdTab));
     document.querySelectorAll('[data-prod-main]').forEach(el=>el.style.display=activeProdTab==='main'?'':'none');
-    const rank=$('[data-prod-ranking="ranking"]');
+    const rank=document.querySelector('[data-prod-ranking="ranking"]');
     if(rank)rank.style.display=activeProdTab==='ranking'?'block':'none';
     if(activeProdTab==='ranking')renderRankingTab();
   }
   function applyProductivityTabVisibility(){
     document.querySelectorAll('[data-prod-main]').forEach(el=>el.style.display=activeProdTab==='main'?'':'none');
-    const rank=$('[data-prod-ranking="ranking"]');
+    const rank=document.querySelector('[data-prod-ranking="ranking"]');
     if(rank)rank.style.display=activeProdTab==='ranking'?'block':'none';
   }
   function updateProductivityPermissions(){
@@ -2045,7 +2044,7 @@ function renderGoals(){$('prod-goals').innerHTML=BIP_SECTORS.map(s=>`<div class=
     if(note && !canEdit)note.textContent='Lançamentos de produtividade';
     if(!canEdit && $('prod-edit-id'))clearForm();
   }
-  function render(){updateProductivityPermissions();syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();updateDayFinalizeUI();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderRanking(rank);renderCharts();renderHistory(rows);renderRankingTab();applyProductivityTabVisibility();}
+  function render(){updateProductivityPermissions();syncGoals();renderSelectors();renderGoals();renderMainDailyGoal();updateDayFinalizeUI();renderQuickRanking();const rows=filtered(),rank=aggregate(rows);renderKpis(rows,rank);renderCharts();renderHistory(rows);renderRankingTab();applyProductivityTabVisibility();}
   function clearForm(){
     $('prod-edit-id').value='';$('prod-form-title').textContent='Adicionar produtividade';
     $('prod-date').value=$('prod-date-filter').value||localDate();$('prod-hour').value='';
