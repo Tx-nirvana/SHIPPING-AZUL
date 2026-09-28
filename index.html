@@ -323,6 +323,10 @@
 
   .lc-photo-card.active{outline:2px solid #2563eb;outline-offset:2px;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
   .lc-photo-card:focus{outline:2px solid #2563eb;outline-offset:2px}
+
+/* ===== Integração SPX / sincronização automática ===== */
+.spx-badge{display:inline-flex;padding:3px 6px;border-radius:99px;font-size:9px;font-weight:900;background:#eef2f7;color:#586477}.spx-updated{font-size:9px;color:var(--muted);margin-top:7px}
+
 .coffee-wrap{margin-top:14px}
 .coffee-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;padding:14px}
 .coffee-groups .empty{grid-column:1/-1}
@@ -654,7 +658,7 @@
         <button class="lc-btn" id="lc-clear-filters" type="button">Limpar filtros</button>
       </div>
       <div class="lc-tablewrap"><table><thead><tr>
-        <th>LT</th><th>Destino</th><th>Motorista</th><th>Placa</th><th>Doca</th><th>Lacre</th><th>Status</th><th>Chegada</th><th>Início</th><th>Fim</th><th>Liberação</th><th>Tempo carga</th><th>Tempo total</th><th>Volumes</th><th>Pacotes</th><th>Ações</th>
+        <th>Data</th><th>LT / LH</th><th>Destino</th><th>Motorista</th><th>Placa</th><th>Doca</th><th>Lacre</th><th>Status</th><th>Chegada</th><th>Início</th><th>Fim</th><th>Liberação</th><th>Tempo carga</th><th>Tempo total</th><th>Volumes</th><th>Pacotes</th><th>Ações</th>
       </tr></thead><tbody id="lc-tbody"></tbody></table></div>
       <div id="lc-empty" class="lc-empty" style="display:none">Nenhum carregamento encontrado.</div>
     </div>
@@ -1447,15 +1451,29 @@ function renderFunctionsDialog(){
   const KEY='controle_carregamento_v1';
   let dados=[];
   try{const raw=JSON.parse(localStorage.getItem(KEY)||'[]');dados=Array.isArray(raw)?raw:[];}catch{dados=[];}
+  const mergeRemoteLoads = remote => {
+    const localNow = (()=>{try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(x)?x:[];}catch{return [];}})();
+    const map=new Map();
+    [...localNow.filter(x=>x?.origem==='SPX'), ...(Array.isArray(remote)?remote:[])].forEach(x=>{
+      if(!x)return; const k=String(x.id||'') || ('lt:'+String(x.lt||'').trim().toLowerCase());
+      if(!map.has(k)) map.set(k,{...x});
+      else map.set(k,{...map.get(k),...x});
+    });
+    const remoteRows=Array.isArray(remote)?remote.map(x=>({...x,equipe:normalizeLoadersToOPS(x.equipe)})):[];
+    const spxRows=[...map.values()].filter(x=>x?.origem==='SPX');
+    const byId=new Map(remoteRows.map(x=>[String(x.id||''),x]));
+    for(const x of spxRows){const id=String(x.id||'');if(!byId.has(id))remoteRows.push({...x,equipe:normalizeLoadersToOPS(x.equipe)});}
+    return remoteRows;
+  };
   window.CloudSync?.load(KEY).then(remote=>{
     if(Array.isArray(remote)){
-      dados=remote.map(x=>({...x,equipe:normalizeLoadersToOPS(x.equipe)}));
+      dados=mergeRemoteLoads(remote);
       try{localStorage.setItem(KEY,JSON.stringify(dados));}catch{}
       render();
     }
     window.CloudSync?.subscribe(KEY, remote=>{
       if(Array.isArray(remote)){
-        dados=remote.map(x=>({...x,equipe:normalizeLoadersToOPS(x.equipe)}));
+        dados=mergeRemoteLoads(remote);
         try{localStorage.setItem(KEY,JSON.stringify(dados));}catch{}
         render();
       }
@@ -1733,7 +1751,7 @@ function persist(){
     }
     const arr=base.filter(x=>(!q||[x.lt,x.placa,x.motorista,x.destino].join(' ').toLowerCase().includes(q))&&(!fd||x.data===fd)&&(!fs||x.status===fs)&&(!dest||(x.destino||'').toLowerCase().includes(dest))).sort((a,b)=>((b.data||'')+(b.chegada||'')).localeCompare((a.data||'')+(a.chegada||'')));
     const tb=$('lc-tbody');tb.innerHTML='';$('lc-empty').style.display=arr.length?'none':'block';$('lc-history-count').textContent=`${arr.length} registro${arr.length===1?'':'s'}`;
-    arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();const somenteLeitura=['DM','VISUALIZACAO'].includes(perfil);const fotoBtn=`<button class="lc-smallbtn edit" data-readonly-allowed="1" data-lc-photos="${x.id}">📸 ${somenteLeitura?'Ver fotos':'Fotos'}</button>`;tr.innerHTML=`<td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td>${esc(x.lacre||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(minutes(x.inicio,x.fim))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td>${somenteLeitura?'':`<button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> `}${fotoBtn}${somenteLeitura?'':` <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button>`}</td>`;tb.appendChild(tr);});
+    arr.forEach(x=>{const tr=document.createElement('tr'),cls='lc-'+(x.status||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();const somenteLeitura=['DM','VISUALIZACAO'].includes(perfil);const fotoBtn=`<button class="lc-smallbtn edit" data-readonly-allowed="1" data-lc-photos="${x.id}">📸 ${somenteLeitura?'Ver fotos':'Fotos'}</button>`;tr.innerHTML=`<td>${x.data?esc(String(x.data).split('-').reverse().join('/')):'—'}</td><td><b>${esc(x.lt)}</b></td><td>${esc(x.destino)}</td><td>${esc(x.motorista)}</td><td>${esc(x.placa||'—')}</td><td>${esc(x.doca||'—')}</td><td>${esc(x.lacre||'—')}</td><td><span class="lc-badge ${cls}">${esc(x.status)}</span></td><td>${fmtDateTime(x.chegada)}</td><td>${fmtDateTime(x.inicio)}</td><td>${fmtDateTime(x.fim)}</td><td>${fmtDateTime(x.liberacao)}</td><td>${fmtMin(minutes(x.inicio,x.fim))}</td><td>${fmtMin(minutes(x.chegada,x.liberacao))}</td><td>${totalVol(x)}</td><td>${(x.pacotes||0).toLocaleString('pt-BR')}</td><td>${somenteLeitura?'':`<button class="lc-smallbtn edit" data-lc-edit="${x.id}">Editar</button> `}${fotoBtn}${somenteLeitura?'':` <button class="lc-smallbtn del" data-lc-del="${x.id}">Excluir</button>`}</td>`;tb.appendChild(tr);});
     updateMetrics();
   }
 
@@ -1862,6 +1880,8 @@ function persist(){
   ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));renderPhotos();
   function visualizarFotos(id){const x=dados.find(r=>r.id===id);if(!x)return;setCurrentPhotoDraft(x.fotos||{});renderPhotos();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>document.getElementById('lc-photo-grid')?.scrollIntoView({behavior:'smooth',block:'center'}),120);}
   $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(ph){const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();if(['DM','VISUALIZACAO'].includes(perfil))visualizarFotos(ph.dataset.lcPhotos);else editar(ph.dataset.lcPhotos);}if(del)excluir(del.dataset.lcDel);});
+  window.renderLoadingModule=render;
+  window.addEventListener('spxCarregamentosAtualizados',()=>{ try{render();}catch(e){console.warn('[SPX] refresh loading:',e);} });
   novo();render();
 })();
 </script>
@@ -2508,6 +2528,92 @@ renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value
   window.addEventListener('storage',e=>{if(e.key===PLAN_KEY)render();});
   window.addEventListener('planoEquipeAtualizado', ()=>render());
   render();
+})();
+</script>
+
+<script>
+/* ===== Integração SPX -> Histórico de Carregamento V4 ===== */
+(() => {
+  'use strict';
+  const API='http://127.0.0.1:8787';
+  const LOAD_KEY='controle_carregamento_v1';
+  const SPX_KEY='shippingAzul_spxTrips_v1';
+  const uid=()=> (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
+  const clean=s=>String(s??'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim();
+  const norm=s=>clean(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const blank=s=>{const x=clean(s);return !x||x==='-'||x==='—';};
+  function readLoads(){try{const x=JSON.parse(localStorage.getItem(LOAD_KEY)||'[]');return Array.isArray(x)?x:[];}catch{return [];}}
+  function writeLoads(arr,saveCloud=true){try{localStorage.setItem(LOAD_KEY,JSON.stringify(arr));}catch(e){console.warn('[SPX] localStorage:',e);}if(saveCloud)window.CloudSync?.save(LOAD_KEY,arr);}
+  function mergeLists(local,remote){
+    const map=new Map();
+    [...(Array.isArray(local)?local:[]),...(Array.isArray(remote)?remote:[])].forEach(x=>{
+      if(!x)return;
+      const key=clean(x.id)||`lt:${norm(x.lt)}`;
+      if(!map.has(key)){map.set(key,{...x});return;}
+      const old=map.get(key), newer=x.atualizadoSPX&&(!old.atualizadoSPX||new Date(x.atualizadoSPX)>=new Date(old.atualizadoSPX));
+      for(const [k,v] of Object.entries(x)){if(blank(old[k])&&!blank(v))old[k]=v;else if(newer&&v!==''&&v!=null&&['status','motorista','placa','veiculo','doca','destino','chegada','fim','liberacao','obs','data'].includes(k))old[k]=v;}
+      if(x.origem==='SPX')old.origem='SPX';
+      map.set(key,old);
+    });
+    // Collapse accidental duplicates by LT, always keeping the richer SPX record.
+    const byLt=new Map();
+    for(const x of map.values()){
+      const lt=clean(x.lt); if(!lt){byLt.set('id:'+x.id,x);continue;}
+      const k='lt:'+norm(lt), old=byLt.get(k);
+      if(!old){byLt.set(k,x);continue;}
+      const preferred=(x.origem==='SPX'&&!old.origem)||((x.obs||'').length>(old.obs||'').length);
+      const a=preferred?{...old,...x}:{...x,...old};
+      if(!a.atualizadoSPX&&(old.atualizadoSPX||x.atualizadoSPX))a.atualizadoSPX=old.atualizadoSPX||x.atualizadoSPX;
+      byLt.set(k,a);
+    }
+    return [...byLt.values()];
+  }
+  function parseSpxDate(value){const iso=clean(value).match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})\s+(\d{1,2}):(\d{2})/);if(iso){const p=n=>String(n).padStart(2,'0');return `${iso[1]}-${p(iso[2])}-${p(iso[3])}T${p(iso[4])}:${iso[5]}`;}
+    const s=clean(value); if(blank(s))return '';
+    const m=s.match(/(\d{1,2})[-/](\d{1,2})(?:[-/](\d{2,4}))?\s+(\d{1,2}):(\d{2})/);
+    if(!m)return '';
+    let year=m[3]?+m[3]:new Date().getFullYear(); if(year<100)year+=2000;
+    const d=new Date(year,+m[2]-1,+m[1],+m[4],+m[5]);
+    if(isNaN(d.getTime()))return '';if(!m[3]&&d.getTime()>Date.now()+60*864e5)d.setFullYear(d.getFullYear()-1);const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  const firstDate=(...vals)=>{for(const v of vals){const x=parseSpxDate(v);if(x)return x;}return '';};
+  const nowLocal=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;};
+  const plate=v=>{const m=clean(v).match(/\b[A-Z]{3}-?\d[A-Z0-9]\d{2}\b/i);return m?m[0].toUpperCase().replace('-',''):'';};
+  function vehicle(v){const n=norm(v);if(n.includes('carreta'))return 'Carreta';if(n.includes('truck'))return 'Truck';if(n.includes('bitrem'))return 'Bitrem';if(n.includes('vuc'))return 'VUC';return blank(v)?'':'Outro';}
+  function statusFor(t){const ata=clean(t.ATA),atd=clean(t.ATD),p=norm(t.indicadorPontualidade);if(p.includes('atras'))return 'Atrasado';if(!blank(atd))return 'Finalizado';if(!blank(ata))return 'Carregando';return 'Aguardando';}
+  function destination(t){return clean(t.destino||t.destinoPedido||t.destinoPedidoPretendido||t.nomeViagem||t.station||'SPX');}
+  function makeRecord(t,old){
+    const lt=clean(t.numeroLH), atd=parseSpxDate(t.ATD), ata=parseSpxDate(t.ATA);
+    const dateIso=firstDate(t.STA,t.STD,t.ATA,t.ATD,t.dataPartidaPrevista)||(old?.data?old.data+'T00:00:00':'')||nowLocal();
+    const keep=(k,v)=>blank(v)?(old?.[k]||''):v;
+    return {...(old||{}),id:old?.id||uid(),criado:old?.criado||new Date().toISOString(),data:dateIso.slice(0,10),lt,
+      destino:keep('destino',destination(t)),motorista:keep('motorista',t.motorista)||'Não informado',placa:keep('placa',plate(t.placa)),veiculo:keep('veiculo',vehicle(t.veiculo)),doca:keep('doca',t.doca),lacre:old?.lacre||'',
+      chegada:ata||old?.chegada||'',aceite:old?.aceite||'',docaHora:old?.docaHora||'',cargaPronta:old?.cargaPronta||'',inicio:old?.inicio||'',fim:atd||old?.fim||'',liberacao:atd||old?.liberacao||'',meta:old?.meta||60,
+      aceitePor:old?.aceitePor||'',liberadoPor:old?.liberadoPor||'',equipe:old?.equipe||'',fotos:old?.fotos||{},comp:old?.comp||[],pacotes:old?.pacotes||0,peso:old?.peso||0,
+      status:statusFor(t),motivo:old?.motivo||'',obs:[`SPX • ${clean(t.nomeViagem)||'Viagem'}`,`Station: ${clean(t.station)||'—'}`,`Pontualidade: ${clean(t.indicadorPontualidade)||'—'}`,`STA: ${clean(t.STA)||'—'} | STD: ${clean(t.STD)||'—'}`,`ATA: ${clean(t.ATA)||'—'} | ATD: ${clean(t.ATD)||'—'}`,`ETA: ${clean(t.ETA)||'—'} | ETD: ${clean(t.ETD)||'—'}`,`Partida prevista: ${clean(t.dataPartidaPrevista)||'—'}`,`Última localização: ${clean(t.ultimaAtualizacaoLocalizacao)||'—'}`].join(' • '),
+      origem:'SPX',spx:t,atualizadoSPX:new Date().toISOString()};
+  }
+  function setBadge(text,state){const brand=document.querySelector('#loadingModule .lc-brand');if(!brand)return;let b=brand.querySelector('#spx-inline-status');if(!b){b=document.createElement('span');b.id='spx-inline-status';b.style.cssText='display:inline-flex;margin-left:8px;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:900;background:#eef2f7;color:#586477;vertical-align:middle;';brand.querySelector('p')?.appendChild(b);}b.textContent=text;b.style.background=state==='ok'?'#dcfce7':state==='err'?'#fee2e2':'#fff4e5';b.style.color=state==='ok'?'#166534':state==='err'?'#991b1b':'#92400e';}
+  function upsertTrips(trips){
+    if(!Array.isArray(trips)||!trips.length)return 0;
+    const local=readLoads(); const byLt=new Map(local.filter(x=>clean(x.lt)).map(x=>[norm(x.lt),x])); let changed=0;
+    for(const t of trips){const lt=clean(t?.numeroLH);if(!lt)continue;const old=byLt.get(norm(lt));const obj=makeRecord(t,old);if(old)Object.assign(old,obj);else local.push(obj);byLt.set(norm(lt),old||obj);changed++;}
+    const merged=mergeLists(local,readLoads()); writeLoads(merged,true);
+    if(changed){window.renderLoadingModule?.();window.dispatchEvent(new CustomEvent('spxCarregamentosAtualizados',{detail:{count:changed}}));}
+    return changed;
+  }
+  async function sync(){
+    try{
+      const r=await fetch(API+'/api/spx/trips?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+      const out=await r.json(); if(!Array.isArray(out.trips))throw new Error('Resposta inválida');
+      localStorage.setItem(SPX_KEY,JSON.stringify(out.trips));
+      const n=upsertTrips(out.trips);
+      setBadge(`SPX: ${out.trips.length} viagens`,out.trips.length?'ok':'warn');
+      console.log(`[Shipping Azul] SPX V4: ${out.trips.length} viagens recebidas; ${n} registros processados.`);
+    }catch(e){setBadge('SPX: sem conexão','err');console.warn('[Shipping Azul] SPX bridge:',e.message);}
+  }
+  window.SPXSync={reload:sync};
+  sync(); setInterval(sync,30000);
 })();
 </script>
 
