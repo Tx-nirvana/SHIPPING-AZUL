@@ -323,6 +323,23 @@
 
   .lc-photo-card.active{outline:2px solid #2563eb;outline-offset:2px;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
   .lc-photo-card:focus{outline:2px solid #2563eb;outline-offset:2px}
+.coffee-wrap{margin-top:14px}
+.coffee-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;padding:14px}
+.coffee-groups .empty{grid-column:1/-1}
+.coffee-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:9px}
+.coffee-card.on{border-color:#f0d5aa;background:#fffcf7}.coffee-card.late{border-color:#f1c3c3;background:#fffafa}.coffee-card.done{opacity:.7}
+.coffee-top{display:grid;grid-template-columns:1fr 88px 88px auto auto;gap:6px;align-items:end}
+.coffee-top label{font-size:9px;font-weight:900;text-transform:uppercase;color:#6f7a8e}
+.coffee-top .modal-input{height:34px;width:100%;padding:0 6px;font-size:12px}
+.coffee-state{font-size:11px;font-weight:800;color:var(--muted)}.coffee-state.on{color:var(--amber)}.coffee-state.late{color:var(--red)}.coffee-state.done{color:var(--green)}
+.coffee-people{display:flex;flex-wrap:wrap;gap:5px}
+.coffee-chip{display:inline-flex;align-items:center;gap:5px;background:var(--primary-soft);color:var(--primary-2);border-radius:99px;padding:4px 5px 4px 9px;font-size:11px;font-weight:800}
+.coffee-chip em{font-style:normal;font-size:8px;background:var(--purple-soft);color:var(--purple);padding:1px 4px;border-radius:9px}
+.coffee-chip button{border:0;background:#fff;border-radius:50%;width:16px;height:16px;line-height:1;font-size:12px;color:#6b7688;padding:0}
+.coffee-none{font-size:11px;color:var(--muted)}
+.lc-dayctl{display:flex;align-items:center;gap:6px}
+#loadingModule .lc-dayctl label{margin:0;color:#c9d1d8;white-space:nowrap}
+#loadingModule .lc-dayctl input{width:auto}
 </style>
 </head>
 <body>
@@ -510,6 +527,27 @@
       <div class="synergy-empty" id="synergyEmpty">Nenhuma pessoa de sinergia cadastrada para hoje.</div>
     </div>
   </section>
+  <section class="panel coffee-wrap">
+    <div class="panel-head">
+      <div class="panel-title"><h2>☕ HORÁRIO DE CAFÉ</h2><span class="count" id="coffeeCountLabel">0</span></div>
+      <button class="btn primary small" id="addCoffeeBtn" type="button">＋ Novo grupo</button>
+    </div>
+    <div class="coffee-groups" id="coffeeGroups"></div>
+  </section>
+
+  <section class="panel synergy-section">
+    <div class="panel-head">
+      <div class="panel-title"><h2>BASE DE SINERGIA</h2><span class="count" id="baseSynergyCount">0</span></div>
+      <input class="field" id="baseSearch" placeholder="Buscar na base..." style="max-width:260px">
+    </div>
+    <div class="synergy-table-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>SO</th><th>OPS</th><th>Setor de origem</th><th style="text-align:right">Ações</th></tr></thead>
+        <tbody id="baseSynergyBody"></tbody>
+      </table>
+    </div>
+  </section>
+
 </div>
 
 
@@ -518,6 +556,7 @@
     <div class="lc-brand"><h1>🚛 Controle de Carregamento</h1><p>LT • carga • equipe • tempos • doca • liberação • histórico</p></div>
     <div class="lc-actions">
       <button class="lc-btn" id="lc-new-top" type="button">＋ Novo carregamento</button>
+      <div class="lc-dayctl"><label for="lc-dia">Dia do relatório</label><input type="date" id="lc-dia" data-readonly-allowed="1"><button class="lc-btn primary" id="lc-finalize" type="button">🔒 Finalizar dia</button></div>
       <button class="lc-btn dark" id="lc-export" type="button">📊 Relatório Excel</button><button class="lc-btn dark" id="lc-export-csv" type="button">⇩ CSV</button>
       <button class="lc-btn dark" id="lc-backup" type="button">💾 Backup</button>
       <label class="lc-btn dark" style="cursor:pointer">↥ Restaurar<input id="lc-restore" type="file" accept=".json" hidden></label>
@@ -825,7 +864,7 @@
     <div class="modal-head"><h3 id="synergyDialogTitle">Adicionar sinergia</h3><button type="button" class="modal-close" data-close="synergyDialog">×</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-row full"><label>Nome</label><input class="modal-input" id="synergyName" required></div>
+        <div class="form-row full"><label>Nome</label><input class="modal-input" id="synergyName" list="synergyBaseList" autocomplete="off" required><datalist id="synergyBaseList"></datalist></div>
         <div class="form-row"><label>SO / S0 (opcional)</label><input class="modal-input" id="synergySo"></div>
         <div class="form-row"><label>OPS (opcional)</label><input class="modal-input" id="synergyOps"></div>
         <div class="form-row"><label>Setor de origem</label><input class="modal-input" id="synergyOrigin" placeholder="Ex.: Receiving" required></div>
@@ -914,11 +953,11 @@
     }
   }
 
-  let state = loadState();
+  let state = ensureExtras(loadState());
   window.CloudSync?.load(STORAGE_KEY).then(remote=>{
-    if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = remote; renderAll(); }
+    if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = ensureExtras(remote); renderAll(); }
     window.CloudSync?.subscribe(STORAGE_KEY, remote=>{
-      if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = remote; renderAll(); }
+      if(remote && Array.isArray(remote.employees) && Array.isArray(remote.functions)){ state = ensureExtras(remote); renderAll(); }
     });
   });
   let editingEmployeeId = null;
@@ -1083,6 +1122,7 @@
   }
 
   function renderSynergy(){
+    renderCoffee();renderBase();
     els.synergyCountLabel.textContent = state.synergy.length;
     els.synergyEmpty.style.display = state.synergy.length ? 'none' : 'block';
     els.synergyTableBody.innerHTML = state.synergy.map(s=>`
@@ -1095,7 +1135,102 @@
       </tr>`).join('');
   }
 
-  function renderFunctionsDialog(){
+    /* ===== Base de sinergia ===== */
+  function baseKey(x){return (normalize(x.so)||normalize(x.ops)||normalize(x.name)).toLowerCase();}
+  function addToBase(s,x){
+    if(!normalize(x.name)) return;
+    const f=s.synergyBase.find(b=>baseKey(b)===baseKey(x)||b.name.toLowerCase()===normalize(x.name).toLowerCase());
+    if(f){ if(!f.so&&x.so)f.so=normalize(x.so); if(!f.ops&&x.ops)f.ops=normalize(x.ops); if(x.origin)f.origin=normalize(x.origin); }
+    else s.synergyBase.push({id:uid(),name:normalize(x.name),so:normalize(x.so),ops:normalize(x.ops),origin:normalize(x.origin)});
+  }
+  function ensureExtras(s){
+    s.coffee=Array.isArray(s.coffee)?s.coffee:[];
+    s.synergyBase=Array.isArray(s.synergyBase)?s.synergyBase:[];
+    if(!s.baseSeeded){ // uma vez só: traz quem já veio nos dias salvos no Histórico
+      try{const h=JSON.parse(localStorage.getItem('shippingAzulDailyHistory_v1')||'[]');
+        (Array.isArray(h)?h:[]).forEach(d=>(d.synergy||[]).forEach(x=>addToBase(s,x)));}catch{}
+      s.baseSeeded=true;
+    }
+    (s.synergy||[]).forEach(x=>addToBase(s,x));
+    return s;
+  }
+  function renderBase(){
+    const q=normalize($('#baseSearch').value).toLowerCase();
+    const rows=state.synergyBase.filter(b=>`${b.name} ${b.so} ${b.ops} ${b.origin}`.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+    $('#baseSynergyCount').textContent=state.synergyBase.length;
+    $('#baseSynergyBody').innerHTML=rows.length?rows.map(b=>`<tr><td><b>${esc(b.name)}</b></td><td>${esc(b.so||'—')}</td><td>${esc(b.ops||'—')}</td><td>${esc(b.origin||'—')}</td><td><div class="action-row"><button class="btn small" type="button" data-base="use" data-id="${b.id}">＋ Usar hoje</button><button class="mini-action delete" type="button" data-base="del" data-id="${b.id}" title="Remover da base">🗑</button></div></td></tr>`).join(''):'<tr><td colspan="5"><div class="synergy-empty">Nenhuma pessoa na base ainda. Ao cadastrar uma sinergia, ela entra aqui automaticamente.</div></td></tr>';
+    $('#synergyBaseList').innerHTML=state.synergyBase.map(b=>`<option value="${esc(b.name)}">`).join('');
+  }
+  $('#baseSearch').addEventListener('input',renderBase);
+  $('#baseSynergyBody').addEventListener('click',e=>{
+    const b=e.target.closest('button[data-base]'); if(!b) return;
+    const p=state.synergyBase.find(x=>x.id===b.dataset.id); if(!p) return;
+    if(b.dataset.base==='del' && confirm('Remover '+p.name+' da base?')){ state.synergyBase=state.synergyBase.filter(x=>x!==p); renderAll(); }
+    if(b.dataset.base==='use'){ openSynergyDialog(); els.synergyName.value=p.name; els.synergySo.value=p.so||''; els.synergyOps.value=p.ops||''; els.synergyOrigin.value=p.origin||''; }
+  });
+  els.synergyName.addEventListener('change',()=>{
+    const b=state.synergyBase.find(x=>x.name.toLowerCase()===normalize(els.synergyName.value).toLowerCase());
+    if(b){ els.synergySo.value=b.so||''; els.synergyOps.value=b.ops||''; els.synergyOrigin.value=b.origin||''; }
+  });
+
+  /* ===== Horário de café ===== */
+  const nowHM=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+  function coffeeStatus(g){
+    if(!g.leave||!g.back) return ['','Defina saída e retorno'];
+    const n=nowHM();
+    if(n<g.leave) return ['wait','Sai às '+g.leave];
+    if(n<g.back) return ['on','☕ Em café — volta às '+g.back];
+    return ['late','⚠ Retorno previsto às '+g.back+' — confirme'];
+  }
+  function personByKey(k){
+    const [t,id]=k.split(':'); const p=(t==='emp'?state.employees:state.synergy).find(x=>x.id===id);
+    return p?{name:p.name,syn:t==='syn'}:null;
+  }
+  function coffeeCandidates(){
+    const used=new Set(state.coffee.filter(g=>!g.done).flatMap(g=>g.people));
+    return [...state.employees.filter(e=>e.status==='presente').map(e=>['emp:'+e.id,e.name]),
+            ...state.synergy.map(s=>['syn:'+s.id,s.name+' (sinergia)'])].filter(([key])=>!used.has(key));
+  }
+  function renderCoffee(){
+    const box=$('#coffeeGroups'), cand=coffeeCandidates();
+    $('#coffeeCountLabel').textContent=state.coffee.length+(state.coffee.length===1?' grupo':' grupos');
+    box.innerHTML=state.coffee.length?state.coffee.map(g=>{
+      const [k,txt]=g.done?['done','✓ Retornou']:coffeeStatus(g);
+      const chips=g.people.map(pk=>{const p=personByKey(pk);return p?`<span class="coffee-chip">${esc(firstName(p.name))}${p.syn?' <em>S</em>':''}<button type="button" data-coffee="rm" data-id="${g.id}" data-key="${pk}" title="Tirar do grupo">×</button></span>`:'';}).join('');
+      return `<div class="coffee-card ${k}">
+        <div class="coffee-top">
+          <input class="modal-input" value="${esc(g.name)}" data-coffee="name" data-id="${g.id}" title="Nome do grupo">
+          <label>Saída<input type="time" class="modal-input" value="${g.leave||''}" data-coffee="leave" data-id="${g.id}"></label>
+          <label>Retorno<input type="time" class="modal-input" value="${g.back||''}" data-coffee="back" data-id="${g.id}"></label>
+          <button class="btn small" type="button" data-coffee="done" data-id="${g.id}">${g.done?'Reabrir':'✓ Voltaram'}</button>
+          <button class="mini-action delete" type="button" data-coffee="del" data-id="${g.id}" title="Excluir grupo">🗑</button>
+        </div>
+        <div class="coffee-state ${k}">${txt} · ${g.people.length} ${g.people.length===1?'pessoa':'pessoas'}</div>
+        <div class="coffee-people">${chips||'<span class="coffee-none">Ninguém no grupo</span>'}</div>
+        <select class="inline-select" data-coffee="add" data-id="${g.id}" style="max-width:100%"><option value="">＋ Adicionar pessoa...</option>${cand.map(([key,nm])=>`<option value="${key}">${esc(nm)}</option>`).join('')}</select>
+      </div>`;
+    }).join(''):'<div class="empty"><div class="big">☕</div><strong>Nenhum horário de café</strong>Crie um grupo, defina saída e retorno e adicione as pessoas.</div>';
+  }
+  $('#addCoffeeBtn').addEventListener('click',()=>{state.coffee.push({id:uid(),name:'Grupo '+(state.coffee.length+1),leave:'',back:'',people:[],done:false});renderAll();});
+  $('#coffeeGroups').addEventListener('change',e=>{
+    const a=e.target.dataset.coffee, g=state.coffee.find(x=>x.id===e.target.dataset.id); if(!a||!g) return;
+    if(a==='name') g.name=normalize(e.target.value)||g.name;
+    if(a==='leave') g.leave=e.target.value;
+    if(a==='back') g.back=e.target.value;
+    if(a==='add'&&e.target.value) g.people.push(e.target.value);
+    renderAll();
+  });
+  $('#coffeeGroups').addEventListener('click',e=>{
+    const b=e.target.closest('button[data-coffee]'); if(!b) return;
+    const g=state.coffee.find(x=>x.id===b.dataset.id); if(!g) return;
+    if(b.dataset.coffee==='rm') g.people=g.people.filter(k=>k!==b.dataset.key);
+    if(b.dataset.coffee==='done') g.done=!g.done;
+    if(b.dataset.coffee==='del'){ if(!confirm('Excluir o grupo "'+g.name+'"?')) return; state.coffee=state.coffee.filter(x=>x!==g); }
+    renderAll();
+  });
+  setInterval(()=>{ if(!$('#coffeeGroups').contains(document.activeElement)) renderCoffee(); },30000);
+
+function renderFunctionsDialog(){
     els.functionsList.innerHTML = state.functions.map((fn,index)=>`
       <div class="function-edit-row">
         <input class="modal-input" value="${esc(fn)}" data-function-index="${index}">
@@ -1188,7 +1323,7 @@
     }else{
       state.synergy.push({id:uid(),...data}); showToast('Pessoa de sinergia adicionada.');
     }
-    els.synergyDialog.close(); renderAll();
+    addToBase(state,data); els.synergyDialog.close(); renderAll();
   });
 
   els.employeeTableBody.addEventListener('change', e=>{
@@ -1261,7 +1396,7 @@
   $('#newDayBtn').addEventListener('click',()=>{
     if(!confirm('Iniciar um novo dia?\n\nAntes de limpar, o sistema salvará automaticamente o estado atual no Histórico Diário. Depois serão limpos status, funções do dia e sinergias temporárias. O cadastro permanente, as funções e o planejamento serão mantidos.')) return;
     if(window.ShippingHistory?.saveToday) window.ShippingHistory.saveToday(false);
-    state.employees.forEach(e=>{e.status='';e.function='';});
+    state.employees.forEach(e=>{e.status='';e.function='';}); state.coffee=[];
     state.synergy=[];
     renderAll(); showToast('Dia arquivado e novo dia iniciado.');
   });
@@ -1332,7 +1467,40 @@
   const localISODate=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-  function persist(){
+    /* ===== Finalizar dia / relatório por dia ===== */
+  const KEYF='controle_carregamento_fechados_v1';
+  let fechados={};try{fechados=JSON.parse(localStorage.getItem(KEYF)||'{}')||{};}catch{}
+  window.CloudSync?.load(KEYF).then(r=>{
+    if(r&&typeof r==='object'&&!Array.isArray(r)){fechados=r;refreshDia();render();}
+    window.CloudSync?.subscribe(KEYF,r=>{if(r&&typeof r==='object'&&!Array.isArray(r)){fechados=r;refreshDia();render();}});
+  });
+  function salvarFechados(){try{localStorage.setItem(KEYF,JSON.stringify(fechados));}catch{}window.CloudSync?.save(KEYF,fechados);}
+  function dadosDoDia(){const d=v('lc-dia');return d?dados.filter(x=>x.data===d):dados;}
+  function sufixoDia(){const d=v('lc-dia');return d?'_'+d:'';}
+  function podeGerirDia(){return ['ADMIN','LIDER'].includes(String(window.SupabaseApp?.profile?.perfil||'').toUpperCase());}
+  function refreshDia(){
+    const b=$('lc-finalize');if(!b)return;
+    b.textContent=fechados[v('lc-dia')]?'🔓 Reabrir dia':'🔒 Finalizar dia';
+    b.style.display=podeGerirDia()?'':'none';
+  }
+  window.refreshLoadingDay=refreshDia;
+  async function finalizarDia(){
+    if(!podeGerirDia())return;
+    const d=v('lc-dia')||localISODate();$('lc-dia').value=d;
+    const br=d.split('-').reverse().join('/'),arr=dados.filter(x=>x.data===d);
+    if(fechados[d]){
+      if(!confirm(`Reabrir o dia ${br}? Os carregamentos voltarão a poder ser editados.`))return;
+      delete fechados[d];salvarFechados();refreshDia();return;
+    }
+    if(!arr.length)return alert('Não há carregamentos em '+br+'.');
+    const pend=arr.filter(x=>x.status!=='Finalizado').length;
+    if(!confirm(`Finalizar o dia ${br}?\n\nCarregamentos: ${arr.length}`+(pend?`\nAtenção: ${pend} ainda não estão como "Finalizado".`:'')+`\n\nO dia ficará bloqueado para edição/exclusão e o relatório Excel será gerado só com esse dia.`))return;
+    fechados[d]={closedAt:new Date().toISOString(),by:window.SupabaseApp?.profile?.nome||window.SupabaseApp?.user?.email||''};
+    salvarFechados();refreshDia();
+    await exportExcelReport();
+  }
+
+function persist(){
     try{
       dados=dados.map(x=>({...x,equipe:normalizeLoadersToOPS(x.equipe)}));
       localStorage.setItem(KEY,JSON.stringify(dados));
@@ -1537,6 +1705,7 @@
   }
 
   function salvar(){
+    if(fechados[v('lc-data')]){alert('Este dia já foi finalizado. Reabra o dia para alterar.');return;}
     const req=[['lc-lt','LT / Pedido'],['lc-destino','Destino'],['lc-motorista','Motorista']];
     for(const [id,n] of req){if(!$(id).value.trim()){alert('Preencha: '+n);$(id).focus();return;}}
     const id=$('lc-editId').value||uid();const old=dados.find(x=>x.id===id);
@@ -1573,15 +1742,16 @@
     const map={data:'lc-data',lt:'lc-lt',destino:'lc-destino',motorista:'lc-motorista',placa:'lc-placa',veiculo:'lc-veiculo',doca:'lc-doca',lacre:'lc-lacre',chegada:'lc-chegada',aceite:'lc-aceite',docaHora:'lc-docaHora',cargaPronta:'lc-cargaPronta',inicio:'lc-inicio',fim:'lc-fim',liberacao:'lc-liberacao',meta:'lc-meta',aceitePor:'lc-aceitePor',liberadoPor:'lc-liberadoPor',equipe:'lc-equipe',pacotes:'lc-pacotes',peso:'lc-peso',status:'lc-status',motivo:'lc-motivo',obs:'lc-obs'};
     Object.entries(map).forEach(([k,id2])=>$(id2).value=x[k]??'');setCurrentPhotoDraft(x.fotos||{});renderPhotos();$('lc-comp').innerHTML='';(x.comp||[]).forEach(c=>addComp(c.tipo,c.qtd));if(!(x.comp||[]).length){addComp('Gaylote');addComp('Saca');}calcComp();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }
-  function excluir(id){const x=dados.find(a=>a.id===id);if(!x)return;if(confirm(`Excluir o carregamento ${x.lt}? Esta ação não pode ser desfeita.`)){dados=dados.filter(a=>a.id!==id);persist();render();}}
+  function excluir(id){
+    const _x=dados.find(a=>a.id===id);if(_x&&fechados[_x.data]){alert('Este dia já foi finalizado. Reabra o dia para excluir.');return;}const x=dados.find(a=>a.id===id);if(!x)return;if(confirm(`Excluir o carregamento ${x.lt}? Esta ação não pode ser desfeita.`)){dados=dados.filter(a=>a.id!==id);persist();render();}}
   function clearFilters(){['lc-busca','lc-fData','lc-fStatus','lc-fDestino'].forEach(id=>$(id).value='');render();}
 
   function download(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
-  function exportCSV(){
+  function exportCSV(){const dados=dadosDoDia();
     const rows=[['Data','LT','Destino','Motorista','Placa','Veículo','Doca','Lacre','Status','Chegada','Aceite','Entrada Doca','Carga Pronta','Início','Fim','Liberação','Tempo Carga (min)','Tempo Total (min)','OPS Carregadores','Aceite Por','Liberado Por','Volumes','Pacotes','Peso kg','Motivo','Observações','Composição']];
     dados.forEach(x=>rows.push([x.data,x.lt,x.destino,x.motorista,x.placa,x.veiculo,x.doca,x.lacre,x.status,x.chegada,x.aceite,x.docaHora,x.cargaPronta,x.inicio,x.fim,x.liberacao,minutes(x.inicio,x.fim),minutes(x.chegada,x.liberacao),x.equipe,x.aceitePor,x.liberadoPor,totalVol(x),x.pacotes,x.peso,x.motivo,x.obs,(x.comp||[]).map(c=>`${c.tipo}: ${c.qtd}`).join(' | ')]));
     const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');
-    download(csv,'controle_carregamento.csv','text/csv;charset=utf-8;');
+    download(csv,'controle_carregamento'+sufixoDia()+'.csv','text/csv;charset=utf-8;');
   }
 
   function excelSafe(value){return value==null?'':String(value);}
@@ -1593,6 +1763,8 @@
   function photoBase64(data){return typeof data==='string'&&data.startsWith('data:image/')?data:'';}
 
   async function exportExcelReport(){
+    const dados=dadosDoDia();
+    if(!dados.length){alert('Nenhum carregamento na data selecionada.');return;}
     if(!window.ExcelJS){alert('A biblioteca do Excel não carregou. Verifique sua conexão com a internet e tente novamente.');return;}
     const wb=new ExcelJS.Workbook();
     wb.creator='Shipping Azul';
@@ -1678,7 +1850,7 @@
     let rr=2;dados.forEach(x=>(x.comp||[]).forEach(c=>{const total=totalVol(x)||0;[x.data,x.lt,x.destino,c.tipo,c.qtd,total?c.qtd/total:0].forEach((v,i)=>{const cell=comp.getCell(rr,i+1);cell.value=v;cell.border=border;if(i===5)cell.numFmt='0.0%';});rr++;}));
     [12,17,22,22,14,14].forEach((w,i)=>comp.getColumn(i+1).width=w);comp.autoFilter={from:{row:1,column:1},to:{row:Math.max(rr-1,1),column:6}};comp.views=[{state:'frozen',ySplit:1,showGridLines:false}];
 
-    const filename=`Relatorio_Controle_Carregamento_${localISODate().replaceAll('-','')}.xlsx`;
+    const filename=`Relatorio_Controle_Carregamento_${(v('lc-dia')||localISODate()).replaceAll('-','')}.xlsx`;
     const buffer=await wb.xlsx.writeBuffer();
     const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
@@ -1686,7 +1858,7 @@
   function backup(){download(JSON.stringify(dados,null,2),'backup_carregamentos.json','application/json');}
   function restoreFile(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw new Error();if(!confirm(`Restaurar backup com ${d.length} carregamento(s)? Os dados atuais serão substituídos.`))return;dados=d;persist();render();alert('Backup restaurado.');}catch{alert('Arquivo de backup inválido.');}};r.readAsText(file);}
 
-  window.addEventListener('planoEquipeAtualizado',updateOpsDatalist);window.addEventListener('storage',e=>{if(e.key==='shippingAzulPlanner_v1')updateOpsDatalist();});$('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-equipe').addEventListener('blur',()=>{ $('lc-equipe').value=normalizeLoadersToOPS($('lc-equipe').value); });$('lc-photo-modal-close').addEventListener('click',closePhotoModal);$('lc-photo-modal').addEventListener('click',e=>{if(e.target.id==='lc-photo-modal')closePhotoModal();});$('lc-export').addEventListener('click',exportExcelReport);$('lc-export-csv').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
+  window.addEventListener('planoEquipeAtualizado',updateOpsDatalist);window.addEventListener('storage',e=>{if(e.key==='shippingAzulPlanner_v1')updateOpsDatalist();});$('lc-new-top').addEventListener('click',novo);$('lc-clear').addEventListener('click',novo);$('lc-save').addEventListener('click',salvar);$('lc-add-comp').addEventListener('click',()=>addComp());$('lc-pacotes').addEventListener('input',calcComp);$('lc-fill-team').addEventListener('click',fillTeamFromPlan);$('lc-equipe').addEventListener('blur',()=>{ $('lc-equipe').value=normalizeLoadersToOPS($('lc-equipe').value); });$('lc-photo-modal-close').addEventListener('click',closePhotoModal);$('lc-photo-modal').addEventListener('click',e=>{if(e.target.id==='lc-photo-modal')closePhotoModal();});$('lc-dia').value=localISODate();$('lc-dia').addEventListener('change',refreshDia);$('lc-finalize').addEventListener('click',finalizarDia);refreshDia();$('lc-export').addEventListener('click',exportExcelReport);$('lc-export-csv').addEventListener('click',exportCSV);$('lc-backup').addEventListener('click',backup);$('lc-restore').addEventListener('change',e=>{restoreFile(e.target.files[0]);e.target.value='';});$('lc-clear-filters').addEventListener('click',clearFilters);
   ['lc-busca','lc-fDestino'].forEach(id=>$(id).addEventListener('input',render));['lc-fData','lc-fStatus'].forEach(id=>$(id).addEventListener('change',render));renderPhotos();
   function visualizarFotos(id){const x=dados.find(r=>r.id===id);if(!x)return;setCurrentPhotoDraft(x.fotos||{});renderPhotos();$('lc-formPanel').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>document.getElementById('lc-photo-grid')?.scrollIntoView({behavior:'smooth',block:'center'}),120);}
   $('lc-tbody').addEventListener('click',e=>{const ed=e.target.closest('[data-lc-edit]'),ph=e.target.closest('[data-lc-photos]'),del=e.target.closest('[data-lc-del]');if(ed)editar(ed.dataset.lcEdit);if(ph){const perfil=String(window.SupabaseApp?.profile?.perfil||'').toUpperCase();if(['DM','VISUALIZACAO'].includes(perfil))visualizarFotos(ph.dataset.lcPhotos);else editar(ph.dataset.lcPhotos);}if(del)excluir(del.dataset.lcDel);});
@@ -2366,7 +2538,7 @@ function aplicarPermissoes(){
   document.querySelectorAll('[data-module-target]').forEach(t=>t.style.display=allow.includes(t.dataset.moduleTarget)?'':'none');
   const active=document.querySelector('.module-view.active');if(!active||!allow.includes(active.id)){const first=allow[0];document.querySelectorAll('.module-view').forEach(v=>v.classList.toggle('active',v.id===first));document.querySelectorAll('[data-module-target]').forEach(t=>t.classList.toggle('active',t.dataset.moduleTarget===first));}
   applyOperatorDataFilter();
-  window.renderLoadingPhotos?.();
+  window.renderLoadingPhotos?.();window.refreshLoadingDay?.();
 }
 function readLocalJson(key){try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}}
 function operatorHasLoadAssociation(){
