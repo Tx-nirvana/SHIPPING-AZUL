@@ -2541,7 +2541,7 @@ renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value
   const uid=()=> (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
   const clean=s=>String(s??'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim();
   const norm=s=>clean(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-  const blank=s=>{const x=clean(s);return !x||x==='-'||x==='—';};
+  const blank=s=>{const x=clean(s);return !x||/^[-—–\s]*$/.test(x);};
   function readLoads(){try{const x=JSON.parse(localStorage.getItem(LOAD_KEY)||'[]');return Array.isArray(x)?x:[];}catch{return [];}}
   function writeLoads(arr,saveCloud=true){try{localStorage.setItem(LOAD_KEY,JSON.stringify(arr));}catch(e){console.warn('[SPX] localStorage:',e);}if(saveCloud)window.CloudSync?.save(LOAD_KEY,arr);}
   function mergeLists(local,remote){
@@ -2578,25 +2578,40 @@ renderHourOptions();$('prod-date-filter').value=localDate();$('prod-date').value
   }
   const firstDate=(...vals)=>{for(const v of vals){const x=parseSpxDate(v);if(x)return x;}return '';};
   const nowLocal=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;};
-  const plate=v=>{const m=clean(v).match(/\b[A-Z]{3}-?\d[A-Z0-9]\d{2}\b/i);return m?m[0].toUpperCase().replace('-',''):'';};
+  const plate=v=>[...new Set((clean(v).match(/\b[A-Z]{3}-?\d[A-Z0-9]\d{2}\b/gi)||[]).map(x=>x.toUpperCase().replace('-','')))].join(',');
   function vehicle(v){const n=norm(v);if(n.includes('carreta'))return 'Carreta';if(n.includes('truck'))return 'Truck';if(n.includes('bitrem'))return 'Bitrem';if(n.includes('vuc'))return 'VUC';return blank(v)?'':'Outro';}
   function statusFor(t){const ata=clean(t.ATA),atd=clean(t.ATD),p=norm(t.indicadorPontualidade);if(p.includes('atras'))return 'Atrasado';if(!blank(atd))return 'Finalizado';if(!blank(ata))return 'Carregando';return 'Aguardando';}
-  function destination(t){return clean(t.destino||t.destinoPedido||t.destinoPedidoPretendido||t.nomeViagem||t.station||'SPX');}
+  const STATION_RE=/(?:SoC|LM\s?Hub|FM\s?Hub|Hub)_[A-Z]{2}_[\p{L}\d_]+/iu;
+  const SCHED_RE=/\s*[-–—]\s*Schedule\s+By\b.*$/i;
+  function cleanDriver(v){return clean(v).replace(SCHED_RE,'').replace(/^\[\d+\]\s*/,'').trim();}
+  function driverOf(t){let d=cleanDriver(t.motorista);if(blank(d)){const m=clean(t.nomeViagem).match(/^\[\d+\]\s*(.+?)\s+[-–—]\s+Schedule\s+By/i);d=m?clean(m[1]):'';}return blank(d)?'':d;}
+  function destination(t){
+    for(const v of [t.destino,t.destinoPedido,t.destinoPedidoPretendido])if(!blank(v))return clean(v);
+    const m=Object.values(t||{}).map(clean).join(' | ').match(STATION_RE);if(m)return m[0];
+    if(!blank(t.station))return clean(t.station);
+    const nv=clean(t.nomeViagem);if(!blank(nv)&&!/Schedule\s+By/i.test(nv))return nv;
+    return '';
+  }
+  function fixOld(x){
+    if(!x||x.origem!=='SPX')return;
+    if(/Schedule\s+By/i.test(x.motorista||''))x.motorista=cleanDriver(x.motorista)||'Não informado';
+    if(blank(x.destino)||x.destino==='SPX'){const d=x.spx?destination(x.spx):'';if(d)x.destino=d;}
+  }
   function makeRecord(t,old){
     const lt=clean(t.numeroLH), atd=parseSpxDate(t.ATD), ata=parseSpxDate(t.ATA);
     const dateIso=firstDate(t.STA,t.STD,t.ATA,t.ATD,t.dataPartidaPrevista)||(old?.data?old.data+'T00:00:00':'')||nowLocal();
     const keep=(k,v)=>blank(v)?(old?.[k]||''):v;
     return {...(old||{}),id:old?.id||uid(),criado:old?.criado||new Date().toISOString(),data:dateIso.slice(0,10),lt,
-      destino:keep('destino',destination(t)),motorista:keep('motorista',t.motorista)||'Não informado',placa:keep('placa',plate(t.placa)),veiculo:keep('veiculo',vehicle(t.veiculo)),doca:keep('doca',t.doca),lacre:old?.lacre||'',
+      destino:keep('destino',destination(t))||'SPX',motorista:keep('motorista',driverOf(t))||'Não informado',placa:keep('placa',plate(t.placa)),veiculo:keep('veiculo',vehicle(t.veiculo)),doca:keep('doca',t.doca),lacre:old?.lacre||'',
       chegada:ata||old?.chegada||'',aceite:old?.aceite||'',docaHora:old?.docaHora||'',cargaPronta:old?.cargaPronta||'',inicio:old?.inicio||'',fim:atd||old?.fim||'',liberacao:atd||old?.liberacao||'',meta:old?.meta||60,
       aceitePor:old?.aceitePor||'',liberadoPor:old?.liberadoPor||'',equipe:old?.equipe||'',fotos:old?.fotos||{},comp:old?.comp||[],pacotes:old?.pacotes||0,peso:old?.peso||0,
-      status:statusFor(t),motivo:old?.motivo||'',obs:[`SPX • ${clean(t.nomeViagem)||'Viagem'}`,`Station: ${clean(t.station)||'—'}`,`Pontualidade: ${clean(t.indicadorPontualidade)||'—'}`,`STA: ${clean(t.STA)||'—'} | STD: ${clean(t.STD)||'—'}`,`ATA: ${clean(t.ATA)||'—'} | ATD: ${clean(t.ATD)||'—'}`,`ETA: ${clean(t.ETA)||'—'} | ETD: ${clean(t.ETD)||'—'}`,`Partida prevista: ${clean(t.dataPartidaPrevista)||'—'}`,`Última localização: ${clean(t.ultimaAtualizacaoLocalizacao)||'—'}`].join(' • '),
+      status:statusFor(t),motivo:old?.motivo||'',obs:[`SPX • ${clean(t.nomeViagem).replace(SCHED_RE,'')||'Viagem'}`,`Station: ${clean(t.station)||'—'}`,`Pontualidade: ${clean(t.indicadorPontualidade)||'—'}`,`STA: ${clean(t.STA)||'—'} | STD: ${clean(t.STD)||'—'}`,`ATA: ${clean(t.ATA)||'—'} | ATD: ${clean(t.ATD)||'—'}`,`ETA: ${clean(t.ETA)||'—'} | ETD: ${clean(t.ETD)||'—'}`,`Partida prevista: ${clean(t.dataPartidaPrevista)||'—'}`,`Última localização: ${clean(t.ultimaAtualizacaoLocalizacao)||'—'}`].join(' • '),
       origem:'SPX',spx:t,atualizadoSPX:new Date().toISOString()};
   }
   function setBadge(text,state){const brand=document.querySelector('#loadingModule .lc-brand');if(!brand)return;let b=brand.querySelector('#spx-inline-status');if(!b){b=document.createElement('span');b.id='spx-inline-status';b.style.cssText='display:inline-flex;margin-left:8px;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:900;background:#eef2f7;color:#586477;vertical-align:middle;';brand.querySelector('p')?.appendChild(b);}b.textContent=text;b.style.background=state==='ok'?'#dcfce7':state==='err'?'#fee2e2':'#fff4e5';b.style.color=state==='ok'?'#166534':state==='err'?'#991b1b':'#92400e';}
   function upsertTrips(trips){
     if(!Array.isArray(trips)||!trips.length)return 0;
-    const local=readLoads(); const byLt=new Map(local.filter(x=>clean(x.lt)).map(x=>[norm(x.lt),x])); let changed=0;
+    const local=readLoads(); local.forEach(fixOld); const byLt=new Map(local.filter(x=>clean(x.lt)).map(x=>[norm(x.lt),x])); let changed=0;
     for(const t of trips){const lt=clean(t?.numeroLH);if(!lt)continue;const old=byLt.get(norm(lt));const obj=makeRecord(t,old);if(old)Object.assign(old,obj);else local.push(obj);byLt.set(norm(lt),old||obj);changed++;}
     const merged=mergeLists(local,readLoads()); writeLoads(merged,true);
     if(changed){window.renderLoadingModule?.();window.dispatchEvent(new CustomEvent('spxCarregamentosAtualizados',{detail:{count:changed}}));}
